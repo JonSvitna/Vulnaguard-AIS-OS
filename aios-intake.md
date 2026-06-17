@@ -11,7 +11,9 @@ This is the source-of-truth file for your AIOS. Fill it in by typing, voice-past
 Identity, offer, ICP. One paragraph each is fine.
 
 ```
-[Your answer here]
+I serve people who need software or website builds — mainly. It's my passion, plus it gives me the opportunity to learn new technology. I've built and shipped a wide range of applications: some were learning lessons, some were practical. Recent projects are tools to either help myself (the SEO agent) or client websites, but my BABY is Sentinel CMMC. I have a diverse background in hacking (CompTIA PenTest+) and information security, a Master's in Computer Forensics, and a BS in Computer Networking. I love working with tech and learning how to implement and simplify complex processes.
+
+What I most enjoy building, creatively, is SaaS products — not agentic flows. I'm familiar with and use both, but SaaS is the primary craft; agents/automation are tools I reach for to take workload off myself as a solo developer/solo entrepreneur.
 ```
 
 ---
@@ -21,11 +23,10 @@ Identity, offer, ICP. One paragraph each is fine.
 An email, a LinkedIn post, a DM, a doc — anything that sounds like you when you're not trying. **Paste verbatim.** Do not type these mid-conversation with Claude — chat-shaped samples are worse than no samples (voice contamination).
 
 ```
-[Sample 1 — paste raw]
-```
-
-```
-[Sample 2 — paste raw]
+Satisfied by an installed skill instead of raw paste: .claude/skills/seanbuilds-voice/SKILL.md
+("SeanBuilds Voice & Persona" — covers SeanBuilds, Vulnaguard, Mectofitness, BlueAlamo.
+Builder-explaining-it-over-coffee register. Banned words list, storytelling arc
+(Situation -> Frustration -> Observation -> Build -> Result), per-channel format rules.)
 ```
 
 ---
@@ -35,9 +36,11 @@ An email, a LinkedIn post, a DM, a doc — anything that sounds like you when yo
 Quarterly priorities. Not yearly aspirations. Things that, if not done by July, would make you say "I wasted Q2."
 
 ```
-1. [Priority 1]
-2. [Priority 2]
-3. [Priority 3]
+1. Complete Sentinel CMMC certification — hard deadline driven by government agency contract requirements.
+2. Secure up to 10 clients via the SEO platform — outreach feature built and automated end-to-end.
+3. Drive consistent feeds/traffic to the website via the SEO optimization agent.
+
+(Underlying theme: solo developer/solo entrepreneur — automation that takes workload off is a standing ask, not just for these three.)
 ```
 
 ---
@@ -47,7 +50,7 @@ Quarterly priorities. Not yearly aspirations. Things that, if not done by July, 
 Multiple answers OK. Stripe? Skool? GoHighLevel? QuickBooks? A spreadsheet?
 
 ```
-[Your answer here]
+No clients yet. Plan: Stripe for payments/tracking (needs to be configured). Mercury Bank used for invoicing as a fallback if needed. Stripe is the intended primary — go with whatever's easiest until volume justifies more process.
 ```
 
 ---
@@ -57,7 +60,7 @@ Multiple answers OK. Stripe? Skool? GoHighLevel? QuickBooks? A spreadsheet?
 Email (which one — Gmail / Outlook)? Slack? Teams? DMs (Skool / Discord / iMessage)? Phone?
 
 ```
-[Your answer here]
+Microsoft 365 business environment — business email (Outlook) + shared mailboxes for fictitious addresses (e.g. support@vulnaguard.com). Outbound email sending via the Resend API. Outreach today is cold email + LinkedIn, no traction yet on either — actively figuring out a better system (this is a core reason for building this AIOS). Slack: have it, will use it for team/internal comms. Tried Twilio for DMs/SMS — dropped it, cost outweighed value.
 ```
 
 ---
@@ -67,7 +70,7 @@ Email (which one — Gmail / Outlook)? Slack? Teams? DMs (Skool / Discord / iMes
 Granola? Otter? Fireflies? Google Drive? Notion? Dropbox? A folder on your desktop you keep meaning to organize?
 
 ```
-[Your answer here]
+No formal system yet. Mostly scattered notepad notes, plus ChatGPT/OpenAI as the main place to think through and carry notes/projects (low friction, no learning curve). Interested in Obsidian eventually but haven't adopted it — learning curve has been the blocker.
 ```
 
 ---
@@ -77,7 +80,9 @@ Granola? Otter? Fireflies? Google Drive? Notion? Dropbox? A folder on your deskt
 The single biggest time-suck or recurring drudgery. Plus where tasks/projects live (ClickUp / Asana / Linear / Notion / a notebook).
 
 ```
-[Your answer here]
+Top pain (two-headed): (1) lead analysis/scraping, (2) content creation + posting for social media — the latter is the one he actively dislikes, calls it more draining than the technical/dev side. Hope: SEO agent's video feature could edit videos, give pre-recording tips, and help auto-post, taking this off his plate.
+
+Task tracking: nothing formal yet — no PM tool in place.
 ```
 
 ---

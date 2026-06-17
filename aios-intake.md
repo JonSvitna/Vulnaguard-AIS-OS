@@ -11,7 +11,7 @@ This is the source-of-truth file for your AIOS. Fill it in by typing, voice-past
 Identity, offer, ICP. One paragraph each is fine.
 
 ```
-[Your answer here]
+I serve people who need software or website builds — mainly. It's my passion, plus it gives me the opportunity to learn new technology. I've built and shipped a wide range of applications: some were learning lessons, some were practical. Recent projects are tools to either help myself (the SEO agent) or client websites, but my BABY is Sentinel CMMC. I have a diverse background in hacking (CompTIA PenTest+) and information security, a Master's in Computer Forensics, and a BS in Computer Networking. I love working with tech and learning how to implement and simplify complex processes.
 ```
 
 ---

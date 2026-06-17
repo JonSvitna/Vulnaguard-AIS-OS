@@ -5,7 +5,7 @@ Registry of every system your AIOS can reach. Filled by `/onboard` from Q4-Q7 an
 | # | Domain | Tool | Mechanism | Auth | Last checked |
 |---|---|---|---|---|---|
 | 1 | Revenue / Financials | Stripe (primary, not yet configured); Mercury Bank (invoicing fallback) | not yet connected | — | — |
-| 2 | Customer interactions | Cold email + LinkedIn outreach (no traction yet); Resend API for sending | not yet connected | — | — |
+| 2 | Customer interactions | Cold email + LinkedIn outreach (no traction yet); Resend API for sending; tracked in `references/outreach-log.md` | script (manual log) | — | 2026-06-17 |
 | 3 | Calendar | Outlook Calendar (inferred from Microsoft 365) | not yet connected | — | — |
 | 4 | Communication | Microsoft 365 (Outlook + shared mailboxes); Slack (internal/team) | not yet connected | — | — |
 | 5 | Project / task tracking | None — nothing formal in place | not yet connected | — | — |

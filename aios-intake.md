@@ -21,11 +21,10 @@ I serve people who need software or website builds — mainly. It's my passion, 
 An email, a LinkedIn post, a DM, a doc — anything that sounds like you when you're not trying. **Paste verbatim.** Do not type these mid-conversation with Claude — chat-shaped samples are worse than no samples (voice contamination).
 
 ```
-[Sample 1 — paste raw]
-```
-
-```
-[Sample 2 — paste raw]
+Satisfied by an installed skill instead of raw paste: .claude/skills/seanbuilds-voice/SKILL.md
+("SeanBuilds Voice & Persona" — covers SeanBuilds, Vulnaguard, Mectofitness, BlueAlamo.
+Builder-explaining-it-over-coffee register. Banned words list, storytelling arc
+(Situation -> Frustration -> Observation -> Build -> Result), per-channel format rules.)
 ```
 
 ---

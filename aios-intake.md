@@ -80,7 +80,9 @@ No formal system yet. Mostly scattered notepad notes, plus ChatGPT/OpenAI as the
 The single biggest time-suck or recurring drudgery. Plus where tasks/projects live (ClickUp / Asana / Linear / Notion / a notebook).
 
 ```
-[Your answer here]
+Top pain (two-headed): (1) lead analysis/scraping, (2) content creation + posting for social media — the latter is the one he actively dislikes, calls it more draining than the technical/dev side. Hope: SEO agent's video feature could edit videos, give pre-recording tips, and help auto-post, taking this off his plate.
+
+Task tracking: nothing formal yet — no PM tool in place.
 ```
 
 ---

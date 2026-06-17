@@ -50,7 +50,7 @@ Quarterly priorities. Not yearly aspirations. Things that, if not done by July, 
 Multiple answers OK. Stripe? Skool? GoHighLevel? QuickBooks? A spreadsheet?
 
 ```
-[Your answer here]
+No clients yet. Plan: Stripe for payments/tracking (needs to be configured). Mercury Bank used for invoicing as a fallback if needed. Stripe is the intended primary — go with whatever's easiest until volume justifies more process.
 ```
 
 ---

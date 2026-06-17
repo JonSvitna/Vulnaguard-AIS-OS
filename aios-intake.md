@@ -70,7 +70,7 @@ Microsoft 365 business environment — business email (Outlook) + shared mailbox
 Granola? Otter? Fireflies? Google Drive? Notion? Dropbox? A folder on your desktop you keep meaning to organize?
 
 ```
-[Your answer here]
+No formal system yet. Mostly scattered notepad notes, plus ChatGPT/OpenAI as the main place to think through and carry notes/projects (low friction, no learning curve). Interested in Obsidian eventually but haven't adopted it — learning curve has been the blocker.
 ```
 
 ---

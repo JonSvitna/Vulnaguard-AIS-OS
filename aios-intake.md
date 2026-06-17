@@ -60,7 +60,7 @@ No clients yet. Plan: Stripe for payments/tracking (needs to be configured). Mer
 Email (which one — Gmail / Outlook)? Slack? Teams? DMs (Skool / Discord / iMessage)? Phone?
 
 ```
-[Your answer here]
+Microsoft 365 business environment — business email (Outlook) + shared mailboxes for fictitious addresses (e.g. support@vulnaguard.com). Outbound email sending via the Resend API. Outreach today is cold email + LinkedIn, no traction yet on either — actively figuring out a better system (this is a core reason for building this AIOS). Slack: have it, will use it for team/internal comms. Tried Twilio for DMs/SMS — dropped it, cost outweighed value.
 ```
 
 ---

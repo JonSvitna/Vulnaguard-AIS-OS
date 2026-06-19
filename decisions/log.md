@@ -49,3 +49,7 @@ Keep it terse. Future-you will thank present-you for capturing the *why*, not ju
 **Alternatives considered:** Creating the file-based persona doc as originally specced (rejected — would diverge from what the running app actually reads).
 
 **Owner:** Sean.
+
+## 2026-06-19 — Lead-triage run failed: M365 auth env vars missing
+
+Scheduled lead-triage run failed before pulling mail — `scripts/microsoft365_api.py` errored with `KeyError: 'MS365_USER_UPN'` (consistent with the SessionStart hook's `MS365_TENANT_ID` warning); no leads pulled, `leads/inbox.md` untouched. Not retried.

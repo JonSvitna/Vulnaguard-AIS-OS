@@ -1,0 +1,304 @@
+/* ============================================================
+   Connections HUD — JARVIS-dominant cyan, Diablo ember as the
+   "needs attention" signal, deep space background.
+   Scoped entirely under #connections-view .hud
+   ============================================================ */
+
+#connections-view {
+  padding: 0;
+}
+
+.hud {
+  position: relative;
+  min-height: calc(100vh - 64px);
+  background: radial-gradient(ellipse at 50% -10%, #0a1626 0%, #04060c 55%, #020308 100%);
+  border: 1px solid rgba(0, 229, 255, 0.15);
+  border-radius: 16px;
+  overflow: hidden;
+  padding: 56px 40px 80px;
+  font-family: "Rajdhani", sans-serif;
+  isolation: isolate;
+}
+
+/* corner HUD brackets */
+.hud::before,
+.hud::after {
+  content: "";
+  position: absolute;
+  width: 36px;
+  height: 36px;
+  border: 2px solid rgba(0, 229, 255, 0.55);
+  z-index: 3;
+  pointer-events: none;
+}
+.hud::before {
+  top: 14px;
+  left: 14px;
+  border-right: none;
+  border-bottom: none;
+}
+.hud::after {
+  bottom: 14px;
+  right: 14px;
+  border-left: none;
+  border-top: none;
+}
+
+.hud-starfield {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.hud-starfield .star {
+  position: absolute;
+  background: #bdeaff;
+  border-radius: 50%;
+  opacity: 0.7;
+  animation: twinkle 4s ease-in-out infinite;
+}
+
+@keyframes twinkle {
+  0%,
+  100% {
+    opacity: 0.15;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+.hud-scanline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 140px;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 229, 255, 0) 0%,
+    rgba(0, 229, 255, 0.07) 50%,
+    rgba(0, 229, 255, 0) 100%
+  );
+  z-index: 1;
+  pointer-events: none;
+  animation: scan 7s linear infinite;
+}
+
+@keyframes scan {
+  0% {
+    transform: translateY(-160px);
+  }
+  100% {
+    transform: translateY(120vh);
+  }
+}
+
+/* ---- Core reactor ---- */
+.hud-core {
+  position: relative;
+  z-index: 2;
+  width: 200px;
+  height: 200px;
+  margin: 0 auto 56px;
+}
+
+.hud-core-rings {
+  width: 100%;
+  height: 100%;
+}
+
+.hud-core-rings .ring {
+  fill: none;
+  stroke: rgba(0, 229, 255, 0.45);
+  stroke-width: 1.5;
+}
+
+.ring-outer {
+  stroke-dasharray: 4 10;
+  animation: spin 24s linear infinite;
+  transform-origin: 100px 100px;
+}
+.ring-mid {
+  stroke-dasharray: 30 6;
+  stroke: rgba(0, 229, 255, 0.7);
+  animation: spin-rev 16s linear infinite;
+  transform-origin: 100px 100px;
+}
+.ring-inner {
+  stroke: rgba(0, 229, 255, 0.95);
+  filter: drop-shadow(0 0 6px rgba(0, 229, 255, 0.8));
+  animation: spin 10s linear infinite;
+  transform-origin: 100px 100px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes spin-rev {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+.hud-core-readout {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.hud-core-label {
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  color: rgba(189, 234, 255, 0.6);
+  margin-bottom: 6px;
+}
+
+.hud-core-value {
+  font-family: "Share Tech Mono", monospace;
+  font-size: 34px;
+  color: #e8fbff;
+  text-shadow: 0 0 18px rgba(0, 229, 255, 0.65);
+  letter-spacing: 0.04em;
+}
+
+/* ---- Panel grid ---- */
+.hud-grid {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 22px;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.hud-panel {
+  position: relative;
+  background: linear-gradient(160deg, rgba(0, 229, 255, 0.05), rgba(255, 255, 255, 0.015));
+  border: 1px solid var(--panel-border, rgba(0, 229, 255, 0.25));
+  clip-path: polygon(0 12px, 12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%);
+  padding: 20px 22px 18px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-shadow: 0 0 0 rgba(0, 229, 255, 0);
+}
+
+.hud-panel:hover {
+  box-shadow: 0 0 22px rgba(0, 229, 255, 0.18);
+}
+
+.hud-panel.state-online {
+  --panel-border: rgba(0, 229, 255, 0.4);
+}
+.hud-panel.state-stale {
+  --panel-border: rgba(255, 184, 64, 0.4);
+}
+.hud-panel.state-unverified {
+  --panel-border: rgba(255, 184, 64, 0.25);
+}
+.hud-panel.state-offline {
+  --panel-border: rgba(255, 77, 46, 0.35);
+}
+
+.hud-panel-top {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
+.hud-gauge {
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+}
+
+.hud-gauge .track {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.08);
+  stroke-width: 4;
+}
+
+.hud-gauge .fill {
+  fill: none;
+  stroke-width: 4;
+  stroke-linecap: round;
+  transform: rotate(-90deg);
+  transform-origin: 26px 26px;
+  transition: stroke-dasharray 0.6s ease;
+}
+
+.state-online .hud-gauge .fill {
+  stroke: #00e5ff;
+  filter: drop-shadow(0 0 4px rgba(0, 229, 255, 0.75));
+}
+.state-stale .hud-gauge .fill,
+.state-unverified .hud-gauge .fill {
+  stroke: #ffb840;
+  filter: drop-shadow(0 0 4px rgba(255, 184, 64, 0.6));
+}
+.state-offline .hud-gauge .fill {
+  stroke: #ff4d2e;
+  filter: drop-shadow(0 0 4px rgba(255, 77, 46, 0.65));
+}
+
+.hud-panel-titles {
+  flex: 1;
+  min-width: 0;
+}
+
+.hud-domain {
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #e8fbff;
+}
+
+.hud-status-badge {
+  display: inline-block;
+  margin-top: 4px;
+  font-family: "Share Tech Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  padding: 2px 8px;
+  border-radius: 3px;
+}
+
+.state-online .hud-status-badge {
+  color: #00e5ff;
+  background: rgba(0, 229, 255, 0.12);
+}
+.state-stale .hud-status-badge,
+.state-unverified .hud-status-badge {
+  color: #ffb840;
+  background: rgba(255, 184, 64, 0.12);
+}
+.state-offline .hud-status-badge {
+  color: #ff4d2e;
+  background: rgba(255, 77, 46, 0.12);
+}
+
+.hud-tool {
+  font-family: "Helvetica Neue", Arial, sans-serif;
+  font-size: 12px;
+  line-height: 1.5;
+  color: rgba(199, 208, 218, 0.75);
+  margin-bottom: 10px;
+}
+
+.hud-readout {
+  font-family: "Share Tech Mono", monospace;
+  font-size: 10.5px;
+  color: rgba(189, 234, 255, 0.45);
+  letter-spacing: 0.03em;
+  display: flex;
+  justify-content: space-between;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: 8px;
+}

@@ -49,3 +49,33 @@ Keep it terse. Future-you will thank present-you for capturing the *why*, not ju
 **Alternatives considered:** Creating the file-based persona doc as originally specced (rejected — would diverge from what the running app actually reads).
 
 **Owner:** Sean.
+
+## 2026-06-18 — Hold off setting up video-use until the next video project
+
+**Decision:** Identified `video-use` (github.com/browser-use/video-use) as the real tool behind Nate Herk's video editing pipeline — handles transcription/trim/filler-word cutting and can dispatch motion-graphics work to HyperFrames. Did not install it yet.
+
+**Why:** Setup requires a new paid third-party dependency (ElevenLabs API key for Scribe transcription) plus a global Claude Code skill install (`~/.claude/skills/video-use`, not project-scoped). No active video project needs it right now — `ai-shovel-video` is already built and working without it.
+
+**Alternatives considered:** Setting it up immediately (rejected — adds a credential and dependency with no immediate use; better to do it when there's a real next video to run through it).
+
+**Owner:** Sean. Revisit when starting the next long-form video project — see `reference_video_use_pipeline` memory for the full setup steps.
+
+## 2026-06-18 — Ship Sentinel CMMC scheduler in two phases, Phase 1 only today
+
+**Decision:** Added an in-process APScheduler to `Sentinel-CMMC/backend` (`app/services/scheduler.py`) that calls the existing `run_due_monitoring_jobs` + `create_compliance_run` across all orgs every `COMPLIANCE_SCAN_INTERVAL_MINUTES` (default 60), wired into the FastAPI `lifespan` hook. Also added `app/services/notifications.py` with a single `deliver_alert()` hook, called from `create_compliance_run` for every generated alert, currently a no-op logger — the foundation for real email/Slack delivery. Did not implement actual delivery transport today.
+
+**Why:** This closed the last open item from the May 11 pilot readiness report ("Continuous operations: BROKEN — no scheduler, no periodic recalculation"). Nearly all the underlying logic already existed (`MonitoringJob` model, `run_due_monitoring_jobs`, `create_compliance_run` with alert generation) — it was only reachable via a manual, authenticated API call. The fix was almost entirely wiring, not new business logic. Splitting delivery into Phase 2 kept today's change small and testable (27/27 backend tests pass, 4 new) instead of also deciding on a notification transport (Resend? Slack?) under time pressure.
+
+**Alternatives considered:** Building real alert delivery today too (rejected — no transport decision made yet, and Resend is currently only connected for `vulnaguard-seo-agent`, not this repo); using an external cron service instead of in-process APScheduler (rejected — deployment is a single long-running Railway process, in-process is simpler and needs no new infra).
+
+**Owner:** Sean. Phase 2 (real alert delivery) deferred to a later session — see `project_sentinel_scheduler_phase2` memory.
+
+## 2026-06-18 — Pushed Sentinel CMMC scheduler to main, deployed to Railway
+
+**Decision:** Committed (`eda2ba1`) and pushed the Phase 1 scheduler changes to `Sentinel-CMMC` `main`. Railway is wired to the repo via `railway.toml` (root, backend, frontend), so the push should trigger an auto-deploy.
+
+**Why:** Sean wanted the compliance scan running unattended overnight ("dream mode") — committed-but-unpushed code does nothing while asleep; only a live deploy actually runs the hourly scan loop.
+
+**Alternatives considered:** Leaving it local for manual review first (rejected by Sean — explicitly asked to push now).
+
+**Owner:** Sean. Verify on next login that the Railway deploy succeeded and the scheduler is ticking (check logs for the `compliance_scan` job, or that `MonitoringJob`/`ComplianceRun` rows are appearing with `source="scheduler"`).

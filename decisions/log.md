@@ -79,3 +79,13 @@ Keep it terse. Future-you will thank present-you for capturing the *why*, not ju
 **Alternatives considered:** Leaving it local for manual review first (rejected by Sean — explicitly asked to push now).
 
 **Owner:** Sean. Verify on next login that the Railway deploy succeeded and the scheduler is ticking (check logs for the `compliance_scan` job, or that `MonitoringJob`/`ComplianceRun` rows are appearing with `source="scheduler"`).
+
+## 2026-06-19 — Shipped Sentinel CMMC Phase 2: real alert delivery via Resend
+
+**Decision:** `deliver_alert()` now emails org owners/admins through Resend instead of just logging. Recipients resolved via `OrganizationMember` (role owner/admin) + Supabase Admin API for email lookup (no local users table — auth lives in Supabase). Pushed to `main` (`024170e`), confirmed deployed and healthy on Railway.
+
+**Why:** Closed the last gap from the continuous-monitoring work — alerts were generating correctly but going nowhere outside the app. Resend was the natural transport (Sean already uses it for `vulnaguard-seo-agent` outreach, has an account and a verified `@vulnaguard.com` domain). Email org owners/admins rather than just Sean, since this is meant to scale across real customer orgs, not just notify him.
+
+**Alternatives considered:** Slack webhook (rejected — Slack isn't connected anywhere yet, would've added a new integration for no reason when Resend was already available); notifying Sean directly for all orgs (rejected — doesn't scale past the first customer, and the product's value prop is *the org* getting notified, not Sean relaying alerts manually).
+
+**Owner:** Sean. `RESEND_API_KEY` and `ALERT_FROM_EMAIL` are set in Railway production. Nothing left open on this thread unless requirements change.

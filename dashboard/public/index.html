@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>AIOS Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="hud.css" />
+  </head>
+  <body>
+    <div id="shell">
+      <nav id="sidebar">
+        <div class="brand">Vulnaguard AIOS</div>
+        <button class="nav-item active" data-view="memory">Memory</button>
+        <button class="nav-item" data-view="decisions">Decisions</button>
+        <button class="nav-item" data-view="connections">Connections</button>
+        <button class="nav-item" data-view="skills">Skills &amp; Agents</button>
+        <button class="nav-item" data-view="context">Context</button>
+      </nav>
+      <main id="content">
+        <div id="memory-view" class="view active">
+          <div class="view-body two-col">
+            <div id="memory-list" class="memory-list"></div>
+            <div id="memory-detail" class="memory-detail">
+              <p class="placeholder">Select a memory entry to view it.</p>
+            </div>
+          </div>
+        </div>
+        <div id="decisions-view" class="view">
+          <div class="view-body markdown" id="decisions-body"></div>
+        </div>
+        <div id="connections-view" class="view">
+          <div class="hud" id="hud-root">
+            <div class="hud-starfield" id="hud-starfield"></div>
+            <div class="hud-scanline"></div>
+            <div class="hud-core" id="hud-core">
+              <svg viewBox="0 0 200 200" class="hud-core-rings">
+                <circle class="ring ring-outer" cx="100" cy="100" r="92" />
+                <circle class="ring ring-mid" cx="100" cy="100" r="78" />
+                <circle class="ring ring-inner" cx="100" cy="100" r="64" />
+              </svg>
+              <div class="hud-core-readout">
+                <div class="hud-core-label">SYSTEMS ONLINE</div>
+                <div class="hud-core-value" id="hud-core-value">0 / 0</div>
+              </div>
+            </div>
+            <div class="hud-grid" id="hud-grid"></div>
+          </div>
+        </div>
+        <div id="skills-view" class="view">
+          <div class="view-body" id="skills-body"></div>
+        </div>
+        <div id="context-view" class="view">
+          <div class="view-body" id="context-body"></div>
+        </div>
+      </main>
+    </div>
+    <script src="app.js"></script>
+  </body>
+</html>

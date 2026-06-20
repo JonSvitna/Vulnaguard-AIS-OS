@@ -89,3 +89,13 @@ Keep it terse. Future-you will thank present-you for capturing the *why*, not ju
 **Alternatives considered:** Slack webhook (rejected — Slack isn't connected anywhere yet, would've added a new integration for no reason when Resend was already available); notifying Sean directly for all orgs (rejected — doesn't scale past the first customer, and the product's value prop is *the org* getting notified, not Sean relaying alerts manually).
 
 **Owner:** Sean. `RESEND_API_KEY` and `ALERT_FROM_EMAIL` are set in Railway production. Nothing left open on this thread unless requirements change.
+
+## 2026-06-19 — Audited vulnaguard-seo-agent, fixed M2/GSC, switched SEO engine to Haiku
+
+**Decision:** Audited the SEO half of vulnaguard-seo-agent (M1-M6 dashboard, separate from the already-solid marketing/outreach pipeline) and found it was almost entirely an LLM prompt wrapper — M2's system prompt literally said "Simulate GSC analysis," and a fully correct, real GSC OAuth integration (`/api/gsc`) existed but was never called by anything. Fixed M2 + Full SEO Pass to fetch real GSC data and inject it into the prompt; updated the system prompt to forbid inventing rows. Switched the SEO chat engine (`app/api/agent/route.ts`) from `claude-sonnet-4-6` to `claude-haiku-4-5-20251001` per Sean's explicit call. Along the way, fixed two real credential issues: the Google OAuth app was in "Testing" status (7-day refresh token expiry) — published it to Production — and the client secret had been rotated/was stale — regenerated it in Cloud Console. Verified the full chain live: real GSC data → real M2 classification on Haiku, no fabricated numbers.
+
+**Why:** Sean's actual question was "does the SEO segment actually work" — it didn't. M2 was the highest-leverage fix since the real integration already existed and just needed wiring, unlike M1 (keyword research) and M3 (page audit), which need new capability (a keyword data source, real HTML crawling) and remain unfixed.
+
+**Alternatives considered:** Building all of M1/M2/M3 in one pass (rejected — M1/M3 need new infrastructure decisions Sean hasn't made yet; M2 was a pure wiring fix with the integration already built, so it shipped same-session while M1/M3 didn't).
+
+**Owner:** Sean. M1 (real keyword data source) and M3 (real page crawling for the audit) are still open — see `project_seo_agent_platform_health` memory for next-step priority.

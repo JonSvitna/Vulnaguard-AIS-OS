@@ -18,6 +18,26 @@ Append-only record of meaningful decisions and why they were made. `/level-up` P
 
 Keep it terse. Future-you will thank present-you for capturing the *why*, not just the *what*.
 
+## 2026-06-20 — Wired Slack into the AIOS
+
+**Decision:** Connected Slack via a bot token (`scripts/slack_api.py`, stdlib-only, same pattern as `microsoft365_api.py`/`stripe_api.py`). Bot scopes: `chat:write`, `channels:read`, `channels:history`, `users:read`. Invited the bot to `#all-vulnaguard-sentinel` (`C0AMQU5HN2G`) and confirmed with a live test message. `connections.md` row 4 updated.
+
+**Why:** Closes the loop from the same-day decision to move mail/lead routing to Slack instead of debugging Exchange forwarding further.
+
+**Note:** `conversations.list` currently only requests `public_channel` type — `private_channel` listing returned `missing_scope` (needs `groups:read`, not yet granted). Add that scope and reinstall the app if private-channel access is needed later.
+
+**Owner:** Sean.
+
+## 2026-06-20 — Move mail/lead routing to Slack, keep Linear for task tracking (drop ClickUp)
+
+**Decision:** Sean will connect Slack for internal/team communication and lead routing instead of ClickUp. Task tracking stays on Linear (already wired, see `connections.md` row 5) — Slack fills the comms gap, not task tracking.
+
+**Why:** Triggered by debugging a broken Exchange forwarding rule (BidNet solicitation notifications meant for jessicasayre28@gmail.com weren't landing in her inbox, despite the inbox rules being correctly configured per Graph API). Rather than keep debugging Exchange-level mailbox forwarding, Sean decided to move this kind of routing to Slack. He already has Linear for tracking, so ClickUp was never needed.
+
+**Alternatives considered:** ClickUp (briefly considered, dropped once Sean confirmed Linear already covers task tracking — see `project_clickup_slack_migration` memory, now superseded by this decision); continuing to debug Exchange mailbox-level SMTP forwarding (put on hold — not worth the effort given the planned migration).
+
+**Owner:** Sean. Next step when he sets up Slack: update `connections.md` row 4 (currently "Slack ... not yet connected") and wire it into the AIOS.
+
 ## 2026-06-19 — Codex/Cursor fallback via `/handoff` skill
 
 **Decision:** Added a `/handoff` skill plus `scripts/sync_agent_manuals.py` and `context/active-task.md` so Sean can switch from Claude Code to Codex CLI or Cursor mid-task without losing context. `CLAUDE.md` stays canonical; the script regenerates `AGENTS.md` (Codex) and `.cursor/rules/aios.mdc` (Cursor) from it. Before switching, the skill snapshots the in-flight task into `context/active-task.md` for the next agent to read first.

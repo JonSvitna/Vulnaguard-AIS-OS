@@ -19,6 +19,7 @@ You triage incoming government bid/solicitation notification emails (BidNet aler
    - **Notes** — anything else useful (deadline mentioned, equipment/service type, whether it's a re-post/update)
 5. Append new rows to the table in `leads/inbox.md`. Don't fabricate contact names, emails, or websites — leave those blank; this is a staging list for Sean to qualify, not a finished lead.
 6. Skip "Undeliverable"/bounce emails and anything that isn't a genuine new solicitation notice.
-7. Report a short summary: how many new rows added, and call out anything that looks especially relevant to CMMC-scoped contracts (IT, defense, hardware procurement for government).
+7. If any new rows were added, also append a dated entry to `~/Documents/Obsidian Vault/wiki/domains/sentinel-cmmc/comms/Lead Triage Log.md` (create the file with frontmatter `type: source`, `tags: [comms, sentinel-cmmc]` if it doesn't exist yet) summarizing what came in and the CMMC-relevance call for each — newest entry at the top, matching the vault's log convention. Skip this step if no new rows were added.
+8. Report a short summary: how many new rows added, and call out anything that looks especially relevant to CMMC-scoped contracts (IT, defense, hardware procurement for government).
 
 Don't import into the live SEO agent pipeline yourself — `leads/inbox.md` is a manual review step before that.

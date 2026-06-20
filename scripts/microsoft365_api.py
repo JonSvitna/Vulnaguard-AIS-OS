@@ -107,6 +107,24 @@ def send_mail(token: str, upn: str, to: str, subject: str, body: str):
     print(f"Sent to {to}")
 
 
+def list_rules(token: str, upn: str):
+    path = f"/users/{upn}/mailFolders/inbox/messageRules"
+    result = graph_request(path, token)
+    for rule in result.get("value", []):
+        actions = rule.get("actions", {})
+        forward = actions.get("forwardTo") or actions.get("redirectTo") or []
+        targets = ", ".join(a.get("emailAddress", {}).get("address", "?") for a in forward)
+        print(f"{rule['id']}  enabled={rule['isEnabled']}  '{rule['displayName']}'  -> {targets or '(no forward action)'}")
+
+
+def set_rule_forward(token: str, upn: str, rule_id: str, to: str, redirect: bool = False):
+    action_key = "redirectTo" if redirect else "forwardTo"
+    path = f"/users/{upn}/mailFolders/inbox/messageRules/{rule_id}"
+    payload = {"actions": {action_key: [{"emailAddress": {"address": to}}]}}
+    graph_request(path, token, method="PATCH", body=payload)
+    print(f"Rule {rule_id} {action_key} -> {to}")
+
+
 def main():
     load_env()
     parser = argparse.ArgumentParser()
@@ -123,6 +141,14 @@ def main():
     p_send.add_argument("--subject", required=True)
     p_send.add_argument("--body", required=True)
 
+    sub.add_parser("rules")
+
+    p_rule_forward = sub.add_parser("rule-forward")
+    p_rule_forward.add_argument("--rule-id", required=True)
+    p_rule_forward.add_argument("--to", required=True)
+    p_rule_forward.add_argument("--redirect", action="store_true",
+                                 help="Use redirectTo (keep original sender) instead of forwardTo")
+
     args = parser.parse_args()
     upn = os.environ["MS365_USER_UPN"]
     token = get_token()
@@ -133,6 +159,10 @@ def main():
         list_mail(token, upn, args.top)
     elif args.command == "send":
         send_mail(token, upn, args.to, args.subject, args.body)
+    elif args.command == "rules":
+        list_rules(token, upn)
+    elif args.command == "rule-forward":
+        set_rule_forward(token, upn, args.rule_id, args.to, args.redirect)
 
 
 if __name__ == "__main__":

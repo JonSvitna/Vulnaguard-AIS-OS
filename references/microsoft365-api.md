@@ -27,6 +27,11 @@ MS365_USER_UPN=seanmurrill@vulnaguard.com
 App registration: `vulnaguard-aios` in Azure AD, tenant `b2168f2a-36e6-4821-9b0b-602124dd3b54`.
 Granted application permissions: `Calendars.Read`, `Mail.Read`, `Mail.Send` (admin consent granted).
 
+**Pending:** `MailboxSettings.ReadWrite` is required for the inbox-rule commands (`rules`, `rule-forward`) but has not been granted yet. To enable:
+1. Azure Portal → App registrations → `vulnaguard-aios` → API permissions → Add a permission → Microsoft Graph → Application permissions → `MailboxSettings.ReadWrite`.
+2. Click "Grant admin consent for {tenant}" — only a tenant admin can do this.
+3. No code change needed after that; the existing `.default` scope picks up new permissions automatically.
+
 Because this is app-only auth, every Graph call targets a specific mailbox via `/users/{upn}/...` — there's no `/me` endpoint without a signed-in user.
 
 ## Common queries
@@ -61,7 +66,11 @@ POST /users/{upn}/sendMail
 python3 scripts/microsoft365_api.py events --days 7
 python3 scripts/microsoft365_api.py mail --top 10
 python3 scripts/microsoft365_api.py send --to a@b.com --subject "Hi" --body "Text"
+python3 scripts/microsoft365_api.py rules
+python3 scripts/microsoft365_api.py rule-forward --rule-id <id> --to jessicasayre28@gmail.com
 ```
+
+`rule-forward` defaults to `forwardTo` (forwarded message looks like it's from the original sender). Pass `--redirect` to use `redirectTo` instead (message arrives as if sent directly to the new address — usually the better choice for a mailbox handoff).
 
 ## Verified working
 

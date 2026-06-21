@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>AIOS Dashboard</title>
+    <title>NEXUS OS — AIOS Command Center</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -11,54 +11,145 @@
     />
     <link rel="stylesheet" href="style.css" />
     <link rel="stylesheet" href="hud.css" />
+    <link rel="stylesheet" href="command.css" />
+    <script src="https://unpkg.com/3d-force-graph@1.73.4/dist/3d-force-graph.min.js"></script>
   </head>
   <body>
-    <div id="shell">
-      <nav id="sidebar">
-        <div class="brand">Vulnaguard AIOS</div>
-        <button class="nav-item active" data-view="memory">Memory</button>
-        <button class="nav-item" data-view="decisions">Decisions</button>
-        <button class="nav-item" data-view="connections">Connections</button>
-        <button class="nav-item" data-view="skills">Skills &amp; Agents</button>
-        <button class="nav-item" data-view="context">Context</button>
-      </nav>
-      <main id="content">
-        <div id="memory-view" class="view active">
-          <div class="view-body two-col">
-            <div id="memory-list" class="memory-list"></div>
-            <div id="memory-detail" class="memory-detail">
-              <p class="placeholder">Select a memory entry to view it.</p>
-            </div>
+    <div id="app">
+      <header id="topbar">
+        <div class="topbar-brand">
+          <svg class="brand-mark" viewBox="0 0 40 40">
+            <polygon points="20,2 36,11 36,29 20,38 4,29 4,11" />
+            <circle cx="20" cy="20" r="6" />
+          </svg>
+          <div class="brand-text">
+            <div class="brand-title">NEXUS OS</div>
+            <div class="brand-sub">INTELLIGENCE COMMAND CENTER</div>
           </div>
         </div>
-        <div id="decisions-view" class="view">
-          <div class="view-body markdown" id="decisions-body"></div>
+        <div class="topbar-stats">
+          <div class="stat">
+            <span class="dot dot-ok"></span>
+            <span class="stat-label">SYSTEM STATUS</span>
+            <span class="stat-value" id="stat-status">OPERATIONAL</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">MEMORY NODES</span>
+            <span class="stat-value" id="stat-nodes">—</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">RELATIONSHIPS</span>
+            <span class="stat-value" id="stat-links">—</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">ACTIVE PATTERNS</span>
+            <span class="stat-value" id="stat-patterns">—</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">TIME</span>
+            <span class="stat-value" id="stat-time">—</span>
+          </div>
         </div>
-        <div id="connections-view" class="view">
-          <div class="hud" id="hud-root">
-            <div class="hud-starfield" id="hud-starfield"></div>
-            <div class="hud-scanline"></div>
-            <div class="hud-core" id="hud-core">
-              <svg viewBox="0 0 200 200" class="hud-core-rings">
-                <circle class="ring ring-outer" cx="100" cy="100" r="92" />
-                <circle class="ring ring-mid" cx="100" cy="100" r="78" />
-                <circle class="ring ring-inner" cx="100" cy="100" r="64" />
-              </svg>
-              <div class="hud-core-readout">
-                <div class="hud-core-label">SYSTEMS ONLINE</div>
-                <div class="hud-core-value" id="hud-core-value">0 / 0</div>
+        <canvas id="topbar-sparkline" width="160" height="32"></canvas>
+        <div class="topbar-sync">
+          <span class="sync-ring"></span>
+        </div>
+      </header>
+
+      <div id="shell">
+        <nav id="rail">
+          <button class="rail-item active" data-view="overview" title="Overview">
+            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /></svg>
+            <span>OVERVIEW</span>
+          </button>
+          <button class="rail-item" data-view="memory" title="Memory">
+            <svg viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.4" /><circle cx="18" cy="6" r="2.4" /><circle cx="12" cy="14" r="2.6" /><circle cx="6" cy="19" r="2" /><circle cx="18" cy="19" r="2" /><path d="M8 7.5 11 12.5M16 7.5 13 12.5M10 16 7 18M14 16 17 18" stroke-width="1" /></svg>
+            <span>MEMORY</span>
+          </button>
+          <button class="rail-item" data-view="decisions" title="Projects">
+            <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2" /><path d="M8 9h8M8 13h8M8 17h5" stroke-width="1.4" /></svg>
+            <span>PROJECTS</span>
+          </button>
+          <button class="rail-item" data-view="ecosystem" title="Tools">
+            <svg viewBox="0 0 24 24"><polygon points="12,3 20,8 20,16 12,21 4,16 4,8" /></svg>
+            <span>TOOLS</span>
+          </button>
+          <button class="rail-item" data-view="skills" title="Analytics">
+            <svg viewBox="0 0 24 24"><path d="M5 19V10M11 19V5M17 19V13" stroke-width="2.4" /></svg>
+            <span>ANALYTICS</span>
+          </button>
+          <button class="rail-item" data-view="context" title="Settings">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2" /><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1" stroke-width="1.6" /></svg>
+            <span>SETTINGS</span>
+          </button>
+        </nav>
+
+        <main id="content">
+          <div id="overview-view" class="view active">
+            <div class="overview-grid" id="overview-grid">
+              <p class="placeholder">Loading system overview…</p>
+            </div>
+          </div>
+
+          <div id="memory-view" class="view">
+            <div class="memory-layout">
+              <div class="graph-panel">
+                <div class="panel-heading">
+                  <span>MEMORY GRAPH</span>
+                  <span class="live-tag">● LIVE</span>
+                  <span class="panel-sub">REAL-TIME SEMANTIC NETWORK</span>
+                </div>
+                <div id="graph-container"></div>
+                <div class="graph-legend">
+                  <span><i class="legend-dot" style="background:#00e5ff"></i>USER FACTS</span>
+                  <span><i class="legend-dot" style="background:#ff8a3d"></i>FEEDBACK</span>
+                  <span><i class="legend-dot" style="background:#b06bff"></i>PROJECT DECISIONS</span>
+                  <span><i class="legend-dot" style="background:#5be88a"></i>REFERENCE LINKS</span>
+                </div>
+              </div>
+              <div class="memory-detail" id="memory-detail">
+                <p class="placeholder">Select a node in the graph to inspect it.</p>
               </div>
             </div>
-            <div class="hud-grid" id="hud-grid"></div>
           </div>
+
+          <div id="decisions-view" class="view">
+            <div class="view-body markdown" id="decisions-body"></div>
+          </div>
+
+          <div id="ecosystem-view" class="view">
+            <div class="panel-heading">
+              <span>ECOSYSTEM</span>
+              <span class="panel-sub">CONNECTED TOOLS &amp; PROJECTS</span>
+            </div>
+            <div class="orbit-wrap" id="orbit-wrap">
+              <p class="placeholder">Loading ecosystem…</p>
+            </div>
+          </div>
+
+          <div id="skills-view" class="view">
+            <div class="view-body" id="skills-body"></div>
+          </div>
+
+          <div id="context-view" class="view">
+            <div class="view-body" id="context-body"></div>
+          </div>
+        </main>
+      </div>
+
+      <footer id="statusbar">
+        <div class="status-group">
+          <span class="status-label">DATA STREAM</span>
+          <canvas id="footer-waveform" width="180" height="20"></canvas>
         </div>
-        <div id="skills-view" class="view">
-          <div class="view-body" id="skills-body"></div>
-        </div>
-        <div id="context-view" class="view">
-          <div class="view-body" id="context-body"></div>
-        </div>
-      </main>
+        <div class="status-group"><span class="status-label">LATENCY</span><span id="status-latency">—</span></div>
+        <div class="status-group"><span class="status-label">SYNC</span><span id="status-sync">100%</span></div>
+        <div class="status-group"><span class="status-label">NODES ONLINE</span><span id="status-nodes-online">—</span></div>
+        <div class="status-group right"><span>NEXUS OS v1.0.0</span></div>
+        <div class="status-group"><span class="status-label">ENCRYPTION</span><span>AES-256</span></div>
+        <div class="status-group"><span class="status-label">LINK</span><span class="status-ok">SECURE</span></div>
+        <div class="status-group"><span class="status-label">UPTIME</span><span id="status-uptime">—</span></div>
+      </footer>
     </div>
     <script src="app.js"></script>
   </body>

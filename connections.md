@@ -15,6 +15,7 @@ Registry of every system your AIOS can reach. Filled by `/onboard` from Q4-Q7 an
 | 9 | Search performance | Google Search Console for vulnaguard.com via OAuth (`/api/gsc` in vulnaguard-seo-agent) — feeds SEO modules M1/M2 with real ranking/query data | key+ref | OAuth app published to Production, secret regenerated 2026-06-19 | 2026-06-19 |
 | 10 | Flagship product | Sentinel CMMC (own repo/tool — tracked here as a connection, not folded into this AIOS) | not yet connected | — | — |
 | 11 | Social posting | Buffer (broker for Facebook, Instagram, LinkedIn — `scripts/buffer_api.py` + `references/buffer-api.md`) — wired via `/level-up` 2026-06-21, `social-post-queue` skill drafts/adapts from `content-bank.md` and queues approved posts; `BUFFER_ACCESS_TOKEN` and profile IDs still placeholder in `.env`, pending Sean connecting accounts in Buffer's UI | key+ref | not yet connected (placeholder keys) | 2026-06-21 |
+| 12 | Peer AIOS | `Jarvis` (Helm AI — mobile-first AI operator product, separate repo `~/Documents/GitHub/Jarvis`, scaffolded as its own AIOS 2026-06-21, Phase 0 spec-complete, Phase 1 partially built) | peer repo, not shared context | n/a | 2026-06-21 |
 
 **Mechanism options:** `mcp` (MCP server), `script` (Python/Bash hitting an API, in `scripts/`), `export` (CSV/JSON dump pipeline), `key+ref` (`.env` key + `references/{tool}-api.md` guide), `not yet connected`.
 

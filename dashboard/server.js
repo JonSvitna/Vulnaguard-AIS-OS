@@ -13,6 +13,7 @@ const MEMORY_INDEX = path.join(path.dirname(MEMORY_DIR), "MEMORY.md");
 
 const app = express();
 const PORT = process.env.PORT || 4400;
+const SERVER_START = Date.now();
 
 app.use(express.static(path.join(__dirname, "public")));
 
@@ -58,6 +59,76 @@ app.get("/api/memory/:slug", (req, res) => {
   if (!raw) return res.status(404).json({ error: "not found" });
   const { data, content } = matter(raw);
   res.json({ frontmatter: data, html: marked.parse(content) });
+});
+
+// --- Memory graph (nodes + [[wikilink]] edges) ---
+app.get("/api/graph", (req, res) => {
+  const files = listMdFiles(MEMORY_DIR).filter((f) => path.basename(f) !== "MEMORY.md");
+  const nodes = [];
+  const linkSlugs = new Map();
+
+  files.forEach((filePath) => {
+    const raw = readSafe(filePath);
+    if (!raw) return;
+    const { data, content } = matter(raw);
+    const fileSlug = path.basename(filePath, ".md");
+    const id = data.name || fileSlug;
+    nodes.push({
+      id,
+      slug: fileSlug,
+      name: data.name || fileSlug,
+      description: data.description || "",
+      type: (data.metadata && data.metadata.type) || data.type || "unknown",
+    });
+    const targets = new Set();
+    const re = /\[\[([^\]|]+)\]\]/g;
+    let m;
+    while ((m = re.exec(content))) targets.add(m[1].trim());
+    linkSlugs.set(id, targets);
+  });
+
+  const nodeIds = new Set(nodes.map((n) => n.id));
+  const seen = new Set();
+  const links = [];
+  linkSlugs.forEach((targets, source) => {
+    targets.forEach((target) => {
+      if (!nodeIds.has(target) || target === source) return;
+      const key = [source, target].sort().join("::");
+      if (seen.has(key)) return;
+      seen.add(key);
+      links.push({ source, target });
+    });
+  });
+
+  res.json({ nodes, links });
+});
+
+// --- Overview (live aggregate stats) ---
+app.get("/api/overview", (req, res) => {
+  const memoryFiles = listMdFiles(MEMORY_DIR);
+  const connectionsRaw = readSafe(path.join(REPO_ROOT, "connections.md")) || "";
+  const connRows = parseConnectionsTable(connectionsRaw);
+  const connStatuses = connRows.map(computeStatus);
+  const onlineCount = connStatuses.filter((s) => s.state === "online").length;
+
+  const skillsDir = path.join(REPO_ROOT, ".claude/skills");
+  const agentsDir = path.join(REPO_ROOT, ".claude/agents");
+  let skillCount = 0;
+  let agentCount = 0;
+  try {
+    skillCount = fs.readdirSync(skillsDir).filter((n) => fs.statSync(path.join(skillsDir, n)).isDirectory()).length;
+  } catch {}
+  try {
+    agentCount = fs.readdirSync(agentsDir).filter((f) => f.endsWith(".md")).length;
+  } catch {}
+
+  res.json({
+    memoryNodes: memoryFiles.length,
+    connectionsOnline: onlineCount,
+    connectionsTotal: connRows.length,
+    activePatterns: skillCount + agentCount,
+    uptimeSeconds: Math.floor((Date.now() - SERVER_START) / 1000),
+  });
 });
 
 // --- Decisions ---

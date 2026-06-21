@@ -182,3 +182,40 @@ Keep it terse. Future-you will thank present-you for capturing the *why*, not ju
 **Alternatives considered:** Direct Meta Graph API + LinkedIn API integration (rejected — slow/uncertain approval process for a solo dev, not boring); auto-publish without review (rejected — violates standing `CLAUDE.md` rule, and Sean explicitly confirmed he wants to review/edit first); lead-triage auto-trigger or SEO send-batch cron as the candidate (deferred, not rejected — still open for a future `/level-up` run).
 
 **Owner:** Sean. Next step: connect Facebook/Instagram/LinkedIn inside Buffer's UI, generate a personal access token at buffer.com/developers/apps, run `python3 scripts/buffer_api.py profiles` to get profile IDs, fill in the four `.env` placeholders. Skill is usable for drafting/review before that — only the final queue step is blocked on real credentials.
+
+## 2026-06-21 — `/level-up` round 2: Eliminated BidNet solicitation triage, not automated
+
+**Decision:** Considered building an auto-trigger for `lead-triage` (currently manual-only — runs only when Sean asks, despite BidNet solicitation emails arriving constantly, 4 in one morning brief alone). Confirmed with Sean that nothing real breaks if these go untriaged: "nothing real breaks, those are mainly noise emails." Did not build a trigger. No artifact shipped this round.
+
+**Why:** EAD's eliminate-first check caught this before any automation work started — the constraint wasn't "triage is too manual," it was "most of what's being triaged doesn't matter." Automating a noisy, low-signal feed would have added standing infrastructure (mailbox watcher, trigger logic) in service of work that doesn't need to happen at all. "Don't automate waste."
+
+**Alternatives considered:** Building the auto-trigger anyway with a higher relevance filter (rejected — adds complexity to solve a problem that mostly isn't there; if BidNet's signal-to-noise improves later, revisit); leaving `lead-triage` as-is and doing nothing (this is effectively the outcome — no code changed).
+
+**Owner:** Sean. Worth revisiting only if BidNet notification quality changes, or if Sean starts actively bidding on NCTCOG/municipal-scale solicitations rather than treating them as background noise. Until then, leave `lead-triage` manual-trigger as-is — don't re-flag this candidate in future `/level-up` runs unless something changes.
+
+## 2026-06-21 — Jarvis becomes its own peer AIOS, not folded into Vulnaguard-AIS-OS
+
+**Decision:** Scaffolded `~/Documents/GitHub/Jarvis` (Helm AI — Sean's half-built mobile-first AI operator product) with its own AIOS structure (`CLAUDE.md`, `context/`, `connections.md`, `decisions/log.md`, `aios-intake.md`, `/onboard` + `/audit` + `/level-up` skills copied in). Registered as a peer connection in both repos (`connections.md` row 12 here, row 6 there) — no shared files or context, just a registry pointer in each direction.
+
+**Why:** Sean wanted a "Jarvis, handle everything" assistant for low-energy sessions — narrow, focused coding work, separate from this AIOS's business-context scope (Sentinel CMMC, SEO agent, leads). Rather than build that from scratch, surfaced that he already has a half-built product literally named Jarvis with its own charter/build-rules/phase-roadmap docs already in the repo — better to finish/assess that than start a third thing. Mixing it into this AIOS would drag business config into Jarvis sessions and vice versa.
+
+**Alternatives considered:** Folding Jarvis into this repo as a sub-folder (rejected — different job, same reasoning as why Sub-OS folders in `EXPANSIONS.md` get scoped operating manuals but stay isolated); building a new lightweight personal-assistant tool instead of touching the existing Jarvis repo (rejected — redundant with a real, more-built product already on disk).
+
+**Owner:** Sean. Next step on the Jarvis side: run `/audit` there, then decide whether to resume Phase 1 build work or shelve it.
+
+## 2026-06-21 — `/level-up` round 3: extracted `ai-shovel-video`'s compositions into `video-website-agent`'s reusable template library
+
+**Decision:** `video-website-agent` was scaffolded (2026-06-19) as a generic HyperFrames block library but had zero actual compositions built — `ai-shovel-video` (built 2026-06-18) was the real, working design system, with content hardcoded to its specific script. Extracted its 5 compositions into `video-website-agent/video/templates/` as parameterized templates (`caption-pills.html`, `beat-text-emphasis.html`, `beat-word-stack.html`, `beat-data-bar-race.html`, `outro-brand-card.html`), each with a `CONFIG` object separating reusable structure/animation from per-video content (text, transcript, stats, colors). Added a catalog `README.md` and `hyperframes-registry-blocks.md` (a reference list of additional pre-built HyperFrames registry blocks — captions, VFX, social overlays, maps, etc. — for beats the 5 core templates don't cover). Shipped the AI-assisted half as `video-website-agent/.claude/skills/template-composer/SKILL.md`.
+
+**Method spec:**
+- **Constraint:** both time-per-video (hand-authoring HTML/GSAP each time) and design consistency across videos — confirmed both break roughly equally at 5x volume.
+- **EAD:** Eliminate rejected — Sean confirmed weekly+ video output going forward, tied to content/traffic goals. Automate selected: ~60% deterministic (template structure/timing, content substitution), ~30% AI-assisted (picking which beats fit new footage's transcript), ~10% manual (footage selection, final review, posting).
+- **Process map:** Trigger = Sean drops in new raw footage. Data sources = footage + whisper transcript + brand tokens (color/font). Transformation = transcript-driven beat selection and CONFIG population. Decision point = which of the 5 templates (+ optional registry blocks) fit the new content, and where they land in time. Destination = rendered MP4 into the existing `social-post-queue`/Buffer pipeline to Instagram.
+- **Autonomy level:** L2 (Drafted) — explicitly chosen over the stated long-term goal of full agent autonomy (L3/L4); pushed back per the framework since lower levels haven't been run yet. The skill drafts the full composition (template choice + CONFIG + timing) and stops before render/publish for Sean's review.
+- **KPI:** Bucket = less cost (time-per-video is the proximate lever), with cadence/reach as the downstream business result it unlocks. Metric = minutes from raw footage to rendered MP4, tracked informally across the next few videos before deciding if L3 is warranted.
+
+**Why:** Sean's framing was "the goal is to have an agent handle my media essentially" — a real L3/L4 ambition — but `/level-up`'s Method step explicitly defaults to the lowest autonomy level that solves the problem and pushes back on jumping straight to autonomous. Sean agreed: ship L2 now, prove it out, escalate later as a deliberate future decision.
+
+**Alternatives considered:** Building the full agent wrapper same-session (rejected — Sean explicitly chose "extract templates tonight, agent comes later" when asked about timeline, before the interview reframed scope toward an AI-assisted skill rather than a bare deterministic scaffold); scrapping `video-website-agent` and making `ai-shovel-video` itself the source of truth (rejected — `ai-shovel-video` is one video's hardcoded content, not a reusable system; `video-website-agent` was always meant to hold the reusable layer, it just hadn't been built yet).
+
+**Owner:** Sean. Next real video through this pipeline is the validation test — if `template-composer`'s drafts need heavy rework, the template parameterization needs another pass before trusting it further. If it works cleanly across 2-3 videos, revisit autonomy level (L3).

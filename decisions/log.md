@@ -163,3 +163,22 @@ Keep it terse. Future-you will thank present-you for capturing the *why*, not ju
 **Alternatives considered:** Building all of M1/M2/M3 in one pass (rejected — M1/M3 need new infrastructure decisions Sean hasn't made yet; M2 was a pure wiring fix with the integration already built, so it shipped same-session while M1/M3 didn't).
 
 **Owner:** Sean. M1 (real keyword data source) and M3 (real page crawling for the audit) are still open — see `project_seo_agent_platform_health` memory for next-step priority.
+
+## 2026-06-21 — `/level-up`: scoped and scaffolded `social-post-queue` (Phase 1 of Bike Method)
+
+**Decision:** First real `/level-up` run (skill existed since kit install but had never fired — Day-14 gate not yet reached, run on-demand instead). Scoped and built `social-post-queue`, a skill that pulls the next unposted draft from `references/content-bank.md`, adapts it per platform (Facebook/Instagram/LinkedIn), shows Sean for review/edit, then queues approved posts into Buffer. Buffer chosen as the broker over direct Meta/LinkedIn API integration — Meta requires app review for publish permissions and LinkedIn's Marketing Developer Platform approval is slow/uncertain for a solo dev; Buffer already holds OAuth to all three and exposes one API.
+
+**Method spec:**
+- **Constraint:** social posting is the single most disliked recurring task (`context/about-me.md`) and ties to priority #3 (drive consistent traffic to the site) — `content-bank.md` had 5+ drafts written, zero marked `[posted]`.
+- **EAD:** Eliminate rejected — Sean wants posting consistency, not zero presence ("one fewer channel, but we need consistency so regular posting is a must"). Automate selected over Delegate — the disliked part is the grind, not a judgment call worth paying someone else for. Split ~60% deterministic (queue management, scheduling, marking posted) / ~30% AI-assisted (platform adaptation, fresh drafts once the bank runs low) / ~10% manual (final review).
+- **Process map:** Trigger = 5 posts/week minimum cadence. Data sources = `content-bank.md`, `seanbuilds-voice` skill for new drafts. Transformation = platform-specific reformatting (LinkedIn long-form, Facebook trimmed, Instagram caption + image flag). Decision point = Sean's review/edit before anything queues (hard rule, not a preference — `CLAUDE.md`'s "don't fake my voice on external content without showing me a draft first"). Destination = Facebook/Instagram/LinkedIn via Buffer.
+- **Autonomy level:** L2 (Drafted) — AI drafts/adapts, Sean reviews and edits before shipping. Explicitly confirmed, not just defaulted.
+- **KPI:** Bucket = more customers (top-of-funnel). Metric = posts/week sustained at ≥5. Follow-on check once volume is steady: whether GSC referral data shows this channel actually driving site traffic.
+
+**Machine handoff:** Shipped as an AI-assisted skill (`.claude/skills/social-post-queue/SKILL.md`, `bike-method-phase: 1`), not a sub-agent — the only AI step needed is platform adaptation/fresh drafting; queueing and scheduling are plain script (`scripts/buffer_api.py`, stdlib-only, matches `scripts/slack_api.py` conventions). Added `references/buffer-api.md` and a row in `connections.md`. `.env` placeholders added: `BUFFER_ACCESS_TOKEN`, `BUFFER_PROFILE_ID_FACEBOOK`, `BUFFER_PROFILE_ID_INSTAGRAM`, `BUFFER_PROFILE_ID_LINKEDIN` — Sean to fill in after connecting accounts in Buffer's UI.
+
+**Why:** Three candidates surfaced (social posting, lead-triage auto-trigger, SEO send-batch cron); social posting ranked highest — it's the one task hitting frequency + drudgery + an explicitly named top pain simultaneously, and had a visible backlog (unposted drafts) proving the gap was real, not hypothetical.
+
+**Alternatives considered:** Direct Meta Graph API + LinkedIn API integration (rejected — slow/uncertain approval process for a solo dev, not boring); auto-publish without review (rejected — violates standing `CLAUDE.md` rule, and Sean explicitly confirmed he wants to review/edit first); lead-triage auto-trigger or SEO send-batch cron as the candidate (deferred, not rejected — still open for a future `/level-up` run).
+
+**Owner:** Sean. Next step: connect Facebook/Instagram/LinkedIn inside Buffer's UI, generate a personal access token at buffer.com/developers/apps, run `python3 scripts/buffer_api.py profiles` to get profile IDs, fill in the four `.env` placeholders. Skill is usable for drafting/review before that — only the final queue step is blocked on real credentials.

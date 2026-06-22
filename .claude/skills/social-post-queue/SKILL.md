@@ -1,6 +1,6 @@
 ---
 name: social-post-queue
-description: Pull the next unposted draft from references/content-bank.md, adapt it per platform (Facebook/Instagram/LinkedIn), show Sean for review/edit, then queue the approved version into Buffer. Use for "post to social", "what's next in the content queue", "queue this week's posts", or as a standing cadence to hit 5 posts/week minimum.
+description: Pull the next unposted draft from references/content-bank.md, adapt it per platform (Facebook/Instagram/LinkedIn via Buffer, IndieHackers manually), show Sean for review/edit, then queue or hand off the approved version. Use for "post to social", "what's next in the content queue", "queue this week's posts", "post to IndieHackers", or as a standing cadence to hit 5 posts/week minimum.
 bike-method-phase: 1
 three-ms-attribution: |
   Adapted from The Three Ms of AI™ © 2026 Nate Herk.
@@ -17,6 +17,10 @@ at zero `[posted]` entries despite 5+ drafts sitting ready.
 Target cadence: **5 posts/week minimum**, across Facebook, Instagram, and LinkedIn,
 via Buffer (see `references/buffer-api.md` — Buffer is the broker so this skill never
 needs direct Meta/LinkedIn API access).
+
+Also drafts for **IndieHackers** on a weekly cadence (separate from the 5/week social
+quota — IndieHackers has no posting API, so this branch stops at a reviewed draft and
+hands off to Sean for manual copy/paste/submit).
 
 ## What this skill is NOT
 
@@ -49,6 +53,21 @@ needs direct Meta/LinkedIn API access).
 6. **Log progress** — if this closes out a week's 5-post quota, note it in `decisions/log.md`
    only if something changed about the approach; routine weeks don't need a log entry.
 
+### IndieHackers branch (weekly, separate from the steps above)
+
+1. **Pick a bank entry suited to IndieHackers' audience** — build-in-public, technical,
+   lessons-learned. Not every entry qualifies; generic promo content doesn't fit this
+   audience and should be skipped rather than forced.
+2. **Rewrite into IndieHackers' register** (one AI step): longer-form, conversational,
+   build-log voice — no hashtags, no CTA-style social copy. This is a different register
+   from the Facebook/Instagram/LinkedIn adaptation in step 2 above, not a trim of it.
+3. **Show Sean the draft.** Wait for explicit approval or edits.
+4. **Hand off — do not attempt to post it.** IndieHackers has no posting API. Once
+   approved, tell Sean the draft is ready for him to copy, paste, and submit manually.
+5. **Mark the source draft `[posted-ih YYYY-MM-DD]`** in `content-bank.md` once Sean
+   confirms he's posted it (separate tag from the Buffer-platform `[posted ...]` tag,
+   since the same bank entry can run on both tracks independently).
+
 ## Setup required before first real run
 
 `BUFFER_ACCESS_TOKEN` and the three `BUFFER_PROFILE_ID_*` vars in `.env` must be filled in
@@ -59,6 +78,9 @@ get approval — it just can't execute the queue step.
 ## KPI
 
 Bucket: **more customers** (top-of-funnel traffic, ties to `context/priorities.md` #3).
-Metric: **posts/week sustained at ≥5.** Revisit later whether GSC referral data shows
-this channel actually driving site traffic, once volume is steady — that's a follow-on
-check, not part of this build.
+Metric: **posts/week sustained at ≥5** (Buffer platforms).
+
+IndieHackers branch tracks separately — bucket: **more customers** (outreach/brand
+awareness, ties to `context/priorities.md` #2). Metric: **IndieHackers posts/week**
+(proxy metric for now; revisit once seanbuilds.com has its own domain and signup
+tracking, so this can trace to actual signups instead of post count).

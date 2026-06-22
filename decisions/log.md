@@ -219,3 +219,20 @@ Keep it terse. Future-you will thank present-you for capturing the *why*, not ju
 **Alternatives considered:** Building the full agent wrapper same-session (rejected — Sean explicitly chose "extract templates tonight, agent comes later" when asked about timeline, before the interview reframed scope toward an AI-assisted skill rather than a bare deterministic scaffold); scrapping `video-website-agent` and making `ai-shovel-video` itself the source of truth (rejected — `ai-shovel-video` is one video's hardcoded content, not a reusable system; `video-website-agent` was always meant to hold the reusable layer, it just hadn't been built yet).
 
 **Owner:** Sean. Next real video through this pipeline is the validation test — if `template-composer`'s drafts need heavy rework, the template parameterization needs another pass before trusting it further. If it works cleanly across 2-3 videos, revisit autonomy level (L3).
+
+## 2026-06-22 — `/level-up` round 4: extended `social-post-queue` with an IndieHackers branch
+
+**Decision:** Added a separate IndieHackers branch to the existing `social-post-queue` skill rather than building a new skill or sub-agent. It pulls from the same `references/content-bank.md`, filters for build-in-public/technical/lessons-learned entries (not generic promo), rewrites into IndieHackers' longer-form build-log register (distinct from the social caption adaptation used for FB/IG/LinkedIn), shows Sean the draft for approval, then hands off — IndieHackers has no posting API, so Sean copies/pastes/submits manually. Tracked separately in `content-bank.md` via a `[posted-ih YYYY-MM-DD]` tag so the same entry can run on both tracks independently.
+
+**Method spec:**
+- **Constraint:** growth-lever gap (priority #2, securing clients via outreach/brand awareness) plus the most-disliked recurring task (content creation + posting, per `context/about-me.md`).
+- **EAD:** Eliminate rejected — Sean explicitly wants more IndieHackers presence, not less. Automate selected: ~60% deterministic (pull from content bank), ~30% AI-assisted (filter for audience fit + rewrite register), ~10% manual (Sean reviews, then personally posts since no API exists).
+- **Process map:** Trigger = weekly cadence (piggybacking on the existing social-posting cadence; exact day/frequency still being figured out by Sean, default to weekly until proven otherwise). Data source = `content-bank.md`. Transformation = social-caption → IndieHackers build-log voice. Decision point = which bank entries fit IndieHackers' audience. Destination = drafted post handed to Sean for manual copy/paste/submit.
+- **Autonomy level:** L2 (Drafted) — and in this case it's a hard ceiling, not a conservative choice: IndieHackers has no API, so L3/L4 aren't physically possible without browser automation, which wasn't considered.
+- **KPI:** Bucket = more customers. Metric = IndieHackers posts/week (proxy metric — Sean flagged that real attribution needs seanbuilds.com on its own domain with signup tracking wired up first; currently sits on Vercel without a domain).
+
+**Why:** `/level-up` Mindset interview surfaced three candidates (IndieHackers posting, a skill-discovery research loop, devops config); Sean picked IndieHackers because it directly serves the priorities #2/#3 growth lever and the existing `social-post-queue` infrastructure (content bank + AI-assisted adaptation + review gate) already does 90% of what's needed — only the final posting step differs (manual instead of Buffer).
+
+**Alternatives considered:** New standalone skill (rejected — would duplicate the content-bank pull and review-gate logic already in `social-post-queue` for no benefit, since the only real difference is the destination); sub-agent (rejected — no multi-step reasoning or tool-use beyond a single AI rewrite call, agent would be overkill).
+
+**Owner:** Sean. Revisit cadence (currently defaulted to weekly) once he's actually run it a few times. Revisit the proxy KPI once seanbuilds.com has its own domain and signup tracking — that's when posts/week should be replaced with a real attribution metric.

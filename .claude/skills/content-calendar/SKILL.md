@@ -57,18 +57,21 @@ not improvised per post:
 1. Read `context/priorities.md` and `context/about-business.md` for anything currently
    load-bearing (e.g. a CMMC deadline crunch) that should bias which pillar gets
    emphasis that month — don't just round-robin blindly if something's clearly hot.
-2. Build a 30-row table in `references/content-calendar.md`: Day | Domain | Pillar |
-   Hook (one line, specific, in Sean's actual voice/register — see `seanbuilds-voice`)
-   | CTA. Alternate domain by day; cycle pillars 1→4→1→4 within each domain's run.
-3. Hooks must be specific enough to write from without further research — a real
-   claim, number, mistake, or feature name, not "talk about compliance." Pull real
-   detail from `context/about-business.md`, `decisions/log.md`, or recent repo/commit
-   activity (`git log --oneline -30` across this repo and the Sentinel/SEO-agent repos
-   if accessible) rather than generic prompts.
-4. Show Sean the full table before writing it — this is a planning artifact, not a
+2. Build 30 per-day blocks in `references/content-calendar.md` — not a flat table.
+   Each day: `### Day N — date — Domain — Pillar`, a **Hook** (the headline claim),
+   **3 talking points** (the specific things to actually say, in order — concrete
+   enough to record or write from without rambling, not a script to read verbatim),
+   and a **CTA** line. Alternate domain by day; cycle pillars 1→4→1→4 within each
+   domain's run.
+3. Hooks and talking points must be specific enough to use without further research —
+   a real claim, number, mistake, or feature name, not "talk about compliance." Pull
+   real detail from `context/about-business.md`, `decisions/log.md`, or recent
+   repo/commit activity (`git log --oneline -30` across this repo and the
+   Sentinel/SEO-agent repos if accessible) rather than generic prompts.
+4. Show Sean the full set before writing it — this is a planning artifact, not a
    posting action, but still cheap to get wrong for a month if pillars are off.
-5. Write the approved table to `references/content-calendar.md`, replacing any
-   previous month's table (move the old one to the bottom under a `## Archive`
+5. Write the approved set to `references/content-calendar.md`, replacing any
+   previous month's content (move the old one to the bottom under a `## Archive`
    heading with its date range — don't delete history).
 
 ## Expanding an idea into a draft

@@ -1,0 +1,8 @@
+# Pending vault updates — 2026-06-23 PM
+
+Staged by the evening vault-sync check. Pull what's relevant into Obsidian, then this file can be archived/deleted.
+
+- **AfterSwing: dropped fabricated swing-path/face-angle metrics, shipping only real measurements for this weekend's test.** Logged in `decisions/log.md` (commit `04e8cc6`, 2026-06-22 16:47). Audit found the iOS pose pipeline (`PoseVision.swift`) was faking its core signals — `outToInPath` was just two unrelated proxies ANDed together, `inToOutPath`/`earlyExtension`/`faceToPathDeg` were declared but never computed, and phase detection used fixed time buckets instead of real wrist-height data. Replaced with three real metrics from Apple Vision pose joints: tempo ratio, lateral sway (inches), posture change (degrees). Chose honesty over scope ahead of testing with real people this weekend. Known gap deferred: capture still uses default-framerate `UIImagePickerController`, not the 60/120fps lock a proper implementation needs — next step in that line of work.
+  - This is a product/scope decision on a project outside the three tracked lines (Sentinel CMMC / SEO agent / client work) — flagging since the AIOS touches it. Worth a note under `wiki/decisions/` if AfterSwing has a home in the vault, or at minimum a line in whatever vault page tracks it.
+
+No other business-relevant items this period — `connections.md` (creative-os repo registration, commit `3936e72`) and the social-post-queue IndieHackers branch (commit `6bcd5b4`) are routine dev/infra changes, not decisions. `leads/inbox.md` and `context/active-task.md` are unchanged since 2026-06-20, nothing new to triage.

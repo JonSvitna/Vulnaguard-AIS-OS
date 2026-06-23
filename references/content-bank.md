@@ -2,6 +2,8 @@
 
 Social post drafts, written in the `seanbuilds-voice` register, ready to pull into the SEO app's content queue. Each entry is a draft — review/edit before posting, per `CLAUDE.md`'s rule on not posting externally without a look first.
 
+Drafts here are sourced from `references/content-calendar.md` via the `content-calendar` skill ("expand idea N") once an idea is picked to actually write. Don't write new entries from scratch first — check the calendar for the next unexpanded idea.
+
 Add new drafts at the bottom as they're written. Mark posted ones with `[posted YYYY-MM-DD]`.
 
 ---

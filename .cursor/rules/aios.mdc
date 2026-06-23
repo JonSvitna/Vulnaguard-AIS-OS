@@ -47,6 +47,15 @@ Match the register in `references/voice.md`. Casual but professional. Short sent
 
 Microsoft 365 (Outlook + shared mailboxes) for business comms; Slack for internal/team; Resend API for outbound email; cold email + LinkedIn for outreach (no traction yet — actively improving this). GitHub, Codex/OpenAI, and Claude as dev/build tools. Revenue plan: Stripe (primary, not yet configured), Mercury Bank (invoicing fallback). No task-tracking tool yet. See `connections.md` for the full registry and `/audit` for freshness.
 
+## Second brain (Obsidian vault)
+
+Path: `~/Documents/Obsidian Vault`. This is Sean's business brain — domain-first wiki spanning Sentinel CMMC, the SEO agent, and client work (see the vault's own `CLAUDE.md` and `wiki/overview.md`). It's meant to compound: every business-relevant thing that happens here should leave a trace there, not just in this repo.
+
+- **Business decisions**: when you log an entry to `decisions/log.md`, also check whether it's business-level (product direction, client/lead handling, market positioning) vs. purely technical/dev (refactors, bug fixes, infra wiring). Business-level entries get mirrored as a page or note under the vault's `wiki/decisions/`. Purely technical/dev decisions stay local to `decisions/log.md` only — don't duplicate those into the vault.
+- **Leads**: the `lead-triage` agent writes synthesized solicitation summaries into the vault's `wiki/domains/sentinel-cmmc/comms/`, in addition to the `leads/inbox.md` staging table here.
+- **Don't ingest noise**: routine file edits, in-progress code, and anything not yet decided don't belong in the vault. The bar is "would future-Sean want to find this by browsing the wiki," not "did something happen."
+- Read `wiki/hot.md` then `wiki/index.md` in the vault before assuming you lack context on a domain — check there before re-deriving it from scratch.
+
 ## How you work with me
 
 - Be direct, concise, and clear. No fluff.

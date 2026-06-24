@@ -28,6 +28,18 @@ Keep it terse. Future-you will thank present-you for capturing the *why*, not ju
 
 **Owner:** Sean.
 
+## 2026-06-24 — Hosted Claude Code CLI on a DigitalOcean droplet for remote access
+
+**Decision:** Provisioned a DigitalOcean droplet (`vulnaguard-aios`, NYC1, Ubuntu 24.04, `s-1vcpu-1gb`, IP `143.244.148.90`) and installed the real Claude Code CLI (`@anthropic-ai/claude-code`) on it, authenticated via `claude setup-token` directly on the droplet (long-lived credential stored on disk there). Hardened with a non-root `sean` sudo user (key-only SSH), root login and password auth disabled, UFW firewall (SSH only). Repo cloned to `~/Vulnaguard-AIS-OS`, Claude run inside a persistent `tmux` session (`tmux attach -t claude`) so SSH disconnects don't kill work. Access via Termius (SSH key) from phone or any machine.
+
+**Why:** Needed the exact same Claude Code session/interface while away from the home machine or on a work network that blocks claude.ai directly. SSH-only traffic to an owned droplet sidesteps that block. Ruled out two more complex paths first: (1) Claude Code's native Slack integration — confirmed via research it only delegates async tasks to claude.ai/code against GitHub repos, not a live interactive session; (2) a custom Claude Agent SDK + Slack bridge — would need a separate metered API key (new billing line) and rebuilding permission/guardrail logic from scratch. `claude setup-token` run on-machine turned out to be the actual supported path; an env-var (`CLAUDE_CODE_OAUTH_TOKEN`) approach was tried first but the interactive REPL didn't honor it and still prompted for browser login — the on-disk credential from `setup-token` is what actually works.
+
+**Alternatives considered:** Railway (originally favored host, swapped to DigitalOcean per [[references/digitalocean-aios-hosting.md]] — host choice was never the constraint); Slack-based chat bridge via Agent SDK (deferred, still the right call if true chat-via-Slack is ever needed instead of a CLI session); native Claude Code Slack integration (ruled out, wrong capability).
+
+**Note:** Droplet currently only has the public `Vulnaguard-AIS-OS` repo cloned (no GitHub auth configured there yet). Private repos (Sentinel-CMMC, AfterSwing, AI-OS, Jarvis, creative-os, etc.) aren't accessible from the droplet until `gh auth login` or a deploy token is set up there.
+
+**Owner:** Sean.
+
 ## 2026-06-20 — Move mail/lead routing to Slack, keep Linear for task tracking (drop ClickUp)
 
 **Decision:** Sean will connect Slack for internal/team communication and lead routing instead of ClickUp. Task tracking stays on Linear (already wired, see `connections.md` row 5) — Slack fills the comms gap, not task tracking.

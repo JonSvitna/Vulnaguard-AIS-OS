@@ -282,3 +282,20 @@ Also fixed a real bug found on the first Remotion batch: beat graphics (word-sta
 **Why:** Direct empirical comparison (same content, same day) made the resource-cost gap undeniable — Sean's own framing was that HyperFrames-as-default is "a drain of resources, a drain of RAM, and a drain of battery power." Splitting by content type (the original same-day plan) undersold how much faster/lighter Remotion is across the board.
 
 **Owner:** Sean. Also wants future short-form clips kept under a tighter length cap (exact number not yet specified) and is open to future hand-tracking-aware graphic placement (parked, not built).
+
+## 2026-06-23 — Svitna gets its Jon Svitna brand identity: coach voice + goal-tailored accountability engine
+
+**Decision:** Ground-truthed Svitna (separate repo, `~/Documents/GitHub/Svitna`) before any soft-test push — confirmed the app actually builds, the backend is live on Railway, and all API routes are real (not stubs), contradicting Sean's initial read that it was "wiring that doesn't connect." The real gap was identity: the app had no personality and read like every other fitness app. Sean revealed Svitna is named after his alter-ego "Jon Svitna" (his serious/intense persona, distinct from the earlier-misheard "John's Fitness" alias) and wants the app to embody that: tough-love accountability, zero tolerance for excuses, genuinely invested in the user winning.
+
+Shipped in one pass (commit `8de19a8`, pushed to `main`):
+1. Rewrote the AI coach's system prompt (`backend/src/lib/coachPrompt.ts`) to speak as Jon Svitna — direct, intense, calls out the user's stated `mainStruggle`, holds them to the standard tied to their stated `goal`, while keeping existing safety guardrails (pain handling, no diagnosis, 120-word cap) untouched.
+2. Built a goal-tailored accountability engine (`AccountabilityEngine.swift`, extended `ReminderService`, new `AppState.evaluateAccountability()`) that schedules a same-day local notification nudge when today's workout isn't done, tailored copy per goal/struggle, cancelled the moment the workout is completed. Deliberately scoped to use data that already exists (workout completion, streaks) rather than inventing calorie/weight tracking that has no data source yet.
+3. Targeted copy pass across onboarding, coach screen, dashboard empty states, and notification settings to carry the voice.
+
+Also folded in two pre-existing fixes from the ground-truth audit: refactored `ProgramCalendarView`'s exercise-swap off an inline API client onto the established `CoachServicing` repository pattern, and stopped tracking `Secrets.xcconfig` going forward (confirmed it's *not* a real secret — Auth0 app is type `Native`/PKCE, so the client ID is meant to be public; walked back the original audit's "rotate credentials" call).
+
+**Why:** Sean's actual blocker to an App Store soft test (10-20 users) wasn't broken plumbing, it was that the product had no differentiated voice — "this feels like there's another app on the marketplace." The old `svitna_product_roadmap.md` was explicitly declared stale/out of scope (written before Sean had real structure on how to build), so this work didn't follow it. Real push notifications (APNs, reaching a user who never opens the app) and calorie/nutrition-based triggers were explicitly deferred — no backend push infra exists yet, and inventing nutrition tracking for the sake of one example trigger would have been scope creep beyond what's needed for a soft test.
+
+**Alternatives considered:** Building full APNs-based push + nutrition tracking now (rejected — bigger lift, no current data source, not needed to validate the soft test); rewriting the entire app from the old roadmap's MVP definition (rejected — Sean explicitly called the roadmap outdated and said the MVP definition itself needs to be redone, not followed).
+
+**Owner:** Sean. Next: live walkthrough in the simulator (onboarding → coach → missed-day nudge) to confirm the voice and accountability trigger feel right before wider soft-test rollout. Real push-to-a-no-show (APNs + backend) is a flagged fast-follow, not blocking.

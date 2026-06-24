@@ -18,6 +18,21 @@ Append-only record of meaningful decisions and why they were made. `/level-up` P
 
 Keep it terse. Future-you will thank present-you for capturing the *why*, not just the *what*.
 
+## 2026-06-24 — Scaffolded vulnaguard-website-creation-tool (design system → code generator)
+
+**Decision:** Created new repo `vulnaguard-website-creation-tool` with full Next.js + TypeScript + PostgreSQL scaffolding. Stack: Vercel (frontend), Railway (PostgreSQL + backend), NextAuth.js (auth), Drizzle ORM (schema), ts-morph + Style Dictionary (code generation), Octokit (GitHub integration). API routes for token generation, component generation, and GitHub export. Database schema for users (via NextAuth) and projects (design systems). Auth flow scaffolded (GitHub/Google OAuth endpoints ready). Design token → Tailwind config pipeline ready. Component code generation scaffolded (ts-morph templates). GitHub repo creation and file push wired (pending GITHUB_APP_TOKEN credentials).
+
+**Why:** Phase 1 of the website creation tool MVP. Chose Option B (standalone tool, not dependent on creative-os) to avoid cross-repo coupling and simplify deployment. Vercel for frontend (fast iteration, serverless), Railway for database (cost-efficient, one-click PostgreSQL), NextAuth.js for auth (zero friction, OIDC-ready). All core service layers (tokens, codegen, GitHub) scaffolded so Phase 2 can focus on UI/forms, not infrastructure.
+
+**Alternatives considered:** 
+- (1) Monolith backend on Railway — rejected, Vercel functions handle all API routes fine for MVP.
+- (2) Integrate with creative-os — rejected per Option B decision 2026-06-24. Avoids coupling and scope creep.
+- (3) Store projects in JSON files instead of PostgreSQL — rejected, DB needed for user auth + multi-user support.
+
+**Owner:** Sean + Copilot.
+
+**Next:** Set up Railway PostgreSQL, configure OAuth credentials, test local dev loop.
+
 ## 2026-06-24 — Disabled stale Exchange forwarding rules to jessicasayre28@gmail.com
 
 **Decision:** Disabled (not deleted) two inbox rules on the `seanmurrill@vulnaguard.com` mailbox that forwarded mail to `jessicasayre28@gmail.com` — `AQAAAClqiFg=` ("Forward emails from specified senders...") and `AQAAACFdhbg=` ("Jessica"). Confirmed via `python3 scripts/microsoft365_api.py rules` both now show `enabled=False`.

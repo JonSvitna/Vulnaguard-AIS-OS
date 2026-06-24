@@ -125,6 +125,23 @@ def set_rule_forward(token: str, upn: str, rule_id: str, to: str, redirect: bool
     print(f"Rule {rule_id} {action_key} -> {to}")
 
 
+def create_rule(token: str, upn: str, name: str, sender: str | None, to: str, redirect: bool = False):
+    action_key = "redirectTo" if redirect else "forwardTo"
+    list_path = f"/users/{upn}/mailFolders/inbox/messageRules"
+    existing = graph_request(list_path, token)
+    next_sequence = max((r.get("sequence", 0) for r in existing.get("value", [])), default=0) + 1
+    conditions = {"fromAddresses": [{"emailAddress": {"address": sender}}]} if sender else {}
+    payload = {
+        "displayName": name,
+        "sequence": next_sequence,
+        "isEnabled": True,
+        "conditions": conditions,
+        "actions": {action_key: [{"emailAddress": {"address": to}}], "stopProcessingRules": False},
+    }
+    result = graph_request(list_path, token, method="POST", body=payload)
+    print(f"Created rule {result['id']}  '{name}'  {sender or '(all mail)'} -> {to}")
+
+
 def main():
     load_env()
     parser = argparse.ArgumentParser()
@@ -149,6 +166,14 @@ def main():
     p_rule_forward.add_argument("--redirect", action="store_true",
                                  help="Use redirectTo (keep original sender) instead of forwardTo")
 
+    p_create_rule = sub.add_parser("create-rule")
+    p_create_rule.add_argument("--name", required=True)
+    p_create_rule.add_argument("--sender", required=False, default=None,
+                                help="Exact from-address to match (omit to match all mail)")
+    p_create_rule.add_argument("--to", required=True)
+    p_create_rule.add_argument("--redirect", action="store_true",
+                                help="Use redirectTo (keep original sender) instead of forwardTo")
+
     args = parser.parse_args()
     upn = os.environ["MS365_USER_UPN"]
     token = get_token()
@@ -163,6 +188,8 @@ def main():
         list_rules(token, upn)
     elif args.command == "rule-forward":
         set_rule_forward(token, upn, args.rule_id, args.to, args.redirect)
+    elif args.command == "create-rule":
+        create_rule(token, upn, args.name, args.sender, args.to, args.redirect)
 
 
 if __name__ == "__main__":

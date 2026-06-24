@@ -18,6 +18,16 @@ Append-only record of meaningful decisions and why they were made. `/level-up` P
 
 Keep it terse. Future-you will thank present-you for capturing the *why*, not just the *what*.
 
+## 2026-06-24 — Disabled stale Exchange forwarding rules to jessicasayre28@gmail.com
+
+**Decision:** Disabled (not deleted) two inbox rules on the `seanmurrill@vulnaguard.com` mailbox that forwarded mail to `jessicasayre28@gmail.com` — `AQAAAClqiFg=` ("Forward emails from specified senders...") and `AQAAACFdhbg=` ("Jessica"). Confirmed via `python3 scripts/microsoft365_api.py rules` both now show `enabled=False`.
+
+**Why:** Sean asked to stop forwarding to Jessica. Discovered along the way that `MailboxSettings.ReadWrite` — noted as "pending, not yet granted" in `references/microsoft365-api.md` and the reason the 2026-06-20 decision moved mail/lead routing to Slack instead — had actually been granted at some point since. The rules were live and working the whole time; the routing problem was never really "Graph API can't read rules," it just wasn't revisited after the permission landed.
+
+**Alternatives considered:** Deleting the rules outright — chose disable instead, easy to re-enable if Jessica's forwarding need resurfaces.
+
+**Owner:** Sean.
+
 ## 2026-06-20 — Wired Slack into the AIOS
 
 **Decision:** Connected Slack via a bot token (`scripts/slack_api.py`, stdlib-only, same pattern as `microsoft365_api.py`/`stripe_api.py`). Bot scopes: `chat:write`, `channels:read`, `channels:history`, `users:read`. Invited the bot to `#all-vulnaguard-sentinel` (`C0AMQU5HN2G`) and confirmed with a live test message. `connections.md` row 4 updated.

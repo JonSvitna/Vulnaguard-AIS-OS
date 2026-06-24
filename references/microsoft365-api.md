@@ -25,12 +25,7 @@ MS365_USER_UPN=seanmurrill@vulnaguard.com
 ```
 
 App registration: `vulnaguard-aios` in Azure AD, tenant `b2168f2a-36e6-4821-9b0b-602124dd3b54`.
-Granted application permissions: `Calendars.Read`, `Mail.Read`, `Mail.Send` (admin consent granted).
-
-**Pending:** `MailboxSettings.ReadWrite` is required for the inbox-rule commands (`rules`, `rule-forward`) but has not been granted yet. To enable:
-1. Azure Portal → App registrations → `vulnaguard-aios` → API permissions → Add a permission → Microsoft Graph → Application permissions → `MailboxSettings.ReadWrite`.
-2. Click "Grant admin consent for {tenant}" — only a tenant admin can do this.
-3. No code change needed after that; the existing `.default` scope picks up new permissions automatically.
+Granted application permissions: `Calendars.Read`, `Mail.Read`, `Mail.Send`, `MailboxSettings.ReadWrite` (admin consent granted — confirmed live 2026-06-24, `rules`/`rule-forward` commands work).
 
 Because this is app-only auth, every Graph call targets a specific mailbox via `/users/{upn}/...` — there's no `/me` endpoint without a signed-in user.
 
@@ -68,13 +63,18 @@ python3 scripts/microsoft365_api.py mail --top 10
 python3 scripts/microsoft365_api.py send --to a@b.com --subject "Hi" --body "Text"
 python3 scripts/microsoft365_api.py rules
 python3 scripts/microsoft365_api.py rule-forward --rule-id <id> --to jessicasayre28@gmail.com
+python3 scripts/microsoft365_api.py create-rule --name "All mail to Slack" --to leads-inbox-...@vulnaguardsentinel.slack.com --redirect
+python3 scripts/microsoft365_api.py create-rule --name "Bidnet to Slack" --sender noreply@bidnet.com --to leads-inbox-...@vulnaguardsentinel.slack.com --redirect
 ```
 
 `rule-forward` defaults to `forwardTo` (forwarded message looks like it's from the original sender). Pass `--redirect` to use `redirectTo` instead (message arrives as if sent directly to the new address — usually the better choice for a mailbox handoff).
 
+`create-rule` makes a new inbox rule. Omit `--sender` to match all mail (catch-all); pass it for an exact from-address filter. Requires a unique `sequence` field — the script auto-assigns the next free sequence number. Note: creating a catch-all redirect rule can cause Exchange to auto-disable other rules it considers superseded — check `rules` output after creating one.
+
 ## Verified working
 
 2026-06-18 — token acquisition and both `calendarView` and `messages` calls confirmed live against the real mailbox.
+2026-06-24 — `MailboxSettings.ReadWrite` confirmed live; created inbox rule `AQAAAC31xzc=` redirecting all mail to the `#leads-inbox` Slack channel email (`leads-inbox-aaaauxdzsvnzooqfpgmmgjttyy@vulnaguardsentinel.slack.com`).
 
 ## Rotating the secret
 

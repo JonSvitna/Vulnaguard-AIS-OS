@@ -321,3 +321,13 @@ Also folded in two pre-existing fixes from the ground-truth audit: refactored `P
 **Alternatives considered:** Building full APNs-based push + nutrition tracking now (rejected — bigger lift, no current data source, not needed to validate the soft test); rewriting the entire app from the old roadmap's MVP definition (rejected — Sean explicitly called the roadmap outdated and said the MVP definition itself needs to be redone, not followed).
 
 **Owner:** Sean. Next: live walkthrough in the simulator (onboarding → coach → missed-day nudge) to confirm the voice and accountability trigger feel right before wider soft-test rollout. Real push-to-a-no-show (APNs + backend) is a flagged fast-follow, not blocking.
+
+## 2026-06-24 — Creative OS wired into the shared Obsidian vault, closing the peer-AIOS bridge gap flagged by `/audit`
+
+**Decision:** `/audit` (score 95/100) flagged that Jarvis and creative-os were both registered as peer repos to Vulnaguard-AIS-OS but only Jarvis actually had a working bridge — its own domain page in the shared vault (`wiki/domains/jarvis-helm-ai/_index.md`) plus a CLAUDE.md section telling it what to mirror there. Creative-os had zero Obsidian presence. Closed the gap by cloning the exact Jarvis pattern: created `wiki/domains/creative-os/_index.md` in the vault, added it to `wiki/index.md`, and added matching "Second brain" + "Relationship to peers" sections to `creative-os/CLAUDE.md`. All three AIOS instances (Vulnaguard-AIS-OS, Jarvis, creative-os) now share one vault with isolated per-domain pages — a decision logged in any of them is findable from any of the others without sharing files or context directly.
+
+**Why:** Sean asked specifically about connecting Jarvis/creative-os to reduce clutter and streamline pipelines. Investigating showed the "bigger lift" framing in the audit was wrong — Jarvis had already proven the pattern works and is cheap (one domain page + one CLAUDE.md section), so the real gap was just that creative-os never got the same treatment.
+
+**Alternatives considered:** A deeper shared-memory layer (e.g. a sync script pulling decisions across all three `decisions/log.md` files automatically) — rejected for now as more infrastructure than the actual need; the existing "domain page + CLAUDE.md rule" pattern Jarvis already validated is sufficient and matches the vault's own stated convention (business-level decisions go to the vault, technical/dev stays local per-repo).
+
+**Owner:** Sean. creative-os has no `decisions/` folder yet, unlike Jarvis — if pipeline/routing decisions start accumulating there, revisit whether it needs one locally in addition to the vault domain.

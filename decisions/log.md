@@ -18,6 +18,21 @@ Append-only record of meaningful decisions and why they were made. `/level-up` P
 
 Keep it terse. Future-you will thank present-you for capturing the *why*, not just the *what*.
 
+## 2026-06-24 — Integrated design-system into vulnaguard-website-creation-tool; planned Phase 1 AI architecture
+
+**Decision:** Connected `design-system/brands/` token library into vulnaguard-website-creation-tool as reference data layer. Designed Phase 1 architecture: multi-model AI assistant (Claude → OpenAI → fallback) for real-time design iteration, with session limit tracking. AI layer scoped but not yet built — waiting for Sean to clarify: (1) AI capabilities (suggest/iterate/both), (2) session limit strategy, (3) model cascade priority, (4) scope of "modify websites" (tokens only vs. live HTML). Created `references/website-creation-tool-architecture.md` as handoff doc for continuation on another PC.
+
+**Why:** Design system integration gives the Vercel tool access to existing brand tokens (seanbuilds + future brands) without coupling to creative-os. Multi-model AI provides redundancy (rate-limit fallback), cost optimization (cheap fallback model for simple tasks), and flexibility. Session tracking prevents budget surprises. Architectural clarity now saves rework later when Phase 1 builds.
+
+**Alternatives considered:**
+- (1) Call creative-os as backend — rejected, too much coupling. design-system tokens are the actual data layer.
+- (2) Single-model AI (Claude-only) — rejected, no fallback if rate-limited. Multi-model is more resilient.
+- (3) Skip AI layer for MVP — rejected, you asked for it, and it's core to the "modification" workflow.
+
+**Owner:** Sean + Copilot.
+
+**Next:** Sean clarifies Phase 1 AI questions (on next PC or session). Then: build lib/ai-client.ts, add aiSessions table, implement suggest/iterate endpoints.
+
 ## 2026-06-24 — Scaffolded vulnaguard-website-creation-tool (design system → code generator)
 
 **Decision:** Created new repo `vulnaguard-website-creation-tool` with full Next.js + TypeScript + PostgreSQL scaffolding. Stack: Vercel (frontend), Railway (PostgreSQL + backend), NextAuth.js (auth), Drizzle ORM (schema), ts-morph + Style Dictionary (code generation), Octokit (GitHub integration). API routes for token generation, component generation, and GitHub export. Database schema for users (via NextAuth) and projects (design systems). Auth flow scaffolded (GitHub/Google OAuth endpoints ready). Design token → Tailwind config pipeline ready. Component code generation scaffolded (ts-morph templates). GitHub repo creation and file push wired (pending GITHUB_APP_TOKEN credentials).

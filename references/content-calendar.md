@@ -24,11 +24,11 @@ Mark a day `[expanded YYYY-MM-DD]` once it's been written into `content-bank.md`
 3. The number that made the call obvious: same clip, HyperFrames ~12+ minutes (when it didn't crash), Remotion under 5.
 **CTA:** Comment "render" or DM me
 
-### Day 2 — 2026-06-24 — Vulnaguard — CMMC myth
-**Hook:** CMMC audits don't usually fail because of bad intentions.
-1. The real failure mode: evidence scattered across six different folders/drives, nobody can produce it fast enough when the assessor asks.
-2. Why this keeps happening: most contractors treat "we have the controls" and "we can prove we have the controls in 30 seconds" as the same thing. They're not.
-3. What Sentinel does about it: keeps the evidence in one place, always audit-ready, instead of reconstructed under deadline pressure.
+### Day 2 — 2026-06-24 — Vulnaguard — CMMC pain point
+**Hook:** Compliance tools can silently undercount your own evidence — caught it happening inside Sentinel itself.
+1. Real CMMC/NIST policy docs commonly run 10-12 pages; Sentinel's evidence extraction was capped at 5.
+2. That wasn't a deliberate compliance decision — it was an arbitrary default nobody had revisited.
+3. Raised the cap to 12 pages / 40k characters so every control suggestion is based on the full document, not half of it.
 **CTA:** vulnaguard.com
 
 ### Day 3 — 2026-06-25 — SeanBuilds — Mistake/lesson
@@ -39,10 +39,10 @@ Mark a day `[expanded YYYY-MM-DD]` once it's been written into `content-bank.md`
 **CTA:** Comment "honest" or DM me
 
 ### Day 4 — 2026-06-26 — Vulnaguard — Behind Sentinel
-**Hook:** Sentinel doesn't just show you a compliance score — it shows you which control is about to bite you.
-1. The gap with most CMMC tools: a dashboard number tells you where you stand today, not what's about to break.
-2. What Sentinel surfaces instead: the specific control trending toward failure and why, before it's a finding.
-3. Why that's the real difference: passing an audit vs. actually being secure are not the same outcome, and most tools only optimize for the first one.
+**Hook:** Sentinel was silently scoring production readiness against less than half the real compliance standard.
+1. A stale duplicate control-matrix directory inside `backend/` had only 48 of the real 110 NIST 800-171 controls, with no mappings subfolder at all.
+2. The deploy path resolved that stale copy first every time, so the mapping engine silently fell back to keyword-only heuristics instead of erroring out.
+3. Fix was deleting the duplicate — plus a regression test that pins the control count so it can't silently regress again.
 **CTA:** vulnaguard.com
 
 ### Day 5 — 2026-06-27 — SeanBuilds — Tool I actually use
@@ -53,10 +53,10 @@ Mark a day `[expanded YYYY-MM-DD]` once it's been written into `content-bank.md`
 **CTA:** Comment "bank" or DM me
 
 ### Day 6 — 2026-06-28 — Vulnaguard — SEO agent in action
-**Hook:** The SEO agent now runs the audit I used to do by hand every month.
-1. What used to happen: manually checking meta tags, broken links, the unglamorous stuff that quietly tanks rankings.
-2. What changed: that whole pass is automated now, and it catches things consistently instead of whenever I had a free Friday.
-3. The actual ROI: it's not about saving time on the audit, it's about the audit actually happening every month instead of slipping.
+**Hook:** My own outreach tool was sending every cold lead to a domain that wasn't even mine.
+1. A placeholder domain had been baked into the copywriter prompt and never got swapped out before it went live.
+2. Fixed it to point at the real vulnaguard.com waitlist.
+3. Also tightened the copy so it stops implying Sentinel is a finished product — it's in active development, and the message should say so.
 **CTA:** vulnaguard.com
 
 ### Day 7 — 2026-06-29 — SeanBuilds — Contrarian take
@@ -67,10 +67,10 @@ Mark a day `[expanded YYYY-MM-DD]` once it's been written into `content-bank.md`
 **CTA:** Comment "L2" or DM me
 
 ### Day 8 — 2026-06-30 — Vulnaguard — Credibility
-**Hook:** CompTIA PenTest+ and a master's in computer forensics — not to sound smart, but because of where they point.
-1. What pen-testing actually teaches: think like the person trying to break in, so you know where they'd start.
-2. What forensics actually teaches: assume the evidence is incomplete until you've proven otherwise — don't trust a clean-looking record.
-3. How that shows up in the product: Sentinel is built by someone who's looked for the gap an assessor would find, not someone guessing what compliance "probably" requires.
+**Hook:** A scanner integration that ships with rules baked in doesn't mean those rules can ever actually fire.
+1. Sentinel's Tenable and Rapid7 rule files looked complete, but the matcher only special-cased a wildcard — every specific keyword rule underneath it was dead code.
+2. Caught it the way pen-testing teaches you to: don't trust that a feature works because it's present, prove it actually matches a real finding.
+3. Fixed the matcher and replaced the placeholder rules with ~13 real ones per scanner — SMBv1, SQLi, RCE, exposed RDP, weak passwords — covering the finding types that actually show up.
 **CTA:** vulnaguard.com
 
 ### Day 9 — 2026-07-01 — SeanBuilds — Build log
@@ -165,10 +165,10 @@ Mark a day `[expanded YYYY-MM-DD]` once it's been written into `content-bank.md`
 **CTA:** Comment "buffer" or DM me
 
 ### Day 22 — 2026-07-14 — Vulnaguard — SEO agent in action
-**Hook:** The SEO agent's outreach piece still needs a real send-batch fix before it runs unattended.
-1. Being honest about the gap: automation isn't done just because most of it works — the scheduled-send piece still needs a Vercel Cron fix.
-2. Why I'm not shipping around it: an outreach pipeline that silently fails to send is worse than one that requires a manual nudge.
-3. The principle: automating the boring part doesn't mean skipping the part that has to actually work reliably.
+**Hook:** The SEO agent's first real batch send hit a rate limit — 5 of 50 outreach emails failed.
+1. The send loop fired requests as fast as possible with zero throttling, blowing past Resend's 5 req/sec cap.
+2. The fix was simple: space sends 250ms apart so the batch never crosses the limit in the first place.
+3. Failed sends already reset cleanly to "drafted" for retry — nothing was lost, but it's a clean before/after number (5 failures out of 50 → 0) from the very first real production batch.
 **CTA:** vulnaguard.com
 
 ### Day 23 — 2026-07-15 — SeanBuilds — Contrarian take

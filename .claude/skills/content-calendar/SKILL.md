@@ -13,6 +13,12 @@ and posting stalls on "I don't know what to talk about today." This skill is the
 that feeds the bank; `social-post-queue` remains the only thing that actually posts.
 
 ```
+hermes agent (scans commits for real moments)
+       │
+       ▼
+references/hermes-opportunities.md (staged real entries, unused/used)
+       │ pulled first when generating/refilling the month
+       ▼
 content-calendar  →  references/content-calendar.md (30 days of one-line hooks)
        │ expand picked rows
        ▼
@@ -54,23 +60,45 @@ not improvised per post:
 
 ## Generating the calendar
 
-1. Read `context/priorities.md` and `context/about-business.md` for anything currently
+1. Read `references/hermes-opportunities.md` if it exists. Every `[unused]` entry
+   there is a real, already-sourced moment (commit-backed hook + talking points +
+   pillar guess).
+   - **Detect shared themes before slotting.** If multiple unused entries trace to
+     the same root cause, sub-product, or effort (e.g. several fixes from one audit
+     pass on the same repo), sequence them as a mini-arc instead of scattering them
+     across the rotation: an opening frame, the fixes in escalating/logical order,
+     and a closing wrap that names what they had in common. Still respect the
+     domain's pillar rotation for which slots they land in.
+   - **Never merge across sub-products.** Sentinel CMMC and the SEO agent are
+     separate products that both ship under the Vulnaguard name — they get separate
+     arcs even when entries from both are unused at the same time. Don't build one
+     story that blends a Sentinel fix with an SEO agent fix.
+   - Entries with no shared theme just slot individually into the next matching
+     pillar rotation spot, same as before.
+   - Mark each entry consumed `[used YYYY-MM-DD]` in `hermes-opportunities.md` once
+     it's placed in the calendar. If an unused entry duplicates a story already told
+     in a previous month's calendar (check for it before assuming it's new), mark it
+     `[used YYYY-MM-DD — duplicate, not slotted]` instead of giving it a fresh day.
+2. Read `context/priorities.md` and `context/about-business.md` for anything currently
    load-bearing (e.g. a CMMC deadline crunch) that should bias which pillar gets
    emphasis that month — don't just round-robin blindly if something's clearly hot.
-2. Build 30 per-day blocks in `references/content-calendar.md` — not a flat table.
+3. Build 30 per-day blocks in `references/content-calendar.md` — not a flat table.
    Each day: `### Day N — date — Domain — Pillar`, a **Hook** (the headline claim),
    **3 talking points** (the specific things to actually say, in order — concrete
    enough to record or write from without rambling, not a script to read verbatim),
    and a **CTA** line. Alternate domain by day; cycle pillars 1→4→1→4 within each
    domain's run.
-3. Hooks and talking points must be specific enough to use without further research —
+4. For any day slot not already filled from `hermes-opportunities.md`, hooks and
+   talking points must still be specific enough to use without further research —
    a real claim, number, mistake, or feature name, not "talk about compliance." Pull
    real detail from `context/about-business.md`, `decisions/log.md`, or recent
    repo/commit activity (`git log --oneline -30` across this repo and the
-   Sentinel/SEO-agent repos if accessible) rather than generic prompts.
-4. Show Sean the full set before writing it — this is a planning artifact, not a
+   Sentinel/SEO-agent repos if accessible) rather than generic prompts. If
+   `hermes-opportunities.md` is running low (fewer than 3 unused entries per domain),
+   say so in the summary — that's the cue to run the `hermes` agent.
+5. Show Sean the full set before writing it — this is a planning artifact, not a
    posting action, but still cheap to get wrong for a month if pillars are off.
-5. Write the approved set to `references/content-calendar.md`, replacing any
+6. Write the approved set to `references/content-calendar.md`, replacing any
    previous month's content (move the old one to the bottom under a `## Archive`
    heading with its date range — don't delete history).
 

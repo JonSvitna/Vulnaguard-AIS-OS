@@ -18,6 +18,16 @@ Append-only record of meaningful decisions and why they were made. `/level-up` P
 
 Keep it terse. Future-you will thank present-you for capturing the *why*, not just the *what*.
 
+## 2026-06-24 — Fixed DO droplet auth gaps: root vs sean user split (Claude token + GitHub)
+
+**Decision:** Diagnosed why the `vulnaguard-aios` droplet prompted for re-login depending on access path (SSH/Termius vs. DigitalOcean web console): `claude setup-token` and `gh auth login` were both originally run as `root` (the SSH-key user), but the web console drops into the separate `sean` account, which has no credentials of its own. Fixed by exporting both `CLAUDE_CODE_OAUTH_TOKEN` and `GH_TOKEN` as persistent env vars in `sean`'s `~/.bashrc` — decoupling auth from which user/session you land in — and running `gh auth setup-git` so plain `git push`/`pull` work without separate SSH keys. Separately confirmed the local-machine "Claude Code on the web" session itself authenticates via OAuth token (`CLAUDE_CODE_OAUTH_TOKEN`/account UUID present, no `ANTHROPIC_API_KEY` set anywhere) — usage there draws against the Claude.ai subscription plan, not pay-per-token API billing.
+
+**Why:** Sean noticed the OAuth token he'd set on his work PC didn't carry over to the droplet (env vars are per-machine, never synced across devices), and separately the DO web console kept prompting login even though SSH access already worked. Root cause was the two access paths landing in different OS user home directories, each with isolated credential stores (`~/.claude/.credentials.json`, `~/.config/gh/`).
+
+**Alternatives considered:** Copying `/root/.claude/.credentials.json` to `sean`'s home directory (works, but brittle — breaks again if the token is ever rotated on only one side); re-running `claude setup-token`/`gh auth login` separately on every access path (rejected — same root cause would just recur with any new access method added later).
+
+**Owner:** Sean.
+
 ## 2026-06-24 — Disabled stale Exchange forwarding rules to jessicasayre28@gmail.com
 
 **Decision:** Disabled (not deleted) two inbox rules on the `seanmurrill@vulnaguard.com` mailbox that forwarded mail to `jessicasayre28@gmail.com` — `AQAAAClqiFg=` ("Forward emails from specified senders...") and `AQAAACFdhbg=` ("Jessica"). Confirmed via `python3 scripts/microsoft365_api.py rules` both now show `enabled=False`.

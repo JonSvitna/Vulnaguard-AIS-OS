@@ -18,6 +18,28 @@ Append-only record of meaningful decisions and why they were made. `/level-up` P
 
 Keep it terse. Future-you will thank present-you for capturing the *why*, not just the *what*.
 
+## 2026-06-24 — Added per-project design history page to vulnaguard-website-creation-tool
+
+**Decision:** Built `/project/[id]` — a chronological timeline of every AI suggestion/iteration and every generated/edited image for a project ("full design history" + "storage area to revisit designs," per Sean). Backed by `GET /api/projects/[id]` and `GET /api/projects/[id]/history`. Found and fixed a real gap while building it: `aiSessions` was tracking cost/model/tokens but never persisting the actual suggestion/iteration text — added a `content` column, since a history view with no actual content to show would be pointless.
+
+**Why:** First real in-app page beyond the static home/login shell — the first piece of an actual project dashboard.
+
+**Found while doing this:** Next.js 15 made dynamic route `params` a Promise in both route handlers and page components (used to be a plain object) — had to await it in all three new files or the build fails with a type error.
+
+**Verified:** `npm run build` passes. Seeded real rows into Railway Postgres and confirmed the query/cascade-delete logic the page depends on works correctly. **Not verified:** the actual authenticated page in a browser — GitHub/Google OAuth isn't configured yet, so there's no way to get a real session locally to click through it.
+
+**Owner:** Sean. OAuth setup (GITHUB_ID/SECRET, GOOGLE_ID/SECRET) is the blocker for real end-to-end browser testing of any authenticated page, not just this one.
+
+## 2026-06-24 — Skinned vulnaguard-website-creation-tool's own UI with seanbuilds tokens
+
+**Decision:** Applied `design-system/brands/seanbuilds.tokens.json` to the tool's own frontend (`tailwind.config.ts`, `app/layout.tsx`, `app/page.tsx`, `app/login/page.tsx`) — dark background, electric-blue accent, glow shadow, eyebrow/display type scale. Used `seanbuilds` specifically because no `vulnaguard` brand tokens file exists anywhere in `design-system/brands/` — Sean confirmed using the only locked brand rather than spending a separate session defining a new Vulnaguard identity first.
+
+**Why:** Closes the "design the app using our design system" ask from the original Phase 1 questions — Sean wanted to see the tool's own UI styled by the system, not just its generated output.
+
+**Verified:** Not just type-checked — built production CSS and grepped for the actual compiled values (`rgb(3 6 13)` background, `rgb(59 130 246)` accent, glow shadow, radial gradient) to confirm the token values landed in real stylesheet rules, not just unmatched class names.
+
+**Owner:** Sean. If a real "vulnaguard" brand gets defined later, swap the hardcoded values in `tailwind.config.ts` for that file instead — comment in the file flags this dependency.
+
 ## 2026-06-24 — Built image generation/editing for vulnaguard-website-creation-tool (Phase 1 capability 4, closes Phase 1)
 
 **Decision:** Built `lib/image-client.ts` against OpenAI's Images API (`gpt-image-1`): `generateImage()` and `editImage()`. New `generatedImages` table tracks prompt, base64 image data, cost, and `parentImageId` (self-reference, not FK-enforced) so edits chain back to their source image. Added `POST /api/ai/generate-image` and `POST /api/ai/edit-image`, both auth-gated and rate-limited against the same hourly cap as the text AI routes. This is intentionally separate from the Claude/OpenAI text cascade in `lib/ai-client.ts` — image gen is a dedicated provider call, no fallback chain, per the 2026-06-24 Phase 1 scoping decision.
@@ -453,3 +475,13 @@ First real run staged 8 entries (6 Vulnaguard, 2 SeanBuilds) from genuine commit
 **Alternatives considered:** Standing up the actual Nous Research Hermes Agent on the DigitalOcean droplet (rejected — infra/cost overhead for a job that's just observe → extract → write; the framework's real differentiator, persistent remote chat, isn't needed here). A separate Hermes-only Obsidian vault (rejected — doc's original plan; replaced with writing directly into the existing content pipeline's own staging file). Letting `content-calendar` post each Hermes entry as its own standalone day (rejected after the first run — six disconnected bug-fix posts don't build toward anything; sequencing them as arcs does).
 
 **Owner:** Sean. Hermes runs on-demand for now (no cron/droplet hosting yet) — re-raise always-on scanning only if on-demand proves too slow to keep the calendar's hermes-opportunities supply above 3 unused entries per domain. Session-log scanning (the doc's other named signal source) is deliberately deferred — commit messages alone are the v1 signal.
+
+## 2026-06-25 — Tomorrow's task list: Svitna walkthrough, AfterSwing metrics, content pull
+
+**Decision:** Set three concrete tasks for 2026-06-25: (1) **Svitna** — run the live simulator walkthrough (onboarding → coach → missed-day nudge) flagged as the open next step since the 2026-06-23 Jon Svitna identity ship, confirming voice + accountability trigger land right. (2) **AfterSwing** — finish the real swing-metric pipeline: get `outToInPath`, `inToOutPath`, `earlyExtension`, and `faceToPathDeg` actually computing from real pose data, picking up from the 2026-06-22 fix that stripped the fabricated placeholder metrics ahead of a weekend golf test. (3) **Content** — pull the two staged Hermes arcs (Sentinel CMMC 3-parter, SEO agent 3-parter) from `references/hermes-opportunities.md` into drafts in `content-bank.md`.
+
+Also flagged but not scheduled: the SEO agent's app-wide auth gap (no middleware anywhere, every route open — still deferred but worth re-checking urgency) and a check on Sentinel CMMC's actual next concrete milestone.
+
+**Why:** Daily-brief check-in; Svitna and AfterSwing both had real open threads from prior sessions, content had a ready-to-use backlog sitting unused in Hermes staging.
+
+**Owner:** Sean.

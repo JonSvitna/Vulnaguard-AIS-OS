@@ -72,28 +72,31 @@ Vercel tool becomes an **AI-powered design assistant**. Users can:
 
 ### Open Architecture Questions (To be decided)
 
-**1. AI Capabilities:**
-- Generate component code suggestions?
-- Suggest design improvements (given taste_skill_dials)?
-- Iterate on tokens (user gives feedback, AI refines)?
-- All three?
+**1. AI Capabilities — ANSWERED 2026-06-24:**
+- All three: generate component code suggestions, suggest design improvements (given taste_skill_dials), iterate on tokens from feedback.
+- **Plus image generation:** AI layer also calls OpenAI's Images API (gpt-image-1) for visuals — same pattern as [[feedback_design_visuals]] (ChatGPT/OpenAI handles aesthetics, Claude handles structure/code). Generated images get pulled back into the project and become editable/iterable like any other asset. Note: this is OpenAI's Images API, not a literal "ChatGPT" MCP server — there isn't one; the API achieves the same outcome.
 
-**2. Session Limits Strategy:**
+**2. Session Limits Strategy:** — still open, decide when building
 - Track Claude usage (tokens/month)?
-- Track OpenAI usage?
+- Track OpenAI usage (incl. image gen cost — billed per image, track separately from text tokens)?
 - Rate limit per user/hour?
 - Cost tracking (log to db)?
 
-**3. Model Cascade:**
+**3. Model Cascade:** — still open, decide when building
 - Model 1: Claude Sonnet (best quality, highest cost)
 - Model 2: GPT-4 Turbo (fallback if Claude rate-limited)
 - Model 3: Claude Haiku or GPT-4 Mini (cheapest fallback)?
 - Retry logic: exponential backoff, 3x total tries?
+- Image generation isn't part of this cascade — it's a dedicated OpenAI Images API call, not a fallback chain.
 
-**4. Scope of "Modify Websites":**
-- Iterate on generated design system (tokens + components)?
-- Edit live website HTML/CSS?
-- Both?
+**4. Scope of "Modify Websites" — ANSWERED 2026-06-24:**
+- Tokens + components for now. Live HTML/CSS editing not in scope yet.
+
+**5. App's own UI — NEW, 2026-06-24:**
+- The website-creation-tool's own Vercel frontend should be designed using the design-system (`design-system/brands/`), same as anything it generates for clients. Sean wants to see the design-system applied to the tool itself before/alongside building client-facing output.
+
+**6. Content loop — NEW, 2026-06-24:**
+- Hermes agent should treat this build as a content source (storyboard/content-calendar feeder) — confirmed, not just a one-off note.
 
 **5. Implementation Pattern:**
 - New API route: `POST /api/ai/suggest` (takes project + user feedback)

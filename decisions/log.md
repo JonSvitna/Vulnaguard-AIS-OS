@@ -18,6 +18,64 @@ Append-only record of meaningful decisions and why they were made. `/level-up` P
 
 Keep it terse. Future-you will thank present-you for capturing the *why*, not just the *what*.
 
+## 2026-06-24 — Provisioned Railway Postgres for vulnaguard-website-creation-tool; reused shared API keys for testing
+
+**Decision:** Repurposed the existing empty Railway project "AI Website Designer" (already on Sean's account, unused) rather than creating a new one. Added a Postgres service to it. Wired `.env.local` with the real `DATABASE_PUBLIC_URL`, a generated `NEXTAUTH_SECRET`, and reused `ANTHROPIC_API_KEY` (from `vulnaguard-seo-agent/.env.local`) and `OPENAI_API_KEY` (from Sentinel-CMMC's Railway service vars — not local, only Sentinel's deployed env had a real key) for testing, per Sean's explicit instruction to share keys across projects for now rather than provision new ones. `GITHUB_APP_TOKEN` intentionally left blank — Sean said that one needs to be repo-specific, his call to set up.
+
+**Why:** Sean said directly "nothing wrong with billing" and to reuse existing keys "for testing purposes" instead of proliferating API keys across projects — explicit acknowledgment this isn't best practice long-term. Saved provisioning a redundant Railway project when an empty one already existed.
+
+**Found while doing this:**
+- Railway CLI was on v4.36.1 (very stale); `railway add` failed with "Unauthorized" — looked like an auth/billing issue but was actually just the outdated client being incompatible with the current API. Upgraded to v5.23.0 via the official install script, fixed it immediately. Worth remembering if Railway CLI throws confusing auth errors again — check `railway --version` before assuming it's a permissions/billing problem.
+- `drizzle-orm@0.28.1` was too old for `drizzle-kit@0.20.18` ("requires newer version of drizzle-orm") — bumped to `0.29.3`. `db:push`/`db:migrate` npm scripts referenced commands (`push:postgres`, `migrate`) that don't exist in this drizzle-kit version — fixed to `push:pg` / renamed to `db:generate` → `generate:pg`.
+
+## 2026-06-24 — Closed audit top-3 gaps: reference guides for Linear/GSC/claude-obsidian
+
+**Decision:** Wrote the three missing reference guides flagged by `audits/audit-2026-06-24.md` gap #1 — `references/linear-api.md`, `references/google-search-console-api.md`, `references/claude-obsidian-plugin.md` — matching the existing Stripe/Buffer/Slack doc style. Verified the other two flagged gaps were already resolved: gap #2 (Buffer placeholder keys / Sentinel CMMC connection) was already explicitly marked in `connections.md` rather than silently passing; gap #3 (uncommitted images/Hermes clutter) was already committed in `71bf0ed`.
+
+**Why:** Audit scored these as live connections with no captured reference — "researched once, saved forever" pattern this repo already follows for other tools. GSC guide was sourced from the actual `/api/gsc` route in `vulnaguard-seo-agent`, not generic docs.
+
+**Found while doing this:**
+- GSC route assumes `sc-domain:vulnaguard.com` (domain property) — if vulnaguard.com is actually a URL-prefix property in Search Console, that query 404s. Worth a quick check in the GSC UI.
+- New claude-obsidian doc separates the live `claude-obsidian:*` skills from the separate cloud-routine vault-sync mechanism (`pending-*.md` staging files) — both land in the vault but via different paths; worth confirming that split is accurate.
+
+**Owner:** Sean (verify GSC property type and vault-sync distinction when convenient).
+
+**Verified:** `db:push` applied cleanly against live Railway Postgres (`users`, `projects`, `ai_sessions` tables created). `npm run dev` boots and serves 200 on `/` with real env vars.
+
+**Owner:** Sean.
+
+## 2026-06-24 — Answered Phase 1 AI questions for vulnaguard-website-creation-tool
+
+**Decision:** AI layer generates code suggestions, design suggestions, and token iteration (all three). Added a fourth capability: image generation via OpenAI's Images API (gpt-image-1) — pulled back into the project and editable, not a literal "ChatGPT MCP server" since none exists. Scope of "modify" stays tokens + components, not live HTML/CSS. Also: the tool's own Vercel frontend should be built using the design-system tokens, same as client output. Hermes should treat this build as a content/storyboard source going forward.
+
+**Why:** Sean is most comfortable with ChatGPT/OpenAI for visual generation (consistent with [[feedback_design_visuals]] — Claude builds structure, ChatGPT/OpenAI builds aesthetics). Session limits and model cascade are deferred until actual build time since they don't block scoping.
+
+**Open:** Session limit strategy and model cascade priority still undecided — revisit when `lib/ai-client.ts` gets built. Repo `vulnaguard-website-creation-tool` doesn't exist on this machine, so no code changes yet — this entry plus the updated `references/website-creation-tool-architecture.md` is the handoff.
+
+**Owner:** Sean.
+
+## 2026-06-24 — Deferred: add real auth to vulnaguard-seo-agent
+
+**Decision:** Don't add a narrow `CRON_SECRET` header check to the `send-batch` route — reverted that fix. Scope a proper auth pass across the whole app instead, for later.
+
+**Why:** Confirmed via code research there's no `middleware.ts` anywhere in `vulnaguard-seo-agent` — every API route (leads, sequences, send-batch, etc.) is unauthenticated, not just the one endpoint. A single-route header check would've broken the dashboard's manual "send now" button (`app/(app)/dashboard/marketing-agents/page.tsx:981`, which calls the same route with no headers) while leaving the real exposure (the whole app) open. Nothing external currently calls these routes — the send-batch scheduler runs in-process via `instrumentation.ts` — so this isn't urgent, but it's a real gap before any external scheduler or public access is added.
+
+**Alternatives considered:** Per-route shared secret (rejected — breaks legitimate UI caller, doesn't fix the rest of the app). Doing nothing (rejected — real gap, just not urgent).
+
+**Owner:** Sean.
+
+## 2026-06-24 — Built Phase 1 AI client layer for vulnaguard-website-creation-tool; set model cascade + rate limit defaults
+
+**Decision:** Cloned `vulnaguard-website-creation-tool` from GitHub (Sean published it). Built `lib/ai-client.ts`: Claude Sonnet (`claude-sonnet-4-6`) primary, GPT-4o-mini fallback on Anthropic error/unconfigured. Added `aiSessions` table (provider, model, tokens, cost, request type) to `db/schema.ts`. Added `POST /api/ai/suggest` and `POST /api/ai/iterate` routes, both auth-gated and rate-limited. Default rate limit: 20 AI requests/user/hour (`AI_RATE_LIMIT_PER_HOUR` env var, overridable). Image generation (OpenAI Images API) is intentionally NOT part of this cascade — separate concern, not yet built.
+
+**Why:** Sean asked for sensible defaults rather than blocking on cascade/limit decisions. Claude primary matches how the rest of Sean's AIOS treats Claude vs. OpenAI (Claude for structure/reasoning, OpenAI for images). GPT-4o-mini chosen as fallback for cost (cheap, fast) over GPT-4 Turbo since fallback only fires on Claude failure, not for quality-tiering. 20/hour is a placeholder guess, not based on actual usage data yet.
+
+**Alternatives considered:**
+- GPT-4 Turbo as fallback — rejected for now, more expensive than needed for a rarely-triggered fallback path.
+- No rate limit at MVP — rejected, cost-tracking was an explicit ask; better to ship a default than skip it.
+
+**Owner:** Sean. Revisit rate limit number once real usage data exists.
+
 ## 2026-06-24 — Integrated design-system into vulnaguard-website-creation-tool; planned Phase 1 AI architecture
 
 **Decision:** Connected `design-system/brands/` token library into vulnaguard-website-creation-tool as reference data layer. Designed Phase 1 architecture: multi-model AI assistant (Claude → OpenAI → fallback) for real-time design iteration, with session limit tracking. AI layer scoped but not yet built — waiting for Sean to clarify: (1) AI capabilities (suggest/iterate/both), (2) session limit strategy, (3) model cascade priority, (4) scope of "modify websites" (tokens only vs. live HTML). Created `references/website-creation-tool-architecture.md` as handoff doc for continuation on another PC.
@@ -77,6 +135,16 @@ Keep it terse. Future-you will thank present-you for capturing the *why*, not ju
 **Alternatives considered:** Railway (originally favored host, swapped to DigitalOcean per [[references/digitalocean-aios-hosting.md]] — host choice was never the constraint); Slack-based chat bridge via Agent SDK (deferred, still the right call if true chat-via-Slack is ever needed instead of a CLI session); native Claude Code Slack integration (ruled out, wrong capability).
 
 **Note:** Droplet currently only has the public `Vulnaguard-AIS-OS` repo cloned (no GitHub auth configured there yet). Private repos (Sentinel-CMMC, AfterSwing, AI-OS, Jarvis, creative-os, etc.) aren't accessible from the droplet until `gh auth login` or a deploy token is set up there.
+
+**Owner:** Sean.
+
+## 2026-06-25 — Deployed mail-to-Slack poller on the DigitalOcean droplet; fixed missing swap
+
+**Decision:** Ran `scripts/mail_to_slack.py` on the existing `vulnaguard-aios` droplet (`143.244.148.90`) as a cron job (every 10 min, 15-min lookback) instead of standing up a new Railway service. Also added a 2GB swapfile to the droplet (`/etc/fstab`-persisted) — it had zero swap configured on 1GB RAM, likely the real cause of repeated crashes that day, not workload choice.
+
+**Why:** The droplet was already provisioned and mostly idle outside of interactive Claude Code CLI sessions (its primary job, see 2026-06-24 "Hosted Claude Code CLI on a DigitalOcean droplet" entry above) — adding a second lightweight host for a stateless cron poller would've been redundant. Copied only the 5 env vars the poller needs (`MS365_*`, `SLACK_BOT_TOKEN`) to the droplet's `.env`, not the full local `.env` (Stripe/Buffer/DO tokens stay local-only).
+
+**Alternatives considered:** New Railway service (original plan — rejected as redundant once the droplet was confirmed idle and capable); Agent SDK/Slack chat bridge (bigger, separate, still deferred — this poller is a one-way notifier, not a chat interface).
 
 **Owner:** Sean.
 

@@ -1,0 +1,2 @@
+# Scripts in scripts/ are stdlib-only by design (see each script's docstring).
+# This file exists only so Railway's Nixpacks builder detects this as a Python service.

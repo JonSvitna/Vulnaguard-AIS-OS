@@ -18,6 +18,16 @@ Append-only record of meaningful decisions and why they were made. `/level-up` P
 
 Keep it terse. Future-you will thank present-you for capturing the *why*, not just the *what*.
 
+## 2026-06-24 — Built image generation/editing for vulnaguard-website-creation-tool (Phase 1 capability 4, closes Phase 1)
+
+**Decision:** Built `lib/image-client.ts` against OpenAI's Images API (`gpt-image-1`): `generateImage()` and `editImage()`. New `generatedImages` table tracks prompt, base64 image data, cost, and `parentImageId` (self-reference, not FK-enforced) so edits chain back to their source image. Added `POST /api/ai/generate-image` and `POST /api/ai/edit-image`, both auth-gated and rate-limited against the same hourly cap as the text AI routes. This is intentionally separate from the Claude/OpenAI text cascade in `lib/ai-client.ts` — image gen is a dedicated provider call, no fallback chain, per the 2026-06-24 Phase 1 scoping decision.
+
+**Why:** This was the last open piece of Sean's four Phase 1 AI capabilities (code suggestions, design suggestions, token iteration, image generation) — closes out Phase 1 as scoped. "Edit" exists because Sean specifically asked for "pull that image back, and then we can modify it," not just one-shot generation.
+
+**Verified:** Tested both `generateImage` and `editImage` against the real OpenAI API (using the shared Sentinel-CMMC key) — both returned valid image data end-to-end, not just type-checked. `npm run build` passes with both new routes. New table confirmed live on Railway Postgres.
+
+**Owner:** Sean.
+
 ## 2026-06-24 — Provisioned Railway Postgres for vulnaguard-website-creation-tool; reused shared API keys for testing
 
 **Decision:** Repurposed the existing empty Railway project "AI Website Designer" (already on Sean's account, unused) rather than creating a new one. Added a Postgres service to it. Wired `.env.local` with the real `DATABASE_PUBLIC_URL`, a generated `NEXTAUTH_SECRET`, and reused `ANTHROPIC_API_KEY` (from `vulnaguard-seo-agent/.env.local`) and `OPENAI_API_KEY` (from Sentinel-CMMC's Railway service vars — not local, only Sentinel's deployed env had a real key) for testing, per Sean's explicit instruction to share keys across projects for now rather than provision new ones. `GITHUB_APP_TOKEN` intentionally left blank — Sean said that one needs to be repo-specific, his call to set up.

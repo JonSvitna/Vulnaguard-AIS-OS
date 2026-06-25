@@ -18,6 +18,21 @@ Append-only record of meaningful decisions and why they were made. `/level-up` P
 
 Keep it terse. Future-you will thank present-you for capturing the *why*, not just the *what*.
 
+## 2026-06-24 — Deployed vulnaguard-website-creation-tool to Vercel, wired to Railway Postgres; connected GitHub auto-deploy
+
+**Decision:** Created the Vercel project (`vulnaguard-website-creation-tool`, team `jonsvitnas-projects`), pushed production env vars (`DATABASE_URL` using Railway's public connection string, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `AI_RATE_LIMIT_PER_HOUR`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL`), and deployed. Connected the GitHub repo via `vercel git connect` so future pushes to `main` auto-deploy — Sean doesn't need to run a manual deploy each time.
+
+**Why:** Sean asked directly: "connect to Vercel and create me the Vercel frontend... that's so much easier than having to manually do all of it."
+
+**Found while doing this:**
+- `vercel.json` had `"version": "1"` (must be a number) and an invalid `env.web.regions` shape that isn't real Vercel config — fixed to `version: 2`, valid `regions` array.
+- The new Vercel project didn't auto-detect Next.js (`framework: null`), so the first deploy attempt failed looking for a static `public/` output directory instead of Next's actual build output. Fixed by setting `"framework": "nextjs"` explicitly in `vercel.json`.
+- No Vercel CLI was installed locally (same situation as Railway earlier) — used `npx vercel` rather than a global install.
+
+**Verified:** Production deployment confirmed `READY`, aliased to `https://vulnaguard-website-creation-tool.vercel.app` (matches the `NEXTAUTH_URL` set beforehand), home and login both return 200.
+
+**Owner:** Sean. GitHub/Google OAuth still isn't configured, so sign-in itself won't work yet even though the pages load — that's the next real blocker for using this in a browser at all (local or production).
+
 ## 2026-06-24 — Added per-project design history page to vulnaguard-website-creation-tool
 
 **Decision:** Built `/project/[id]` — a chronological timeline of every AI suggestion/iteration and every generated/edited image for a project ("full design history" + "storage area to revisit designs," per Sean). Backed by `GET /api/projects/[id]` and `GET /api/projects/[id]/history`. Found and fixed a real gap while building it: `aiSessions` was tracking cost/model/tokens but never persisting the actual suggestion/iteration text — added a `content` column, since a history view with no actual content to show would be pointless.

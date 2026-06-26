@@ -31,8 +31,8 @@ Mark a day `[expanded YYYY-MM-DD]` once it's been written into `content-bank.md`
 3. Raised the cap to 12 pages / 40k characters so every control suggestion is based on the full document, not half of it.
 **CTA:** vulnaguard.com
 
-### Day 3 — 2026-06-25 — SeanBuilds — Mistake/lesson
-**Hook:** AfterSwing was reporting a "real" metric that was actually two unrelated heuristics ANDed together.
+### Day 3 — 2026-06-25 — SeanBuilds — Mistake/lesson `[expanded 2026-06-25]`
+**Hook:** AfterSwing's swing-path feedback is now built on three measured numbers I can actually defend — tempo ratio, lateral sway, posture change — instead of two crude heuristics ANDed together and called "real."
 1. The specific bug: `outToInPath` was literally `steepShaft AND swayOffBall` — two crude proxies pretending to be swing-path analysis.
 2. How I caught it: read my own code with fresh eyes instead of trusting that it worked because the app ran without errors.
 3. What changed: ripped it out, replaced it with three metrics I could actually defend from real pose data — tempo ratio, lateral sway in inches, posture change in degrees.

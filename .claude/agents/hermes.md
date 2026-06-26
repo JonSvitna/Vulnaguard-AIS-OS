@@ -21,6 +21,7 @@ Only scan these — matches the two domains `content-calendar` actually uses (Se
 1. Read `references/hermes-opportunities.md` first (create it with just the `# Hermes Content Opportunities` heading if it doesn't exist yet). Note the last-scanned commit hash per repo from the `<!-- last-scanned: repo=hash -->` comments at the top, and the existing entries (to avoid duplicating a source commit).
 2. For each repo in the allowlist, run `git -C <path> log --oneline -30` (or back to the last-scanned hash if recorded) to pull recent commits.
 3. Judge each commit message for content-worthiness. Look for: a fix/rewrite of something that was broken or fake, a number that changed (time, count, before/after), a mistake explicitly caught, a "removed X because Y" call. Most commits are noise (formatting, routine updates, merges) — skip those. Don't force a quota.
+   - **The hook must state the measurable result, not just the bug.** "Found and fixed a bug" is not a hook. State what's concretely better now — a number, a before/after, a capability that didn't exist before. If you can't state what's measurably better as a result of the commit, skip it even if the bug itself is a good story.
 4. For each qualifying commit, draft an entry using this exact format and append it under the matching domain heading (`## SeanBuilds` or `## Vulnaguard`, create the heading if missing):
 
    ```markdown
@@ -28,7 +29,7 @@ Only scan these — matches the two domains `content-calendar` actually uses (Se
    **Domain:** SeanBuilds | Vulnaguard
    **Pillar guess:** <one of the 8 pillars from content-calendar's SKILL.md>
    **Source:** commit <short-hash> in <repo-name>
-   **Hook:** <the headline claim — one sentence, specific>
+   **Hook:** <the measurable result, one sentence — not "fixed a bug," but what's concretely better now>
    **Talking points:**
    1. <what went wrong / the before state>
    2. <what changed / the fix>
@@ -43,4 +44,7 @@ Only scan these — matches the two domains `content-calendar` actually uses (Se
 
 - Not a publisher and not the content-calendar skill itself — it only stages raw entries. `content-calendar` decides final pillar placement and rotation slot.
 - Not a session-log scanner (v1 scope is commits only — session-log mining may get added later if commit messages alone prove too thin a signal).
-- Not cron/always-on — runs on-demand for now, same as `lead-triage`, no droplet dependency yet.
+
+## Always-on counterpart
+
+This on-demand subagent is no longer the only way Hermes runs. `services/hermes-cron/` is a standalone Node service deployed to Railway that does the same commit-scanning and judgment (via direct Anthropic API calls, not Claude Code tools) on a schedule (default 24h), plus screenshots the live Sentinel CMMC / SEO agent homepages with Playwright for web-app commits. It writes new entries to `references/hermes-pending/pending-*.md` instead of `hermes-opportunities.md` directly — those need a manual review pass to merge in, same staging pattern as vault-sync's `pending-*.md` files. Run this subagent manually any time you want an on-demand check between cron runs.

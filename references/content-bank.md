@@ -61,3 +61,8 @@ CTA: What's the one thing eating your week? Tell me, I might already have a fix.
 > Don't reinvent the wheel. Just make a better wheel. I have a CompTIA PenTest+ and a master's in computer forensics. I don't use either to sound smart — I use them to know exactly where the holes are before someone else finds them.
 
 CTA: Follow for more from the build log.
+
+**9.**
+> AfterSwing's swing-path feedback used to be two guesses pretending to be one measurement — steep shaft angle AND sway off the ball, ANDed together and called "swing path." It ran fine. No errors. I just didn't trust it, so I went back and read my own code with fresh eyes. Found it in five minutes. Ripped it out, rebuilt the feedback on three numbers I can actually defend from real pose data — tempo ratio, lateral sway in inches, posture change in degrees. The lesson isn't "I had a bug." Every build has bugs. It's that "it ran without errors" and "it's true" are two different claims, and I'd been treating them as the same one.
+
+CTA: Comment "honest" or DM me

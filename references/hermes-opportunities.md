@@ -12,7 +12,7 @@
 **Domain:** Vulnaguard
 **Pillar guess:** Behind Sentinel — one real feature and the reason it exists
 **Source:** commit 459f17a in Sentinel-CMMC
-**Hook:** Sentinel's production readiness scores were silently running against only 44% of the real NIST 800-171 control catalog for an unknown stretch of time.
+**Hook:** Sentinel's readiness scores now check against the full 110-control NIST 800-171 catalog — not the stale 48-control duplicate it was silently scoring against before, a gap that had it grading at 44% coverage.
 **Talking points:**
 1. A stale partial duplicate of the control-matrix directory lived inside backend/ — only 48 of 110 controls, with no mappings/ subdirectory at all.
 2. Because Railway deploys from backend/ as the working directory, the loader resolved to the stale copy first every time, and the YAML mapping engine silently fell back to keyword-only heuristics instead of erroring out.
@@ -23,7 +23,7 @@
 **Domain:** Vulnaguard
 **Pillar guess:** Behind Sentinel — one real feature and the reason it exists
 **Source:** commit 0fed78d in Sentinel-CMMC
-**Hook:** The Tenable and Rapid7 scanner-specific rule files Sentinel shipped with could never actually match a finding — every rule in them was dead code.
+**Hook:** Sentinel's Tenable and Rapid7 scanner integrations went from zero working rules to ~13 real keyword-based detections per scanner — SMBv1, SQLi, RCE, and expired certs now actually get caught.
 **Talking points:**
 1. The rule matcher special-cased only the wildcard plugin_id "*" for non-generic sources and returned False for everything else, so any granular keyword/category rule added to tenable.yaml or rapid7.yaml silently never fired.
 2. Fixed the matcher to apply the same category/keyword logic to source-specific rules as generic ones, gated by a source check.
@@ -34,7 +34,7 @@
 **Domain:** Vulnaguard
 **Pillar guess:** CMMC myth or pain point contractors actually hit
 **Source:** commit ff92c82 in Sentinel-CMMC
-**Hook:** Sentinel's evidence text extraction was capped at 5 pages — but real CMMC/NIST policy documents commonly run 10-12 pages, so a chunk of every uploaded policy was getting silently dropped before the AI ever saw it.
+**Hook:** Raised Sentinel's evidence-extraction cap from 5 pages to 12 — every control suggestion on a real policy doc now reads the whole thing instead of silently grading off half of it.
 **Talking points:**
 1. The cap existed as an arbitrary default, not a deliberate compliance decision.
 2. Raised the cap to 12 pages / 40k characters to actually cover the documents contractors really submit.
@@ -56,7 +56,7 @@
 **Domain:** Vulnaguard
 **Pillar guess:** Lesson from a mistake — what went wrong, what changed after
 **Source:** commit 9c6c852 in vulnaguard-seo-agent
-**Hook:** The SEO agent's outreach copywriter was sending every cold lead to bogard.com — a domain that isn't even Vulnaguard's.
+**Hook:** Every cold outreach email now points to the real vulnaguard.com waitlist instead of a placeholder domain that wasn't ours.
 **Talking points:**
 1. A wrong/placeholder domain had been baked into the copywriter prompt, so outreach emails were pointing leads somewhere that wasn't ours.
 2. Fixed to point at the real vulnaguard.com waitlist.
@@ -67,7 +67,7 @@
 **Domain:** Vulnaguard
 **Pillar guess:** SEO agent in action — a specific thing it caught or automated
 **Source:** commit 937cf55 in vulnaguard-seo-agent
-**Hook:** The first real batch-send run hit Resend's rate limit and 5 of 50 outreach emails failed with 429 errors.
+**Hook:** Vulnaguard's first real batch send went from 5 failed sends out of 50 to 0 — just by spacing sends 250ms apart to respect Resend's rate limit.
 **Talking points:**
 1. The send loop fired requests as fast as possible with no throttling, ignoring Resend's 5 req/sec cap.
 2. Fix was simple — space sends 250ms apart so the batch never crosses the limit in the first place.
@@ -80,7 +80,7 @@
 **Domain:** SeanBuilds
 **Pillar guess:** Lesson from a mistake — what went wrong, what changed after
 **Source:** commit d72c8d1 in AfterSwing
-**Hook:** AfterSwing's swing recordings could vanish into thin air before the upload ever ran — because the app was holding onto a temp file path the OS is free to purge at any time.
+**Hook:** AfterSwing swing recordings now reliably survive from capture to upload — no longer at risk of the OS purging the temp file mid-pipeline.
 **Talking points:**
 1. UIImagePickerController hands back a video URL inside NSTemporaryDirectory(), which iOS can purge whenever it wants. The app held that raw tmp URL across preflight validation, analysis, and upload — three steps where the file could already be gone.
 2. Fix: copy the file into Documents immediately on capture and use that durable URL for every step after.

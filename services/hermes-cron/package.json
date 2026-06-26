@@ -1,0 +1,16 @@
+{
+  "name": "hermes-cron",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Always-on Railway service that scans Sean's active repos for content-worthy commits and stages them for the content-calendar pipeline.",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "scan-now": "node -e \"import('./lib/run.js').then(m => m.runHermesScan())\""
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.0",
+    "playwright": "^1.48.0"
+  }
+}

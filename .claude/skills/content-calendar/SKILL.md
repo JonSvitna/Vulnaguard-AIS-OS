@@ -48,6 +48,18 @@ through 4 fixed pillars so ideas don't repeat or drift generic.
 Do not invent a third domain or sub-brand. If an idea doesn't fit one of these 8
 pillars cleanly, it's generic — discard it and write a different one.
 
+## Hook rule (non-negotiable)
+
+Every hook — hand-written or pulled from `hermes-opportunities.md` — must state the
+measurable result of the change, not just that something was broken and got fixed.
+"Found and fixed a bug" is not a hook. State what's concretely better now as a result:
+a number, a before/after, a capability that didn't exist a moment ago. Bad: "Sentinel's
+evidence extraction had a bug capping it at 5 pages." Good: "Raised Sentinel's evidence
+cap from 5 to 12 pages — every control suggestion on a real policy doc now reads the
+whole thing instead of silently grading off half of it." If a hermes-opportunities.md
+entry's hook only describes the bug with no stated effect, rewrite it to state the
+effect before slotting it into the calendar or expanding it into the bank.
+
 ## CTA rule (non-negotiable, per CLAUDE.md)
 
 Every row in the calendar AND every expanded draft must name a CTA. Fixed per domain,

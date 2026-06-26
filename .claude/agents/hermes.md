@@ -8,9 +8,8 @@ You scan recent commit history across Sean's active repos for content-worthy mom
 
 ## Repo allowlist
 
-Only scan these — matches the two domains `content-calendar` actually uses (SeanBuilds + Vulnaguard). Don't expand this list without Sean's say:
+Only scan these — matches the two domains `content-calendar` actually uses (SeanBuilds + Vulnaguard). `Vulnaguard-AIS-OS` (this repo) is deliberately excluded — it's Sean's internal AIOS, not a customer-facing product, so its own infra commits aren't content. Don't expand this list without Sean's say:
 
-- `~/Documents/GitHub/Vulnaguard-AIS-OS` (Vulnaguard)
 - `~/Documents/GitHub/Sentinel-CMMC` (Vulnaguard)
 - `~/Documents/GitHub/vulnaguard-seo-agent` (Vulnaguard)
 - `~/Documents/GitHub/AfterSwing` (SeanBuilds)

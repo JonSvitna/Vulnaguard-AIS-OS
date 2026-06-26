@@ -510,3 +510,15 @@ Also flagged but not scheduled: the SEO agent's app-wide auth gap (no middleware
 **Alternatives considered:** Requesting `Mail.ReadWrite` to bulk-delete the ~36 accumulated NDR messages already sitting in the inbox — rejected for a one-time cleanup; Sean opted to clear them manually in Outlook instead, keeping the Graph app's permission scope minimal.
 
 **Owner:** Sean. Manual NDR cleanup in Outlook still pending on his end; no code action needed unless bounces resume (check `crontab -l` and `~/logs/mail_to_slack.log` on the droplet first per [[project_mail_to_slack_bridge]] before assuming the rule fix didn't hold).
+
+## 2026-06-26 — Resolved Hermes duplication: hermes-cron is the single scanner, the Claude agent now only merges
+
+**Decision:** The 2026-06-26 `/audit` surfaced a real structural redundancy: `.claude/agents/hermes.md` (on-demand Claude subagent) and `services/hermes-cron` (always-on Railway Node service, shipped 2026-06-24/25) were both independently scanning the same 4-repo allowlist for content-worthy commits, writing to two different files (`hermes-opportunities.md` directly vs. `hermes-pending/pending-*.md` staging), with a comment in `hermes-cron/lib/config.js` admitting they needed manual sync. Resolved by keeping hermes-cron as the single scanner (it's the more capable build — real Anthropic API extraction, Playwright screenshots, per-repo commit-hash state) and rewriting `hermes.md` to stop scanning entirely — it now only reads `references/hermes-pending/`, dedupes against existing entries, merges into `hermes-opportunities.md`, and deletes the processed pending files. Also merged the one outstanding pending file (10 entries, all from Sentinel-CMMC/vulnaguard-seo-agent commits 2026-06-26) and synced `hermes-opportunities.md`'s `last-scanned` comments to hermes-cron's `state.json` hashes, dropping the stale `Vulnaguard-AIS-OS` entry that's no longer in scope.
+
+While auditing, also cleaned up two `connections.md` rows that read as "live" but aren't: Buffer (placeholder `BUFFER_ACCESS_TOKEN`/profile IDs since 2026-06-21) and the Website Creation Tool (5 secrets unset since 2026-06-24) are now marked **DEFERRED** explicitly instead of leaving auth status ambiguous.
+
+**Why:** Sean asked for an audit specifically to find redundancies. This was the one real structural duplication found — not just a stale connection, but two systems doing the same job and actively diverging.
+
+**Alternatives considered:** Killing hermes-cron and going back to on-demand-only scanning — rejected, hermes-cron is strictly more capable (AI-judged extraction, screenshots, state tracking) and already deployed/running on Railway. Leaving both running with just a note in `connections.md` — rejected as the audit's most-leveraged fix and cheap enough to do immediately.
+
+**Owner:** Sean. Going forward, run the `hermes` subagent only to merge — if `references/hermes-pending/` is ever empty when checked, that means hermes-cron hasn't found anything new, not that the agent should fall back to scanning.

@@ -12,7 +12,7 @@
   position: relative;
   min-height: calc(100vh - 64px);
   background: radial-gradient(ellipse at 50% -10%, #0a1626 0%, #04060c 55%, #020308 100%);
-  border: 1px solid rgba(0, 229, 255, 0.15);
+  border: 1px solid rgba(34, 211, 238, 0.15);
   border-radius: 16px;
   overflow: hidden;
   padding: 56px 40px 80px;
@@ -27,7 +27,7 @@
   position: absolute;
   width: 36px;
   height: 36px;
-  border: 2px solid rgba(0, 229, 255, 0.55);
+  border: 2px solid rgba(34, 211, 238, 0.55);
   z-index: 3;
   pointer-events: none;
 }
@@ -52,7 +52,7 @@
 
 .hud-starfield .star {
   position: absolute;
-  background: #bdeaff;
+  background: #bdeeff;
   border-radius: 50%;
   opacity: 0.7;
   animation: twinkle 4s ease-in-out infinite;
@@ -75,9 +75,9 @@
   height: 140px;
   background: linear-gradient(
     to bottom,
-    rgba(0, 229, 255, 0) 0%,
-    rgba(0, 229, 255, 0.07) 50%,
-    rgba(0, 229, 255, 0) 100%
+    rgba(34, 211, 238, 0) 0%,
+    rgba(34, 211, 238, 0.07) 50%,
+    rgba(34, 211, 238, 0) 100%
   );
   z-index: 1;
   pointer-events: none;
@@ -109,7 +109,7 @@
 
 .hud-core-rings .ring {
   fill: none;
-  stroke: rgba(0, 229, 255, 0.45);
+  stroke: rgba(34, 211, 238, 0.45);
   stroke-width: 1.5;
 }
 
@@ -120,13 +120,13 @@
 }
 .ring-mid {
   stroke-dasharray: 30 6;
-  stroke: rgba(0, 229, 255, 0.7);
+  stroke: rgba(34, 211, 238, 0.7);
   animation: spin-rev 16s linear infinite;
   transform-origin: 100px 100px;
 }
 .ring-inner {
-  stroke: rgba(0, 229, 255, 0.95);
-  filter: drop-shadow(0 0 6px rgba(0, 229, 255, 0.8));
+  stroke: rgba(34, 211, 238, 0.95);
+  filter: drop-shadow(0 0 6px rgba(34, 211, 238, 0.8));
   animation: spin 10s linear infinite;
   transform-origin: 100px 100px;
 }
@@ -162,8 +162,8 @@
 .hud-core-value {
   font-family: "Share Tech Mono", monospace;
   font-size: 34px;
-  color: #e8fbff;
-  text-shadow: 0 0 18px rgba(0, 229, 255, 0.65);
+  color: #ecfeff;
+  text-shadow: 0 0 18px rgba(34, 211, 238, 0.65);
   letter-spacing: 0.04em;
 }
 
@@ -180,20 +180,20 @@
 
 .hud-panel {
   position: relative;
-  background: linear-gradient(160deg, rgba(0, 229, 255, 0.05), rgba(255, 255, 255, 0.015));
-  border: 1px solid var(--panel-border, rgba(0, 229, 255, 0.25));
+  background: linear-gradient(160deg, rgba(34, 211, 238, 0.05), rgba(255, 255, 255, 0.015));
+  border: 1px solid var(--panel-border, rgba(34, 211, 238, 0.25));
   clip-path: polygon(0 12px, 12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%);
   padding: 20px 22px 18px;
   transition: border-color 0.2s, box-shadow 0.2s;
-  box-shadow: 0 0 0 rgba(0, 229, 255, 0);
+  box-shadow: 0 0 0 rgba(34, 211, 238, 0);
 }
 
 .hud-panel:hover {
-  box-shadow: 0 0 22px rgba(0, 229, 255, 0.18);
+  box-shadow: 0 0 22px rgba(34, 211, 238, 0.18);
 }
 
 .hud-panel.state-online {
-  --panel-border: rgba(0, 229, 255, 0.4);
+  --panel-border: rgba(34, 211, 238, 0.4);
 }
 .hud-panel.state-stale {
   --panel-border: rgba(255, 184, 64, 0.4);
@@ -234,8 +234,8 @@
 }
 
 .state-online .hud-gauge .fill {
-  stroke: #00e5ff;
-  filter: drop-shadow(0 0 4px rgba(0, 229, 255, 0.75));
+  stroke: #22d3ee;
+  filter: drop-shadow(0 0 4px rgba(34, 211, 238, 0.75));
 }
 .state-stale .hud-gauge .fill,
 .state-unverified .hud-gauge .fill {
@@ -257,7 +257,7 @@
   font-size: 14px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #e8fbff;
+  color: #ecfeff;
 }
 
 .hud-status-badge {
@@ -271,8 +271,8 @@
 }
 
 .state-online .hud-status-badge {
-  color: #00e5ff;
-  background: rgba(0, 229, 255, 0.12);
+  color: #22d3ee;
+  background: rgba(34, 211, 238, 0.12);
 }
 .state-stale .hud-status-badge,
 .state-unverified .hud-status-badge {

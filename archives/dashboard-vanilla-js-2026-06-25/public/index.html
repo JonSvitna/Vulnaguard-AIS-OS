@@ -51,8 +51,9 @@
           </div>
         </div>
         <canvas id="topbar-sparkline" width="160" height="32"></canvas>
-        <div class="topbar-sync">
-          <span class="sync-ring"></span>
+        <div class="topbar-sync" id="nav-dial" title="Drag to rotate &amp; jump to a section">
+          <div class="dial-ring" id="dial-ring"></div>
+          <div class="dial-hub"></div>
         </div>
       </header>
 
@@ -62,9 +63,9 @@
             <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /></svg>
             <span>OVERVIEW</span>
           </button>
-          <button class="rail-item" data-view="memory" title="Memory">
+          <button class="rail-item" data-view="memory" title="Knowledge">
             <svg viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.4" /><circle cx="18" cy="6" r="2.4" /><circle cx="12" cy="14" r="2.6" /><circle cx="6" cy="19" r="2" /><circle cx="18" cy="19" r="2" /><path d="M8 7.5 11 12.5M16 7.5 13 12.5M10 16 7 18M14 16 17 18" stroke-width="1" /></svg>
-            <span>MEMORY</span>
+            <span>KNOWLEDGE</span>
           </button>
           <button class="rail-item" data-view="decisions" title="Projects">
             <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2" /><path d="M8 9h8M8 13h8M8 17h5" stroke-width="1.4" /></svg>
@@ -86,6 +87,20 @@
 
         <main id="content">
           <div id="overview-view" class="view active">
+            <div class="hero-sphere-panel">
+              <div class="panel-heading">
+                <span>NEURAL KNOWLEDGE NETWORK</span>
+                <span class="live-tag">● LIVE</span>
+                <span class="panel-sub" id="hero-sphere-sub">AIOS MEMORY + OBSIDIAN VAULT</span>
+              </div>
+              <div id="hero-sphere-container">
+                <p class="placeholder">Spinning up the network…</p>
+              </div>
+              <div class="hero-sphere-legend">
+                <span><i class="legend-dot" style="background:#22d3ee"></i>AIOS MEMORY</span>
+                <span><i class="legend-dot" style="background:#bdeeff"></i>OBSIDIAN VAULT</span>
+              </div>
+            </div>
             <div class="overview-grid" id="overview-grid">
               <p class="placeholder">Loading system overview…</p>
             </div>
@@ -95,16 +110,17 @@
             <div class="memory-layout">
               <div class="graph-panel">
                 <div class="panel-heading">
-                  <span>MEMORY GRAPH</span>
+                  <span>KNOWLEDGE GRAPH</span>
                   <span class="live-tag">● LIVE</span>
-                  <span class="panel-sub">REAL-TIME SEMANTIC NETWORK</span>
+                  <span class="panel-sub">SAME NETWORK AS THE HOME SPHERE — CLICK A NODE TO INSPECT</span>
                 </div>
                 <div id="graph-container"></div>
                 <div class="graph-legend">
-                  <span><i class="legend-dot" style="background:#00e5ff"></i>USER FACTS</span>
+                  <span><i class="legend-dot" style="background:#ffd166"></i>USER FACTS</span>
                   <span><i class="legend-dot" style="background:#ff8a3d"></i>FEEDBACK</span>
                   <span><i class="legend-dot" style="background:#b06bff"></i>PROJECT DECISIONS</span>
                   <span><i class="legend-dot" style="background:#5be88a"></i>REFERENCE LINKS</span>
+                  <span><i class="legend-dot" style="background:#bdeeff"></i>OBSIDIAN VAULT</span>
                 </div>
               </div>
               <div class="memory-detail" id="memory-detail">

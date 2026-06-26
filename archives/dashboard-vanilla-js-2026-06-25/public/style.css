@@ -1,12 +1,12 @@
 :root {
   --bg: #04060c;
-  --panel: rgba(0, 229, 255, 0.04);
-  --border: rgba(0, 229, 255, 0.2);
-  --accent: #00e5ff;
-  --accent-light: #4be3ff;
-  --text: #c7d0da;
-  --text-bright: #e8fbff;
-  --text-dim: #7c93a3;
+  --panel: rgba(34, 211, 238, 0.04);
+  --border: rgba(34, 211, 238, 0.2);
+  --accent: #22d3ee;
+  --accent-light: #67e8f9;
+  --text: #c3d6da;
+  --text-bright: #ecfeff;
+  --text-dim: #7fa3ab;
 }
 
 * {
@@ -64,7 +64,7 @@ body {
 }
 
 .memory-card {
-  background: linear-gradient(160deg, rgba(0, 229, 255, 0.05), rgba(255, 255, 255, 0.015));
+  background: linear-gradient(160deg, rgba(34, 211, 238, 0.05), rgba(255, 255, 255, 0.015));
   border: 1px solid var(--border);
   clip-path: polygon(0 10px, 10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%);
   padding: 14px 16px;
@@ -74,11 +74,11 @@ body {
 
 .memory-card:hover {
   border-color: var(--accent-light);
-  box-shadow: 0 0 16px rgba(0, 229, 255, 0.12);
+  box-shadow: 0 0 16px rgba(34, 211, 238, 0.12);
 }
 
 .memory-card.active {
-  background: rgba(0, 229, 255, 0.1);
+  background: rgba(34, 211, 238, 0.1);
   border-color: var(--accent-light);
 }
 
@@ -103,13 +103,13 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--accent-light);
-  background: rgba(0, 229, 255, 0.1);
+  background: rgba(34, 211, 238, 0.1);
   padding: 2px 8px;
 }
 
 .memory-detail {
   flex: 1;
-  background: linear-gradient(160deg, rgba(0, 229, 255, 0.04), rgba(255, 255, 255, 0.01));
+  background: linear-gradient(160deg, rgba(34, 211, 238, 0.04), rgba(255, 255, 255, 0.01));
   border: 1px solid var(--border);
   clip-path: polygon(0 14px, 14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%);
   padding: 28px 32px;
@@ -134,7 +134,7 @@ body {
   font-weight: 700;
   font-size: 26px;
   color: var(--text-bright);
-  text-shadow: 0 0 14px rgba(0, 229, 255, 0.35);
+  text-shadow: 0 0 14px rgba(34, 211, 238, 0.35);
   margin-bottom: 16px;
 }
 
@@ -224,7 +224,7 @@ body {
 }
 
 .card {
-  background: linear-gradient(160deg, rgba(0, 229, 255, 0.05), rgba(255, 255, 255, 0.015));
+  background: linear-gradient(160deg, rgba(34, 211, 238, 0.05), rgba(255, 255, 255, 0.015));
   border: 1px solid var(--border);
   clip-path: polygon(0 10px, 10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%);
   padding: 16px 18px;
@@ -233,7 +233,7 @@ body {
 
 .card:hover {
   border-color: var(--accent-light);
-  box-shadow: 0 0 16px rgba(0, 229, 255, 0.12);
+  box-shadow: 0 0 16px rgba(34, 211, 238, 0.12);
 }
 
 .card .name {

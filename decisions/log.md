@@ -500,3 +500,13 @@ Also flagged but not scheduled: the SEO agent's app-wide auth gap (no middleware
 **Why:** Daily-brief check-in; Svitna and AfterSwing both had real open threads from prior sessions, content had a ready-to-use backlog sitting unused in Hermes staging.
 
 **Owner:** Sean.
+
+## 2026-06-25 — Deleted the broken Slack catch-all rule causing recurring mail bounces
+
+**Decision:** Diagnosed why Sean was seeing "Undeliverable" NDRs in both his inbox and `#all-vulnaguard-sentinel` Slack (the latter via `mail_to_slack.py`'s indiscriminate poller, which forwards every inbox message including NDRs). Found two separate root causes layered on top of each other: (1) the two Jessica forward rules (forwardTo, bounced with `FW:`-prefixed subjects from 2026-05-19 through 2026-06-23 — stopped once those rules were disabled 2026-06-24), and (2) the catch-all redirect rule `AQAAAC31xzc=` created 2026-06-24 to route all mail to a Slack channel's "email address" (`leads-inbox-...@vulnaguardsentinel.slack.com`) — that feature isn't available on Sean's Slack plan, so every redirected message bounced (non-`FW:`-prefixed NDRs from 2026-06-24 onward). Deleted rule `AQAAAC31xzc=` via a new `delete-rule` command added to `scripts/microsoft365_api.py` (also added `search-mail` and `delete-mail`). The real mail→Slack bridge (the cron poller) was unaffected and remains the only mechanism going forward.
+
+**Why:** Sean reported still receiving bounces in both channels after the morning's lead triage flagged the issue. Root cause was a misconceived rule built on a Slack feature that doesn't exist on this plan, not an auth/Graph problem.
+
+**Alternatives considered:** Requesting `Mail.ReadWrite` to bulk-delete the ~36 accumulated NDR messages already sitting in the inbox — rejected for a one-time cleanup; Sean opted to clear them manually in Outlook instead, keeping the Graph app's permission scope minimal.
+
+**Owner:** Sean. Manual NDR cleanup in Outlook still pending on his end; no code action needed unless bounces resume (check `crontab -l` and `~/logs/mail_to_slack.log` on the droplet first per [[project_mail_to_slack_bridge]] before assuming the rule fix didn't hold).

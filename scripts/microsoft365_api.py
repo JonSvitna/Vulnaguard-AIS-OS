@@ -142,6 +142,33 @@ def create_rule(token: str, upn: str, name: str, sender: str | None, to: str, re
     print(f"Created rule {result['id']}  '{name}'  {sender or '(all mail)'} -> {to}")
 
 
+def delete_rule(token: str, upn: str, rule_id: str):
+    path = f"/users/{upn}/mailFolders/inbox/messageRules/{rule_id}"
+    graph_request(path, token, method="DELETE")
+    print(f"Deleted rule {rule_id}")
+
+
+def search_mail(token: str, upn: str, sender: str | None, subject_contains: str | None, top: int):
+    params = {
+        "$top": str(top),
+        "$select": "id,subject,from,receivedDateTime",
+        "$orderby": "receivedDateTime desc",
+    }
+    path = f"/users/{upn}/messages?{urllib.parse.urlencode(params)}"
+    result = graph_request(path, token)
+    messages = result.get("value", [])
+    if sender:
+        messages = [m for m in messages if m.get("from", {}).get("emailAddress", {}).get("address", "").lower() == sender.lower()]
+    if subject_contains:
+        messages = [m for m in messages if subject_contains.lower() in m.get("subject", "").lower()]
+    return messages
+
+
+def delete_mail(token: str, upn: str, message_id: str):
+    path = f"/users/{upn}/messages/{message_id}"
+    graph_request(path, token, method="DELETE")
+
+
 def main():
     load_env()
     parser = argparse.ArgumentParser()
@@ -174,6 +201,17 @@ def main():
     p_create_rule.add_argument("--redirect", action="store_true",
                                 help="Use redirectTo (keep original sender) instead of forwardTo")
 
+    p_delete_rule = sub.add_parser("delete-rule")
+    p_delete_rule.add_argument("--rule-id", required=True)
+
+    p_search_mail = sub.add_parser("search-mail")
+    p_search_mail.add_argument("--sender", required=False, default=None)
+    p_search_mail.add_argument("--subject-contains", required=False, default=None)
+    p_search_mail.add_argument("--top", type=int, default=50)
+
+    p_delete_mail = sub.add_parser("delete-mail")
+    p_delete_mail.add_argument("--message-id", required=True)
+
     args = parser.parse_args()
     upn = os.environ["MS365_USER_UPN"]
     token = get_token()
@@ -190,6 +228,15 @@ def main():
         set_rule_forward(token, upn, args.rule_id, args.to, args.redirect)
     elif args.command == "create-rule":
         create_rule(token, upn, args.name, args.sender, args.to, args.redirect)
+    elif args.command == "delete-rule":
+        delete_rule(token, upn, args.rule_id)
+    elif args.command == "search-mail":
+        for msg in search_mail(token, upn, args.sender, args.subject_contains, args.top):
+            sender = msg.get("from", {}).get("emailAddress", {}).get("address", "?")
+            print(f"{msg['id']}  {msg['receivedDateTime']}  {sender}  {msg['subject']}")
+    elif args.command == "delete-mail":
+        delete_mail(token, upn, args.message_id)
+        print(f"Deleted message {args.message_id}")
 
 
 if __name__ == "__main__":

@@ -2,25 +2,117 @@ const railItems = document.querySelectorAll(".rail-item");
 const views = document.querySelectorAll(".view");
 
 const TYPE_COLOR = {
-  user: "#00e5ff",
+  user: "#ffd166",
   feedback: "#ff8a3d",
   project: "#b06bff",
   reference: "#5be88a",
 };
-const TYPE_FALLBACK = "#7c93a3";
+const TYPE_FALLBACK = "#7fa3ab";
 
 let activeView = "overview";
+const viewChangeListeners = [];
 
 function showView(name) {
   activeView = name;
   railItems.forEach((b) => b.classList.toggle("active", b.dataset.view === name));
   views.forEach((v) => v.classList.toggle("active", v.id === `${name}-view`));
   loaders[name] && loaders[name]();
+  viewChangeListeners.forEach((fn) => fn(name));
 }
 
 railItems.forEach((btn) => {
   btn.addEventListener("click", () => showView(btn.dataset.view));
 });
+
+// ---- Rotating nav dial ----
+(function setupNavDial() {
+  const dial = document.getElementById("nav-dial");
+  const ring = document.getElementById("dial-ring");
+  if (!dial || !ring) return;
+
+  const dialViews = Array.from(railItems).map((b) => ({
+    view: b.dataset.view,
+    label: b.querySelector("span").textContent,
+  }));
+  const count = dialViews.length;
+  const segmentAngle = 360 / count;
+  const radius = 22;
+
+  const nodes = dialViews.map((v, i) => {
+    const node = document.createElement("div");
+    node.className = "dial-node";
+    node.dataset.view = v.view;
+    node.title = v.label;
+    const angle = i * segmentAngle - 90;
+    const rad = (angle * Math.PI) / 180;
+    node.style.left = `${25 + radius * Math.cos(rad)}px`;
+    node.style.top = `${25 + radius * Math.sin(rad)}px`;
+    node.addEventListener("click", (e) => {
+      e.stopPropagation();
+      showView(v.view);
+    });
+    ring.appendChild(node);
+    return node;
+  });
+
+  function updateActiveDialNode() {
+    nodes.forEach((n) => n.classList.toggle("active", n.dataset.view === activeView));
+  }
+  updateActiveDialNode();
+
+  viewChangeListeners.push((name) => {
+    updateActiveDialNode();
+    const i = dialViews.findIndex((v) => v.view === name);
+    if (i === -1) return;
+    rotation = -i * segmentAngle;
+    ring.style.transform = `rotate(${rotation}deg)`;
+  });
+
+  let rotation = 0;
+  let dragging = false;
+  let startAngle = 0;
+  let startRotation = 0;
+
+  function angleFromCenter(clientX, clientY) {
+    const rect = dial.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    return (Math.atan2(clientY - cy, clientX - cx) * 180) / Math.PI;
+  }
+
+  dial.addEventListener("pointerdown", (e) => {
+    dragging = true;
+    dial.classList.add("dragging");
+    ring.style.transition = "none";
+    startAngle = angleFromCenter(e.clientX, e.clientY);
+    startRotation = rotation;
+    dial.setPointerCapture(e.pointerId);
+  });
+
+  dial.addEventListener("pointermove", (e) => {
+    if (!dragging) return;
+    const current = angleFromCenter(e.clientX, e.clientY);
+    rotation = startRotation + (current - startAngle);
+    ring.style.transform = `rotate(${rotation}deg)`;
+  });
+
+  dial.addEventListener("pointerup", () => {
+    if (!dragging) return;
+    dragging = false;
+    dial.classList.remove("dragging");
+    ring.style.transition = "";
+
+    // snap to the nearest segment and navigate to whichever view
+    // ended up under the fixed top pointer.
+    const snapped = Math.round(rotation / segmentAngle) * segmentAngle;
+    rotation = snapped;
+    ring.style.transform = `rotate(${rotation}deg)`;
+    let index = Math.round(-rotation / segmentAngle) % count;
+    if (index < 0) index += count;
+    showView(dialViews[index].view);
+    updateActiveDialNode();
+  });
+})();
 
 // ---- Clock ----
 function tickClock() {
@@ -58,8 +150,8 @@ function animateLine(canvasId, color) {
   step();
   setInterval(step, 450);
 }
-animateLine("topbar-sparkline", "rgba(0, 229, 255, 0.8)");
-animateLine("footer-waveform", "rgba(0, 229, 255, 0.6)");
+animateLine("topbar-sparkline", "rgba(34, 211, 238, 0.8)");
+animateLine("footer-waveform", "rgba(34, 211, 238, 0.6)");
 
 setInterval(() => {
   const el = document.getElementById("status-latency");
@@ -73,6 +165,14 @@ async function getGraphData() {
     graphDataCache = await fetch("/api/graph").then((r) => r.json());
   }
   return graphDataCache;
+}
+
+let knowledgeGraphCache = null;
+async function getKnowledgeGraphData() {
+  if (!knowledgeGraphCache) {
+    knowledgeGraphCache = await fetch("/api/knowledge-graph").then((r) => r.json());
+  }
+  return knowledgeGraphCache;
 }
 
 function formatUptime(seconds) {
@@ -103,6 +203,86 @@ async function loadOverview() {
     <div class="overview-card"><div class="label">ACTIVE PATTERNS</div><div class="value">${overview.activePatterns}</div><div class="sub">skills + agents installed</div></div>
     <div class="overview-card"><div class="label">UPTIME</div><div class="value">${formatUptime(overview.uptimeSeconds)}</div><div class="sub">dashboard server session</div></div>
   `;
+
+  loadHeroSphere();
+}
+
+// ---- Hero neural sphere (Overview) ----
+const SOURCE_COLOR = {
+  "aios-memory": "#22d3ee",
+  "obsidian-vault": "#bdeeff",
+};
+
+let heroGraphInstance = null;
+let heroGraphLoaded = false;
+let heroRotateAngle = 0;
+let heroUserInteracting = false;
+let heroInteractionTimer = null;
+
+async function loadHeroSphere() {
+  if (heroGraphLoaded) return;
+  heroGraphLoaded = true;
+
+  const data = await getKnowledgeGraphData();
+  const sub = document.getElementById("hero-sphere-sub");
+  if (sub) {
+    const memCount = data.nodes.filter((n) => n.source === "aios-memory").length;
+    const wikiCount = data.nodes.filter((n) => n.source === "obsidian-vault").length;
+    sub.textContent = `${memCount} MEMORY NODES · ${wikiCount} VAULT NODES`;
+  }
+
+  const degree = {};
+  data.links.forEach((l) => {
+    degree[l.source] = (degree[l.source] || 0) + 1;
+    degree[l.target] = (degree[l.target] || 0) + 1;
+  });
+
+  const container = document.getElementById("hero-sphere-container");
+  container.innerHTML = "";
+  heroGraphInstance = ForceGraph3D()(container)
+    .backgroundColor("rgba(0,0,0,0)")
+    .graphData(data)
+    .nodeId("id")
+    .nodeLabel((n) => `${n.name} [${n.source === "obsidian-vault" ? "vault" : "memory"}]`)
+    .nodeColor((n) => SOURCE_COLOR[n.source] || "#67e8f9")
+    .nodeVal((n) => 1 + (degree[n.id] || 0) * 0.5)
+    .nodeOpacity(0.95)
+    .nodeResolution(12)
+    .linkColor(() => "rgba(103, 232, 249, 0.55)")
+    .linkWidth(0.9)
+    .linkDirectionalParticles(4)
+    .linkDirectionalParticleWidth(2.2)
+    .linkDirectionalParticleColor(() => "#ecfeff")
+    .linkDirectionalParticleSpeed(0.012)
+    .showNavInfo(false)
+    .width(container.clientWidth)
+    .height(container.clientHeight);
+
+  window.addEventListener("resize", () => {
+    if (activeView === "overview" && heroGraphInstance) {
+      heroGraphInstance.width(container.clientWidth).height(container.clientHeight);
+    }
+  });
+
+  container.addEventListener("pointerdown", () => {
+    heroUserInteracting = true;
+    clearTimeout(heroInteractionTimer);
+  });
+  container.addEventListener("pointerup", () => {
+    heroInteractionTimer = setTimeout(() => (heroUserInteracting = false), 3000);
+  });
+
+  (function autoRotateHero() {
+    if (activeView === "overview" && heroGraphInstance && !heroUserInteracting) {
+      heroRotateAngle += 0.0012;
+      const distance = 260;
+      heroGraphInstance.cameraPosition({
+        x: distance * Math.sin(heroRotateAngle),
+        z: distance * Math.cos(heroRotateAngle),
+      });
+    }
+    requestAnimationFrame(autoRotateHero);
+  })();
 }
 
 // ---- Memory graph (3D) ----
@@ -115,19 +295,23 @@ let interactionTimer = null;
 async function showNodeDetail(node) {
   const detail = document.getElementById("memory-detail");
   detail.innerHTML = `<p class="placeholder">Loading…</p>`;
-  const res = await fetch(`/api/memory/${node.slug}`);
+  const isVault = node.source === "obsidian-vault";
+  const url = isVault
+    ? `/api/vault-note?path=${encodeURIComponent(node.path)}`
+    : `/api/memory/${node.slug}`;
+  const res = await fetch(url);
   if (!res.ok) {
     detail.innerHTML = `<p class="placeholder">No detail found for this node.</p>`;
     return;
   }
   const { html } = await res.json();
-  const color = TYPE_COLOR[node.type] || TYPE_FALLBACK;
+  const color = isVault ? SOURCE_COLOR["obsidian-vault"] : TYPE_COLOR[node.type] || TYPE_FALLBACK;
   detail.innerHTML = `
     <div class="node-tooltip" style="color:${color}">
       <div class="nt-name">${node.name}</div>
-      <div class="nt-type">${node.type}</div>
+      <div class="nt-type">${isVault ? "obsidian vault" : "aios memory"} · ${node.type}</div>
     </div>
-    <hr style="border:none;border-top:1px solid rgba(0,229,255,0.15);margin:12px 0;">
+    <hr style="border:none;border-top:1px solid rgba(34,211,238,0.15);margin:12px 0;">
     ${html}
   `;
 }
@@ -139,7 +323,7 @@ function resizeGraph() {
 }
 
 async function loadMemoryGraph() {
-  const data = await getGraphData();
+  const data = await getKnowledgeGraphData();
   if (graphLoaded) return;
   graphLoaded = true;
 
@@ -154,16 +338,16 @@ async function loadMemoryGraph() {
     .backgroundColor("rgba(0,0,0,0)")
     .graphData(data)
     .nodeId("id")
-    .nodeLabel((n) => `${n.name} [${n.type}]`)
-    .nodeColor((n) => TYPE_COLOR[n.type] || TYPE_FALLBACK)
+    .nodeLabel((n) => `${n.name} [${n.source === "obsidian-vault" ? "vault" : n.type}]`)
+    .nodeColor((n) => (n.source === "obsidian-vault" ? SOURCE_COLOR["obsidian-vault"] : TYPE_COLOR[n.type] || TYPE_FALLBACK))
     .nodeVal((n) => 1.4 + (degree[n.id] || 0) * 0.6)
     .nodeOpacity(0.92)
-    .linkColor(() => "rgba(0, 229, 255, 0.25)")
-    .linkWidth(0.5)
-    .linkDirectionalParticles(2)
-    .linkDirectionalParticleWidth(1.3)
-    .linkDirectionalParticleColor(() => "#4be3ff")
-    .linkDirectionalParticleSpeed(0.004)
+    .linkColor(() => "rgba(103, 232, 249, 0.55)")
+    .linkWidth(0.8)
+    .linkDirectionalParticles(4)
+    .linkDirectionalParticleWidth(2)
+    .linkDirectionalParticleColor(() => "#ecfeff")
+    .linkDirectionalParticleSpeed(0.01)
     .onNodeClick((node) => showNodeDetail(node))
     .showNavInfo(false);
 
@@ -216,6 +400,7 @@ async function loadEcosystem() {
       sub: s.status.label,
       state: s.status.state,
       icon: "◆",
+      url: s.url,
     }));
     nodes.push({ label: "SKILLS", sub: `${skillsRes.skills.length} INSTALLED`, state: "online", icon: "✺" });
     nodes.push({ label: "AGENTS", sub: `${skillsRes.agents.length} INSTALLED`, state: "online", icon: "◈" });
@@ -265,10 +450,14 @@ function renderOrbit(nodes) {
     wrap.appendChild(tether);
 
     const node = document.createElement("div");
-    node.className = `orbit-node state-${n.state}`;
+    node.className = `orbit-node state-${n.state}${n.url ? " linkable" : ""}`;
     node.style.left = `${x}px`;
     node.style.top = `${y}px`;
     node.innerHTML = `<div class="node-hex">${n.icon}</div><div class="node-label">${n.label}</div><div class="node-sub">${n.sub}</div>`;
+    if (n.url) {
+      node.title = `Open ${n.label}`;
+      node.addEventListener("click", () => window.open(n.url, "_blank", "noopener"));
+    }
     wrap.appendChild(node);
   });
 }

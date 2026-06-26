@@ -10,6 +10,7 @@ const MEMORY_DIR = path.join(
   ".claude/projects/-Users-seanm-Documents-GitHub-Vulnaguard-AIS-OS/memory",
 );
 const MEMORY_INDEX = path.join(path.dirname(MEMORY_DIR), "MEMORY.md");
+const OBSIDIAN_WIKI_DIR = path.join(process.env.HOME || "", "Documents/Obsidian Vault/wiki");
 
 const app = express();
 const PORT = process.env.PORT || 4400;
@@ -36,6 +37,26 @@ function listMdFiles(dir) {
   }
 }
 
+function listMdFilesRecursive(dir) {
+  let results = [];
+  let entries;
+  try {
+    entries = fs.readdirSync(dir, { withFileTypes: true });
+  } catch {
+    return results;
+  }
+  for (const entry of entries) {
+    if (entry.name.startsWith(".") || entry.name.startsWith("_")) continue;
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      results = results.concat(listMdFilesRecursive(full));
+    } else if (entry.name.endsWith(".md")) {
+      results.push(full);
+    }
+  }
+  return results;
+}
+
 // --- Memory ---
 app.get("/api/memory", (req, res) => {
   const files = listMdFiles(MEMORY_DIR);
@@ -55,6 +76,19 @@ app.get("/api/memory", (req, res) => {
 
 app.get("/api/memory/:slug", (req, res) => {
   const filePath = path.join(MEMORY_DIR, `${req.params.slug}.md`);
+  const raw = readSafe(filePath);
+  if (!raw) return res.status(404).json({ error: "not found" });
+  const { data, content } = matter(raw);
+  res.json({ frontmatter: data, html: marked.parse(content) });
+});
+
+// --- Obsidian vault note detail (for the combined knowledge graph) ---
+app.get("/api/vault-note", (req, res) => {
+  const relPath = req.query.path || "";
+  const filePath = path.resolve(OBSIDIAN_WIKI_DIR, relPath);
+  if (!filePath.startsWith(OBSIDIAN_WIKI_DIR + path.sep)) {
+    return res.status(400).json({ error: "invalid path" });
+  }
   const raw = readSafe(filePath);
   if (!raw) return res.status(404).json({ error: "not found" });
   const { data, content } = matter(raw);
@@ -97,6 +131,68 @@ app.get("/api/graph", (req, res) => {
       if (seen.has(key)) return;
       seen.add(key);
       links.push({ source, target });
+    });
+  });
+
+  res.json({ nodes, links });
+});
+
+// --- Combined knowledge graph: AIOS memory + Obsidian vault wiki ---
+// Powers the rotating neural-sphere hero on the Overview page with real
+// data from both knowledge bases, not synthetic/decorative nodes.
+app.get("/api/knowledge-graph", (req, res) => {
+  const nodes = [];
+  const linkTargets = new Map();
+  const nodeIds = new Set();
+
+  function ingest(files, { source, idPrefix, defaultType, baseDir }) {
+    files.forEach((filePath) => {
+      const raw = readSafe(filePath);
+      if (!raw) return;
+      const { data, content } = matter(raw);
+      const fileSlug = path.basename(filePath, ".md");
+      const name = data.title || data.name || fileSlug;
+      const id = `${idPrefix}:${name}`;
+      if (nodeIds.has(id)) return;
+      nodeIds.add(id);
+      nodes.push({
+        id,
+        name,
+        source,
+        type: data.type || (data.metadata && data.metadata.type) || defaultType,
+        slug: source === "aios-memory" ? fileSlug : undefined,
+        path: source === "obsidian-vault" ? path.relative(baseDir, filePath) : undefined,
+      });
+      const targets = new Set();
+      const re = /\[\[([^\]|#]+)/g;
+      let m;
+      while ((m = re.exec(content))) targets.add(`${idPrefix}:${m[1].trim()}`);
+      linkTargets.set(id, targets);
+    });
+  }
+
+  ingest(listMdFiles(MEMORY_DIR).filter((f) => path.basename(f) !== "MEMORY.md"), {
+    source: "aios-memory",
+    idPrefix: "mem",
+    defaultType: "unknown",
+    baseDir: MEMORY_DIR,
+  });
+  ingest(listMdFilesRecursive(OBSIDIAN_WIKI_DIR), {
+    source: "obsidian-vault",
+    idPrefix: "wiki",
+    defaultType: "note",
+    baseDir: OBSIDIAN_WIKI_DIR,
+  });
+
+  const seen = new Set();
+  const links = [];
+  linkTargets.forEach((targets, sourceId) => {
+    targets.forEach((targetId) => {
+      if (!nodeIds.has(targetId) || targetId === sourceId) return;
+      const key = [sourceId, targetId].sort().join("::");
+      if (seen.has(key)) return;
+      seen.add(key);
+      links.push({ source: sourceId, target: targetId });
     });
   });
 
@@ -180,12 +276,33 @@ function computeStatus(row) {
   return { state: "stale", gauge: 70, label: "STALE", daysSince };
 }
 
+// Known public dashboards for tools mentioned in connections.md — only
+// stable top-level service URLs, not guessed/invented paths.
+const TOOL_LINKS = [
+  { match: /stripe/i, url: "https://dashboard.stripe.com" },
+  { match: /mercury bank/i, url: "https://mercury.com" },
+  { match: /outlook calendar|microsoft graph/i, url: "https://outlook.office.com/calendar" },
+  { match: /slack/i, url: "https://app.slack.com/client" },
+  { match: /linear/i, url: "https://linear.app" },
+  { match: /github/i, url: "https://github.com/JonSvitna" },
+  { match: /google search console/i, url: "https://search.google.com/search-console" },
+  { match: /buffer/i, url: "https://buffer.com" },
+  { match: /digitalocean/i, url: "https://cloud.digitalocean.com" },
+  { match: /vercel/i, url: "https://vercel.com/dashboard" },
+];
+
+function findToolLink(text) {
+  const hit = TOOL_LINKS.find((t) => t.match.test(text || ""));
+  return hit ? hit.url : null;
+}
+
 app.get("/api/connections/structured", (req, res) => {
   const raw = readSafe(path.join(REPO_ROOT, "connections.md")) || "";
   const rows = parseConnectionsTable(raw);
   const systems = rows.map((row) => ({
     ...row,
     status: computeStatus(row),
+    url: findToolLink(row.tool) || findToolLink(row.domain),
   }));
   const online = systems.filter((s) => s.status.state === "online").length;
   res.json({ systems, online, total: systems.length });

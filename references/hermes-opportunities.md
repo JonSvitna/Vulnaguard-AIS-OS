@@ -9,7 +9,7 @@
 
 ## Vulnaguard
 
-### [unused] 2026-06-26 — sentinel-closes-out-7-integration-adapters
+### [used 2026-06-27] 2026-06-26 — sentinel-closes-out-7-integration-adapters
 **Domain:** Vulnaguard
 **Pillar guess:** Behind Sentinel — one real feature and the reason it exists
 **Source:** commit 32ef672 in Sentinel-CMMC
@@ -21,7 +21,7 @@
 **Screenshot:** screenshots/hermes/sentinel-closes-out-7-integration-adapters.png
 **Status:** unused
 
-### [unused] 2026-06-26 — aws-continuous-monitoring-adapter
+### [used 2026-06-27] 2026-06-26 — aws-continuous-monitoring-adapter
 **Domain:** Vulnaguard
 **Pillar guess:** Behind Sentinel — one real feature and the reason it exists
 **Source:** commit 8e849f7 in Sentinel-CMMC
@@ -33,7 +33,7 @@
 **Screenshot:** screenshots/hermes/aws-continuous-monitoring-adapter.png
 **Status:** unused
 
-### [unused] 2026-06-26 — okta-continuous-monitoring-adapter
+### [skipped 2026-06-27 — near-duplicate of aws-continuous-monitoring-adapter, same controls/pattern] 2026-06-26 — okta-continuous-monitoring-adapter
 **Domain:** Vulnaguard
 **Pillar guess:** Behind Sentinel — one real feature and the reason it exists
 **Source:** commit d940c9b in Sentinel-CMMC
@@ -45,7 +45,7 @@
 **Screenshot:** screenshots/hermes/okta-continuous-monitoring-adapter.png
 **Status:** unused
 
-### [unused] 2026-06-26 — assessor-export-no-frontend-entry-point
+### [used 2026-06-27] 2026-06-26 — assessor-export-no-frontend-entry-point
 **Domain:** Vulnaguard
 **Pillar guess:** Behind Sentinel — one real feature and the reason it exists
 **Source:** commit 128330c in Sentinel-CMMC
@@ -57,7 +57,7 @@
 **Screenshot:** screenshots/hermes/assessor-export-no-frontend-entry-point.png
 **Status:** unused
 
-### [unused] 2026-06-26 — pdf-assessment-export-sentinel
+### [used 2026-06-27] 2026-06-26 — pdf-assessment-export-sentinel
 **Domain:** Vulnaguard
 **Pillar guess:** Behind Sentinel — one real feature and the reason it exists
 **Source:** commit 2d05363 in Sentinel-CMMC
@@ -69,7 +69,7 @@
 **Screenshot:** screenshots/hermes/pdf-assessment-export-sentinel.png
 **Status:** unused
 
-### [unused] 2026-06-26 — opt-out-handling-outreach-replies
+### [used 2026-06-27] 2026-06-26 — opt-out-handling-outreach-replies
 **Domain:** Vulnaguard
 **Pillar guess:** Behind the build — process, tools, decisions
 **Source:** commit 71d9668 in vulnaguard-seo-agent
@@ -81,7 +81,7 @@
 **Screenshot:** screenshots/hermes/opt-out-handling-outreach-replies.png
 **Status:** unused
 
-### [unused] 2026-06-26 — stale-usage-panel-fix-collapse-strip
+### [used 2026-06-27] 2026-06-26 — stale-usage-panel-fix-collapse-strip
 **Domain:** Vulnaguard
 **Pillar guess:** Before/after — a number that changed
 **Source:** commit 98dc2ad in vulnaguard-seo-agent
@@ -93,7 +93,7 @@
 **Screenshot:** screenshots/hermes/stale-usage-panel-fix-collapse-strip.png
 **Status:** unused
 
-### [unused] 2026-06-26 — token-capture-was-missing-from-ai-calls
+### [used 2026-06-27] 2026-06-26 — token-capture-was-missing-from-ai-calls
 **Domain:** Vulnaguard
 **Pillar guess:** Lesson from a mistake — what went wrong, what changed after
 **Source:** commit 857c66c in vulnaguard-seo-agent
@@ -105,7 +105,7 @@
 **Screenshot:** screenshots/hermes/token-capture-was-missing-from-ai-calls.png
 **Status:** unused
 
-### [unused] 2026-06-26 — 52-leads-invisible-naming-mismatch
+### [used 2026-06-27] 2026-06-26 — 52-leads-invisible-naming-mismatch
 **Domain:** Vulnaguard
 **Pillar guess:** Lesson from a mistake — what went wrong, what changed after
 **Source:** commit f6acc36 in vulnaguard-seo-agent
@@ -117,7 +117,7 @@
 **Screenshot:** screenshots/hermes/52-leads-invisible-naming-mismatch.png
 **Status:** unused
 
-### [unused] 2026-06-26 — cross-app-dedup-at-import
+### [used 2026-06-27] 2026-06-26 — cross-app-dedup-at-import
 **Domain:** Vulnaguard
 **Pillar guess:** SEO agent in action — a specific thing it caught or automated
 **Source:** commit 97313b8 in vulnaguard-seo-agent

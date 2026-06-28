@@ -18,6 +18,16 @@ Append-only record of meaningful decisions and why they were made. `/level-up` P
 
 Keep it terse. Future-you will thank present-you for capturing the *why*, not just the *what*.
 
+## 2026-06-26 — Connected YouTube Data API for OfficialSeanBuilds channel branding
+
+**Decision:** Built `scripts/youtube_api.py` (stdlib OAuth, no third-party deps) to read/update channel title and description via the YouTube Data API. Used a dedicated Google Cloud project (`youtube-channel-manager-500617`) in OAuth Testing mode rather than Sean's existing shared Production project, so the restricted `youtube` scope doesn't trigger Google's app verification review.
+
+**Why:** Sean wanted to offload his YouTube channel redesign — name, bio, profile pictures — since the manual process is time-consuming. Confirmed the API's actual surface: it can write `brandingSettings.channel.title`/`description`, but has no endpoint for avatar/banner image upload or @handle changes — those stay manual in YouTube Studio regardless of automation.
+
+**Alternatives considered:** Reusing the existing shared Google Cloud project (rejected — it's already in Production for other apps; adding a sensitive scope there would force a verification process). Using `google-api-python-client` (rejected — `requirements.txt` documents that `scripts/` is stdlib-only by design, for Railway/Nixpacks detection reasons).
+
+**Owner:** Sean.
+
 ## 2026-06-24 — Deployed vulnaguard-website-creation-tool to Vercel, wired to Railway Postgres; connected GitHub auto-deploy
 
 **Decision:** Created the Vercel project (`vulnaguard-website-creation-tool`, team `jonsvitnas-projects`), pushed production env vars (`DATABASE_URL` using Railway's public connection string, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `AI_RATE_LIMIT_PER_HOUR`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL`), and deployed. Connected the GitHub repo via `vercel git connect` so future pushes to `main` auto-deploy — Sean doesn't need to run a manual deploy each time.

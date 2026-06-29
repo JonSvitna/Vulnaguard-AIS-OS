@@ -28,6 +28,17 @@ If it sounds like a builder explaining something over coffee → publish it.
 
 ---
 
+## Practical Advice Over Tool Hype
+
+Most creators in this space post "new tool just dropped" or feature roundups. Sean doesn't. He gives practical, real-world advice for the actual situation someone's in — the tool is never the point, what you do with it is.
+
+- Lead with the situation/decision, not the tool name
+- A tool gets mentioned only in service of the advice, never as the headline
+- The tool is just a tool: "The shovel is just a tool. It doesn't matter how good the shovel is if you're digging in the wrong spot." — this is the template move: name the tool, then immediately deflate it down to "still just a tool," then pivot to the real point (the decision, the process, the judgment call)
+- Bland and to-the-point is fine — even preferred. It doesn't need to be exciting, it needs to be useful enough that someone stops scrolling. Capture attention through directness and a sharp opening line, not hype.
+
+---
+
 ## Word Rules
 
 ### Never Use
@@ -93,6 +104,7 @@ Draw from these or invent new ones in the same register:
 - "AI is a hammer. A hammer doesn't build a house. Somebody still needs a plan." (AI reality check)
 - "Compliance is a lot like checking your smoke detectors." (boring-but-necessary)
 - "I don't start with code. I start with annoyance." (how good software gets built)
+- "The shovel is just a tool. Doesn't matter how good it is if you're digging in the wrong spot." (practical advice over tool hype)
 
 ---
 

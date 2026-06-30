@@ -1,0 +1,5 @@
+# Pending vault updates — 2026-06-30 PM
+
+- **SeanBuilds brand voice: "Practical Advice Over Tool Hype" positioning codified** (`commit 9ca5740`, Jun 29 16:13 ET). Added a named section to `.claude/skills/seanbuilds-voice/SKILL.md` that formalizes Sean's content differentiation angle — the tool is never the headline, the decision/process/judgment call is. Canonical template move: name the tool → immediately deflate it to "just a tool" → pivot to the real point (e.g., "The shovel is just a tool. Doesn't matter how good it is if you're digging in the wrong spot."). Also added this quote to the voice samples table. **Why this matters for the vault:** this is a standing market-positioning rule for all SeanBuilds content, not a one-off post decision — worth capturing in the vault's SeanBuilds domain page so it carries forward to content strategy / onboarding context regardless of which session is drafting.
+
+- No new entries in `decisions/log.md` or `leads/inbox.md` since the last check (`pending-2026-06-29-AM.md`).

@@ -1,0 +1,588 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Vulnaguard LLC — Capability Statement</title>
+<style>
+  @page { size: letter; margin: 0; }
+
+  :root {
+    /* Vulnaguard brand palette (sourced from frontend/components/sentinel/theme.ts) */
+    --ink-deep:    #0e0c0a;   /* warm near-black, gradient depth */
+    --panel:       #211f1a;   /* primary dark panel — site --vg-panel */
+    --panel-light: #2d2924;   /* mid warm-dark */
+
+    --brand:       #c46a34;   /* primary copper — site --vg-brand */
+    --brand-deep:  #9d5128;   /* deeper copper, headings */
+    --brand-bright:#d97b46;   /* brighter accent, pills, borders */
+    --brand-tint:  #faecd9;   /* light copper wash, mission box bg */
+    --amber:       #f5a352;   /* warm amber secondary accent */
+
+    --paper:       #fefcf7;   /* off-white, warm */
+    --paper-deep:  #ebe2cf;   /* page surround */
+    --cream:       #fdf8ed;   /* card highlight */
+
+    --ink:         #171410;   /* warm near-black text */
+    --muted:       #6b6356;   /* warm muted */
+    --rule:        #d9d0bf;   /* warm border */
+    --rule-soft:   #ece4d3;   /* faint warm border */
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--ink);
+    background: var(--paper-deep);
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .page {
+    width: 8.5in;
+    height: 11in;
+    margin: 0 auto;
+    background: var(--paper);
+    display: grid;
+    grid-template-rows: auto 1fr auto auto;
+    overflow: hidden;
+  }
+
+  /* ─── HEADER ────────────────────────────────────────────────── */
+  header.brand {
+    background:
+      radial-gradient(900px 220px at 85% -40%, rgba(196,106,52,.45), transparent 60%),
+      linear-gradient(135deg, var(--ink-deep) 0%, var(--panel) 55%, var(--panel-light) 100%);
+    color: #fff;
+    padding: 0.45in 0.55in 0.4in;
+    position: relative;
+    overflow: hidden;
+  }
+  header.brand::after {
+    content: "";
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--brand-bright), var(--brand) 50%, var(--brand-deep));
+  }
+
+  .brand-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 18px;
+  }
+
+  .logo-mark {
+    width: 56px; height: 56px;
+    flex-shrink: 0;
+    display: block;
+  }
+
+  .brand-name {
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    margin: 0;
+    line-height: 1.05;
+    color: #F0EDE8;
+  }
+  .brand-tag {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    color: #f5c89c;
+    margin-top: 4px;
+  }
+
+  .id-badge {
+    display: grid;
+    grid-template-columns: auto auto;
+    gap: 2px 14px;
+    font-size: 10px;
+    line-height: 1.45;
+    padding: 10px 14px;
+    border: 1px solid rgba(245,200,156,.28);
+    border-radius: 6px;
+    background: rgba(255,255,255,.04);
+    text-align: left;
+  }
+  .id-badge dt {
+    color: #f5c89c;
+    font-weight: 600;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    font-size: 9px;
+    margin: 0;
+  }
+  .id-badge dd {
+    margin: 0;
+    color: #fff;
+    font-weight: 700;
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 11px;
+  }
+
+  /* ─── BODY ──────────────────────────────────────────────────── */
+  main {
+    padding: 0.35in 0.55in 0.15in;
+    display: grid;
+    grid-template-columns: 0.92fr 1.02fr 1.32fr;
+    gap: 20px;
+  }
+
+  .col h2 {
+    font-size: 11px;
+    letter-spacing: 1.6px;
+    text-transform: uppercase;
+    color: var(--brand-deep);
+    margin: 0 0 8px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid var(--brand);
+    font-weight: 800;
+  }
+
+  .col h2 + p,
+  .col h2 + ul,
+  .col h2 + .card { margin-top: 8px; }
+
+  .col p {
+    font-size: 10.5px;
+    line-height: 1.55;
+    color: var(--ink);
+    margin: 0 0 14px;
+  }
+  .col p.mission {
+    font-style: italic;
+    color: var(--panel);
+    border-left: 3px solid var(--brand);
+    padding: 6px 10px;
+    background: var(--brand-tint);
+    border-radius: 0 4px 4px 0;
+  }
+
+  /* Competencies list with icons */
+  ul.icon-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 7px;
+  }
+  ul.icon-list li {
+    display: grid;
+    grid-template-columns: 22px 1fr;
+    gap: 9px;
+    align-items: start;
+    font-size: 10.5px;
+    line-height: 1.4;
+    color: var(--ink);
+  }
+  ul.icon-list svg {
+    width: 18px; height: 18px;
+    color: var(--brand-deep);
+    margin-top: 1px;
+  }
+  ul.icon-list b {
+    display: block;
+    color: var(--panel);
+    font-weight: 700;
+    font-size: 10.5px;
+  }
+  ul.icon-list span {
+    color: var(--muted);
+    font-size: 9.5px;
+  }
+
+  /* Differentiators */
+  ul.diff {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 6px;
+  }
+  ul.diff li {
+    font-size: 10.5px;
+    line-height: 1.4;
+    padding: 7px 10px 7px 26px;
+    border-radius: 5px;
+    background: var(--cream);
+    border: 1px solid var(--rule-soft);
+    position: relative;
+    color: var(--ink);
+  }
+  ul.diff li::before {
+    content: "";
+    position: absolute;
+    left: 10px; top: 11px;
+    width: 8px; height: 8px;
+    border-radius: 2px;
+    background: var(--brand);
+    box-shadow: 0 0 0 3px rgba(196,106,52,.18);
+  }
+
+  /* Company snapshot card */
+  .card {
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 12px 14px 14px;
+    background:
+      linear-gradient(180deg, #fff 0%, #fff 60%, var(--cream) 100%);
+    margin-bottom: 14px;
+    position: relative;
+  }
+  .card::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 3px;
+    border-radius: 8px 8px 0 0;
+    background: linear-gradient(90deg, var(--brand), var(--panel));
+  }
+  .card h3 {
+    font-size: 10px;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    margin: 0 0 8px;
+    color: var(--panel);
+    font-weight: 800;
+  }
+  dl.snapshot {
+    display: grid;
+    grid-template-columns: 74px 1fr;
+    gap: 5px 10px;
+    margin: 0;
+    font-size: 10px;
+    line-height: 1.35;
+  }
+  dl.snapshot dd.email {
+    word-break: keep-all;
+    overflow-wrap: anywhere;
+    font-size: 9.5px;
+  }
+  dl.snapshot dt {
+    color: var(--muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 9px;
+    padding-top: 1px;
+  }
+  dl.snapshot dd {
+    margin: 0;
+    color: var(--ink);
+    font-weight: 600;
+    word-break: break-word;
+  }
+  dl.snapshot dd.mono {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    color: var(--brand-deep);
+  }
+
+  /* Growth box: contract vehicles + certs */
+  .growth {
+    border: 1px dashed #b8a892;
+    border-radius: 8px;
+    padding: 10px 12px 12px;
+    background: var(--cream);
+  }
+  .growth h3 {
+    font-size: 9.5px;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    margin: 0 0 8px;
+    color: var(--panel);
+    font-weight: 800;
+  }
+  .growth .grid2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+  .growth .slot {
+    height: 22px;
+    border: 1px dashed #cdbfa6;
+    border-radius: 4px;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 8.5px;
+    color: #a89a82;
+    letter-spacing: 0.4px;
+  }
+  .growth .slot.earned {
+    border: 1px solid var(--brand);
+    background: var(--brand-tint);
+    color: var(--brand-deep);
+    font-weight: 700;
+  }
+  .growth p.hint {
+    margin: 8px 0 0;
+    font-size: 8.5px;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+
+  /* ─── FOOTER ────────────────────────────────────────────────── */
+  footer.codes {
+    margin-top: 0.1in;
+    background: linear-gradient(135deg, var(--ink-deep), var(--panel));
+    color: #fff;
+    padding: 0.32in 0.55in 0.36in;
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 22px;
+    align-items: center;
+    border-top: 4px solid var(--brand);
+  }
+  footer.codes h4 {
+    margin: 0 0 6px;
+    font-size: 9px;
+    letter-spacing: 1.6px;
+    text-transform: uppercase;
+    color: #f5c89c;
+    font-weight: 800;
+  }
+  footer.codes .codeblock {
+    font-size: 10.5px;
+    line-height: 1.5;
+  }
+  footer.codes .code-pill {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.06);
+    border: 1px solid rgba(245,200,156,.32);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 10px;
+    margin: 2px 4px 2px 0;
+    color: #fff;
+    letter-spacing: 0.4px;
+  }
+  footer.codes .code-pill.primary {
+    background: var(--brand);
+    border-color: var(--brand-bright);
+    font-weight: 700;
+  }
+  footer.codes .qr {
+    text-align: center;
+    color: #f5c89c;
+    font-size: 9px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+  }
+  footer.codes .qr img {
+    width: 86px; height: 86px;
+    display: block;
+    margin: 0 auto 4px;
+    background: #fff;
+    padding: 4px;
+    border-radius: 6px;
+  }
+  footer.codes .qr .url {
+    color: #fff;
+    font-weight: 700;
+    font-size: 10px;
+    letter-spacing: 0.4px;
+    text-transform: none;
+    margin-top: 2px;
+  }
+
+  .legal {
+    text-align: center;
+    font-size: 8px;
+    color: #8a8076;
+    padding: 5px 0 7px;
+    letter-spacing: 0.4px;
+    background: var(--paper);
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ─── BRAND HEADER ────────────────────────────────────── -->
+  <header class="brand">
+    <div class="brand-row">
+      <!-- Vulnaguard brand mark — matches site (rounded tile + copper shield with check) -->
+      <svg class="logo-mark" viewBox="0 0 56 56" aria-label="Vulnaguard logo">
+        <defs>
+          <linearGradient id="tileGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="rgba(196,106,52,0.32)"/>
+            <stop offset="100%" stop-color="rgba(196,106,52,0)"/>
+          </linearGradient>
+        </defs>
+        <!-- Tile -->
+        <rect x="0.75" y="0.75" width="54.5" height="54.5" rx="14"
+              fill="#161310"
+              stroke="rgba(196,106,52,0.45)" stroke-width="1.2"/>
+        <rect x="0.75" y="0.75" width="54.5" height="54.5" rx="14"
+              fill="url(#tileGrad)"/>
+        <!-- Shield + check, centered (24-viewBox glyph scaled 1.25× → 30px, offset 13px) -->
+        <g transform="translate(13, 13) scale(1.25)">
+          <path d="M12 2.5 L20 6 V12 C20 17 16.5 20.5 12 22 C7.5 20.5 4 17 4 12 V6 Z"
+                fill="#c46a34" fill-opacity="0.22"
+                stroke="#c46a34" stroke-width="1.6"
+                stroke-linejoin="round"/>
+          <path d="M9 12 L11.2 14.2 L15.5 9.8"
+                fill="none" stroke="#c46a34" stroke-width="1.9"
+                stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+      </svg>
+
+      <div>
+        <h1 class="brand-name">VULNAGUARD<span style="color:#d97b46;font-weight:600;letter-spacing:1px"> LLC</span></h1>
+        <div class="brand-tag">Compliance Intelligence for Government Contractors</div>
+      </div>
+
+      <dl class="id-badge">
+        <dt>UEI</dt>     <dd>CJ7ZXTUSN3W8</dd>
+        <dt>CAGE</dt>    <dd>21QQ7</dd>
+        <dt>NAICS</dt>   <dd>541512</dd>
+      </dl>
+    </div>
+  </header>
+
+  <!-- ─── BODY: 3 COLUMNS ─────────────────────────────────── -->
+  <main>
+
+    <!-- COL 1: Overview + Mission + Differentiators -->
+    <section class="col">
+      <h2>Company Overview</h2>
+      <p>
+        Vulnaguard LLC is a Maryland-based cybersecurity and compliance company
+        focused on helping organizations reduce cyber risk, strengthen security
+        programs, and prepare for government and regulated-industry compliance
+        requirements. Our proprietary <b>Sentinel</b> platform combines compliance
+        automation with executive risk visibility.
+      </p>
+
+      <h2>Mission</h2>
+      <p class="mission">
+        To help organizations strengthen their cybersecurity posture through
+        practical security consulting and intelligent compliance automation.
+      </p>
+
+      <h2>Differentiators</h2>
+      <ul class="diff">
+        <li>Purpose-built for government contractors and their supply chain.</li>
+        <li>Proprietary <b>Sentinel</b> compliance intelligence platform.</li>
+        <li>API-first architecture &mdash; integrates with existing stacks.</li>
+        <li>Practical, risk-first approach &mdash; no compliance theater.</li>
+        <li>Combines consulting expertise with automation at micro-purchase pricing.</li>
+      </ul>
+    </section>
+
+    <!-- COL 2: Core Competencies with icons -->
+    <section class="col">
+      <h2>Core Competencies</h2>
+      <ul class="icon-list">
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.5 8.5-8 9-4.5-.5-8-4-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/></svg>
+          <div><b>CMMC Readiness Assessments</b><span>Level 1 &amp; Level 2 gap analysis, scoping, evidence prep.</span></div>
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 7h6M9 11h6M9 15h4"/></svg>
+          <div><b>NIST SP 800-171 Gap Assessments</b><span>Control-by-control review, scoring, POA&amp;M drafting.</span></div>
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          <div><b>Vulnerability Assessments</b><span>External &amp; internal scans, prioritized remediation plans.</span></div>
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z"/></svg>
+          <div><b>Compliance Automation &amp; Continuous Monitoring</b><span>Evidence pipelines, control telemetry, drift detection.</span></div>
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l10 18H2L12 3z"/><path d="M12 10v5M12 18.5v.01"/></svg>
+          <div><b>Risk Assessments &amp; Risk Registers</b><span>Quantified risk scoring, register build, treatment plans.</span></div>
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18"/><rect x="5" y="11" width="3" height="8"/><rect x="11" y="6" width="3" height="13"/><rect x="17" y="13" width="3" height="6"/></svg>
+          <div><b>Executive Cybersecurity Reporting</b><span>Board-ready dashboards, revenue-at-risk summaries.</span></div>
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l5 5v13a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/></svg>
+          <div><b>Security Policy Development</b><span>SSPs, policies, SOPs aligned to NIST &amp; CMMC.</span></div>
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M5 8h14"/><path d="M5 8l-2 6a4 4 0 008 0L9 8M19 8l-2 6a4 4 0 008 0l-2-6"/></svg>
+          <div><b>Governance, Risk &amp; Compliance (GRC) Support</b><span>Program build-out, vendor risk, audit liaison.</span></div>
+        </li>
+      </ul>
+    </section>
+
+    <!-- COL 3: Company snapshot + growth box -->
+    <section class="col">
+      <h2>Company Snapshot</h2>
+      <div class="card">
+        <h3>At a Glance</h3>
+        <dl class="snapshot">
+          <dt>Business</dt>   <dd>Vulnaguard LLC</dd>
+          <dt>UEI</dt>        <dd class="mono">CJ7ZXTUSN3W8</dd>
+          <dt>CAGE</dt>       <dd class="mono">21QQ7</dd>
+          <dt>Type</dt>       <dd>Small Business</dd>
+          <dt>State</dt>      <dd>Maryland</dd>
+          <dt>Founded</dt>    <dd>2026</dd>
+          <dt>Website</dt>    <dd>vulnaguard.com</dd>
+          <dt>Email</dt>      <dd class="email">seanmurrill@vulnaguard.com</dd>
+          <dt>Awards</dt>     <dd>$2.5K – $20K (micro-purchase / SAP)</dd>
+        </dl>
+      </div>
+
+      <div class="growth">
+        <h3>Contract Vehicles &amp; Certifications</h3>
+        <div class="grid2">
+          <div class="slot earned">SAM.gov ✓</div>
+          <div class="slot earned">CAGE ✓</div>
+          <div class="slot">GSA MAS</div>
+          <div class="slot">SBA 8(a)</div>
+          <div class="slot">CMMC L2 C3PAO</div>
+          <div class="slot">DUNS / D&amp;B</div>
+        </div>
+        <p class="hint">
+          Placeholders grow with the business — mark each as it is awarded
+          or certified (e.g., GSA Schedule, 8(a) entry, SDB, HUBZone).
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <!-- ─── FOOTER: NAICS / PSC / QR ────────────────────────── -->
+  <footer class="codes">
+    <div class="codeblock">
+      <h4>NAICS Codes</h4>
+      <span class="code-pill primary">541512 · Primary</span><br/>
+      <span class="code-pill">541511</span>
+      <span class="code-pill">541519</span>
+      <span class="code-pill">541611</span>
+      <span class="code-pill">541690</span>
+      <span class="code-pill">541990</span>
+      <span class="code-pill">611420</span>
+    </div>
+    <div class="codeblock">
+      <h4>PSC Codes</h4>
+      <span class="code-pill">D310 · Cyber Security</span>
+      <span class="code-pill">D307 · IT Strategy</span><br/>
+      <span class="code-pill">R425 · Engineering Svcs</span>
+      <span class="code-pill">R408 · Program Mgmt</span>
+    </div>
+    <div class="qr">
+      <img src="assets/vulnaguard_qr.png" alt="QR code to vulnaguard.com"/>
+      Scan to visit
+      <div class="url">vulnaguard.com</div>
+    </div>
+  </footer>
+
+  <div class="legal">
+    Vulnaguard LLC · Capability Statement · Updated 2026-06-30
+  </div>
+</div>
+
+</body>
+</html>

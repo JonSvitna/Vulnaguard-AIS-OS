@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Vulnaguard LLC — Invoice Template</title>
+<link rel="stylesheet" href="assets/brand.css" />
+<style>
+  .pay-grid {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+  .remit {
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 11px 14px 12px;
+    background: linear-gradient(180deg, #fff 0%, var(--cream) 100%);
+  }
+  .remit h3 {
+    margin: 0 0 6px;
+    font-size: 10px;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    color: var(--panel);
+    font-weight: 800;
+  }
+  .remit dl {
+    display: grid; grid-template-columns: 110px 1fr;
+    gap: 4px 10px; margin: 0;
+    font-size: 10px; line-height: 1.4;
+  }
+  .remit dt {
+    color: var(--muted); font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    font-size: 9px; padding-top: 1px;
+  }
+  .remit dd { margin: 0; color: var(--ink); font-weight: 600; }
+  .remit dd.mono {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    color: var(--brand-deep);
+  }
+  .pay-callout {
+    background: var(--brand);
+    color: #fff;
+    border-radius: 8px;
+    padding: 14px 16px 16px;
+    display: grid;
+    align-content: center;
+  }
+  .pay-callout .label {
+    font-size: 9px; letter-spacing: 1.2px;
+    text-transform: uppercase; color: #fde2c4; font-weight: 800;
+  }
+  .pay-callout .amount {
+    font-size: 26px; font-weight: 800; letter-spacing: -0.4px;
+    line-height: 1.05; margin: 4px 0 8px;
+  }
+  .pay-callout .due {
+    font-size: 10px; color: #fde2c4; letter-spacing: 0.4px;
+  }
+  .pay-callout .due b { color: #fff; }
+</style>
+</head>
+<body>
+<div class="page page--cover">
+
+  <header class="brand">
+    <div class="brand-row">
+      <svg class="logo-mark" viewBox="0 0 56 56" aria-label="Vulnaguard logo">
+        <defs>
+          <linearGradient id="tileGradI" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="rgba(196,106,52,0.32)"/>
+            <stop offset="100%" stop-color="rgba(196,106,52,0)"/>
+          </linearGradient>
+        </defs>
+        <rect x="0.75" y="0.75" width="54.5" height="54.5" rx="14"
+              fill="#161310" stroke="rgba(196,106,52,0.45)" stroke-width="1.2"/>
+        <rect x="0.75" y="0.75" width="54.5" height="54.5" rx="14"
+              fill="url(#tileGradI)"/>
+        <g transform="translate(13, 13) scale(1.25)">
+          <path d="M12 2.5 L20 6 V12 C20 17 16.5 20.5 12 22 C7.5 20.5 4 17 4 12 V6 Z"
+                fill="#c46a34" fill-opacity="0.22"
+                stroke="#c46a34" stroke-width="1.6" stroke-linejoin="round"/>
+          <path d="M9 12 L11.2 14.2 L15.5 9.8"
+                fill="none" stroke="#c46a34" stroke-width="1.9"
+                stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+      </svg>
+      <div>
+        <h1 class="brand-name">VULNAGUARD<span class="accent"> LLC</span></h1>
+        <div class="doc-title">Invoice</div>
+      </div>
+      <div class="doc-stamp">
+        <div class="label">Invoice #</div><div class="value">[INV-YYYY-NNNN]</div>
+        <div class="label" style="margin-top:4px">Issued</div><div class="value">[YYYY-MM-DD]</div>
+        <div class="label" style="margin-top:4px">Due</div><div class="value">[YYYY-MM-DD]</div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="party-grid">
+      <div class="party">
+        <h3>Bill To</h3>
+        <dl>
+          <dt>Client</dt>    <dd class="fillable">[Client / Prime Contractor]</dd>
+          <dt>Attn</dt>      <dd class="fillable">[Accounts Payable Contact]</dd>
+          <dt>Email</dt>     <dd class="fillable">[ap@client.com]</dd>
+          <dt>Address</dt>   <dd class="fillable">[Street, City, ST ZIP]</dd>
+          <dt>PO / SOW #</dt><dd class="fillable">[Reference number]</dd>
+        </dl>
+      </div>
+      <div class="party">
+        <h3>From</h3>
+        <dl>
+          <dt>Company</dt>    <dd>Vulnaguard LLC</dd>
+          <dt>Address</dt>    <dd>[Street, Maryland, ZIP]</dd>
+          <dt>Contact</dt>    <dd>Sean Murrill</dd>
+          <dt>Email</dt>      <dd>seanmurrill@vulnaguard.com</dd>
+          <dt>CAGE / UEI</dt> <dd class="mono">21QQ7 · CJ7ZXTUSN3W8</dd>
+        </dl>
+      </div>
+    </div>
+
+    <div class="section-head"><h2>Charges</h2><span class="rule"></span></div>
+    <table class="lineitems">
+      <thead>
+        <tr>
+          <th style="width: 80px">Code</th>
+          <th>Description</th>
+          <th class="num" style="width: 60px">Qty</th>
+          <th style="width: 80px">Unit</th>
+          <th class="num" style="width: 80px">Rate</th>
+          <th class="num" style="width: 90px">Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="code">[GE-01]</td>
+          <td><b>[Service delivered]</b><span class="desc-sub">[SOW reference · acceptance date]</span></td>
+          <td class="num">1</td><td>Fixed-price</td><td class="num">$2,500</td><td class="num">$2,500</td>
+        </tr>
+        <tr>
+          <td class="code">[LR-02]</td>
+          <td><b>[Hourly support]</b><span class="desc-sub">[Period covered]</span></td>
+          <td class="num">10</td><td>Hours</td><td class="num">$175</td><td class="num">$1,750</td>
+        </tr>
+        <tr>
+          <td class="code">[—]</td>
+          <td><b>[Pass-through / expenses, if any]</b></td>
+          <td class="num">—</td><td>At cost</td><td class="num">—</td><td class="num">—</td>
+        </tr>
+      </tbody>
+      <tfoot>
+        <tr><td colspan="5" class="label">Subtotal</td><td class="num">$4,250</td></tr>
+        <tr><td colspan="5" class="label">Tax (services — N/A)</td><td class="num">$0.00</td></tr>
+        <tr><td colspan="5" class="label">Credits / Adjustments</td><td class="num">($0)</td></tr>
+        <tr class="grand"><td colspan="5" class="label">Total Due (USD)</td><td class="num total">$4,250</td></tr>
+      </tfoot>
+    </table>
+
+    <div class="pay-grid">
+      <div class="remit">
+        <h3>Remit To · ACH (Preferred)</h3>
+        <dl>
+          <dt>Bank</dt>            <dd class="fillable">[Bank name]</dd>
+          <dt>Account Name</dt>    <dd>Vulnaguard LLC</dd>
+          <dt>Routing #</dt>       <dd class="mono">[XXXXXXXXX]</dd>
+          <dt>Account #</dt>       <dd class="mono">[XXXXXXXXXXX]</dd>
+          <dt>SWIFT (intl)</dt>    <dd class="mono">[OPTIONAL]</dd>
+          <dt>Reference</dt>       <dd class="fillable">Invoice # above</dd>
+        </dl>
+        <p style="margin:8px 0 0;font-size:9px;color:var(--muted);line-height:1.4">
+          Check payable to <b>Vulnaguard LLC</b>, mailed to address in <b>From</b>.
+          Wire fees are payer's responsibility. ACH preferred for awards under
+          $20K to minimize processing time.
+        </p>
+      </div>
+      <div class="pay-callout">
+        <div class="label">Total Due</div>
+        <div class="amount">$4,250.00</div>
+        <div class="due">Payment terms: <b>Net 30</b> from issue date.<br/>Late balance accrues interest at 1.5%/mo.</div>
+      </div>
+    </div>
+
+    <div class="notes">
+      <b>Questions on this invoice?</b> Contact <b>seanmurrill@vulnaguard.com</b>
+      with the invoice number above. Invoiced under Vulnaguard LLC · CAGE 21QQ7 ·
+      UEI CJ7ZXTUSN3W8 · NAICS 541512. Thank you for your business.
+    </div>
+  </main>
+
+  <footer class="foot">
+    <div class="left"><b>Vulnaguard LLC</b> · vulnaguard.com · seanmurrill@vulnaguard.com</div>
+    <div class="mid">CAGE 21QQ7 · UEI CJ7ZXTUSN3W8 · NAICS 541512</div>
+    <div class="right">Invoice Template <span>v 1.0</span></div>
+  </footer>
+</div>
+</body>
+</html>

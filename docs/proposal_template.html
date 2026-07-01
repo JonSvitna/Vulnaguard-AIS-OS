@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Vulnaguard LLC — Proposal Template</title>
+<link rel="stylesheet" href="assets/brand.css" />
+<style>
+  .cover-main {
+    padding: 0.5in 0.55in 0.3in;
+    display: grid;
+    align-content: center;
+    text-align: left;
+  }
+  .cover-main .label {
+    font-size: 11px; letter-spacing: 1.6px;
+    text-transform: uppercase; color: var(--brand-deep);
+    font-weight: 800;
+  }
+  .cover-main h1 {
+    font-size: 32px; margin: 6px 0 4px;
+    color: var(--panel); letter-spacing: -0.4px; line-height: 1.1;
+    font-weight: 800;
+  }
+  .cover-main h2 {
+    font-size: 14px; margin: 0 0 24px;
+    color: var(--muted); font-weight: 600; letter-spacing: 0.2px;
+  }
+  .cover-meta {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 12px 24px;
+    margin-top: 16px;
+    font-size: 11px;
+    line-height: 1.5;
+    max-width: 5.5in;
+  }
+  .cover-meta dt {
+    color: var(--muted); font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.6px;
+    font-size: 9.5px;
+  }
+  .cover-meta dd { margin: 0; color: var(--ink); font-weight: 600; }
+  .cover-bullet { font-size: 11px; color: var(--ink); line-height: 1.55; max-width: 5in; margin: 18px 0 0; }
+  .cover-stripe {
+    height: 8px;
+    background: linear-gradient(90deg, var(--brand-bright), var(--brand) 50%, var(--brand-deep));
+    margin: 18px 0;
+    border-radius: 4px;
+    max-width: 5in;
+  }
+
+  .section-body p {
+    font-size: 10.5px;
+    line-height: 1.55;
+    color: var(--ink);
+    margin: 0 0 8px;
+  }
+  .section-body ul {
+    margin: 0 0 12px;
+    padding: 0 0 0 18px;
+    font-size: 10.5px;
+    line-height: 1.5;
+  }
+  .section-body ul li { margin-bottom: 3px; }
+  .section-body ul li b { color: var(--panel); }
+  .approach-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .phase {
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 9px 11px 10px;
+    background: linear-gradient(180deg, #fff 0%, var(--cream) 100%);
+    position: relative;
+  }
+  .phase .pnum {
+    width: 18px; height: 18px;
+    border-radius: 5px;
+    background: var(--brand);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 800;
+    display: grid;
+    place-items: center;
+    margin-bottom: 5px;
+  }
+  .phase h4 {
+    margin: 0 0 3px;
+    font-size: 10px;
+    color: var(--panel);
+    font-weight: 800;
+    letter-spacing: 0.2px;
+  }
+  .phase p {
+    margin: 0;
+    font-size: 9.5px;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+  .why-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .why {
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 10px 12px;
+    background: #fff;
+  }
+  .why h4 {
+    margin: 0 0 4px;
+    color: var(--brand-deep);
+    font-size: 10.5px;
+    font-weight: 800;
+  }
+  .why p {
+    margin: 0;
+    font-size: 9.5px;
+    color: var(--ink);
+    line-height: 1.45;
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════ COVER ════ -->
+<div class="page page--detail">
+  <header class="brand">
+    <div class="brand-row">
+      <svg class="logo-mark" viewBox="0 0 56 56" aria-label="Vulnaguard logo">
+        <defs>
+          <linearGradient id="tileP1" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="rgba(196,106,52,0.32)"/>
+            <stop offset="100%" stop-color="rgba(196,106,52,0)"/>
+          </linearGradient>
+        </defs>
+        <rect x="0.75" y="0.75" width="54.5" height="54.5" rx="14"
+              fill="#161310" stroke="rgba(196,106,52,0.45)" stroke-width="1.2"/>
+        <rect x="0.75" y="0.75" width="54.5" height="54.5" rx="14"
+              fill="url(#tileP1)"/>
+        <g transform="translate(13, 13) scale(1.25)">
+          <path d="M12 2.5 L20 6 V12 C20 17 16.5 20.5 12 22 C7.5 20.5 4 17 4 12 V6 Z"
+                fill="#c46a34" fill-opacity="0.22"
+                stroke="#c46a34" stroke-width="1.6" stroke-linejoin="round"/>
+          <path d="M9 12 L11.2 14.2 L15.5 9.8"
+                fill="none" stroke="#c46a34" stroke-width="1.9"
+                stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+      </svg>
+      <div>
+        <h1 class="brand-name">VULNAGUARD<span class="accent"> LLC</span></h1>
+        <div class="doc-title">Proposal</div>
+      </div>
+      <span class="version-pill">v 1.0</span>
+    </div>
+  </header>
+
+  <main class="cover-main">
+    <div class="label">Proposal in Response To</div>
+    <h1>[Solicitation / RFP Title]</h1>
+    <h2>[Buyer agency or prime · solicitation # · NAICS]</h2>
+
+    <div class="cover-stripe"></div>
+
+    <p class="cover-bullet">
+      Vulnaguard LLC is pleased to submit this proposal for
+      <b>[engagement title]</b> in response to <b>[solicitation #]</b>.
+      Our approach delivers <b>[1-line value statement]</b> on a
+      <b>[firm fixed-price / T&amp;M]</b> basis within the
+      <b>[$2.5K&ndash;$20K micro-purchase / SAP]</b> band.
+    </p>
+
+    <dl class="cover-meta">
+      <div><dt>Submitted To</dt><dd>[Buyer / Prime Contractor]</dd></div>
+      <div><dt>Submitted By</dt><dd>Vulnaguard LLC</dd></div>
+      <div><dt>Contracting Officer / POC</dt><dd>[Name]</dd></div>
+      <div><dt>Vulnaguard POC</dt><dd>Sean Murrill · seanmurrill@vulnaguard.com</dd></div>
+      <div><dt>Solicitation #</dt><dd>[XXXXX-XX-X-XXXX]</dd></div>
+      <div><dt>CAGE · UEI</dt><dd>21QQ7 · CJ7ZXTUSN3W8</dd></div>
+      <div><dt>Date Submitted</dt><dd>[YYYY-MM-DD]</dd></div>
+      <div><dt>Validity Period</dt><dd>90 days from submission</dd></div>
+    </dl>
+  </main>
+
+  <footer class="foot">
+    <div class="left"><b>Vulnaguard LLC</b> · Proposal · Confidential</div>
+    <div class="mid">CAGE 21QQ7 · UEI CJ7ZXTUSN3W8 · NAICS 541512</div>
+    <div class="right">Page 1 / 3 <span>v 1.0</span></div>
+  </footer>
+</div>
+
+<!-- ═══════════════════════════════════════════════ PAGE 2 ═══ -->
+<div class="page page--detail">
+  <header class="brand slim">
+    <div class="brand-row">
+      <svg class="logo-mark" viewBox="0 0 56 56">
+        <defs><linearGradient id="tileP2" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="rgba(196,106,52,0.32)"/>
+          <stop offset="100%" stop-color="rgba(196,106,52,0)"/>
+        </linearGradient></defs>
+        <rect x="0.75" y="0.75" width="54.5" height="54.5" rx="14" fill="#161310" stroke="rgba(196,106,52,0.45)" stroke-width="1.2"/>
+        <rect x="0.75" y="0.75" width="54.5" height="54.5" rx="14" fill="url(#tileP2)"/>
+        <g transform="translate(13, 13) scale(1.25)">
+          <path d="M12 2.5 L20 6 V12 C20 17 16.5 20.5 12 22 C7.5 20.5 4 17 4 12 V6 Z" fill="#c46a34" fill-opacity="0.22" stroke="#c46a34" stroke-width="1.6" stroke-linejoin="round"/>
+          <path d="M9 12 L11.2 14.2 L15.5 9.8" fill="none" stroke="#c46a34" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+      </svg>
+      <div>
+        <h1 class="brand-name">VULNAGUARD<span class="accent"> LLC</span></h1>
+        <div class="doc-title">Proposal · Approach &amp; Team</div>
+      </div>
+      <span class="version-pill">v 1.0</span>
+    </div>
+  </header>
+
+  <main class="section-body">
+    <div class="section-head"><h2>Executive Summary</h2><span class="rule"></span></div>
+    <p>
+      <b>[Client name]</b> seeks <b>[summary of need — e.g., CMMC L2
+      readiness in support of a DoD prime contract]</b>. Vulnaguard proposes a
+      <b>[duration]</b> engagement that delivers <b>[primary deliverable]</b>
+      and an actionable <b>[secondary deliverable]</b>, priced at
+      <b>$[X,XXX]</b> firm fixed-price. The engagement is led personally by
+      our Principal, ensuring continuity from kickoff through close-out.
+    </p>
+
+    <div class="section-head"><h2>Our Understanding</h2><span class="rule"></span></div>
+    <p>
+      <b>[2&ndash;4 sentences restating the client's situation, the goal, and
+      the constraints in the client's words. Demonstrate you read the
+      solicitation; name the program, the deadline, the prime, the contract
+      vehicle. Acknowledge any specific mandatory clauses or set-asides.]</b>
+    </p>
+
+    <div class="section-head"><h2>Proposed Approach</h2><span class="rule"></span></div>
+    <div class="approach-grid">
+      <div class="phase"><div class="pnum">1</div><h4>Discover</h4><p>Kickoff, scope confirmation, evidence inventory, system &amp; data-flow walk-through.</p></div>
+      <div class="phase"><div class="pnum">2</div><h4>Assess</h4><p>Control-by-control review against [NIST 800-171 / CMMC L2], interviews, artifact inspection.</p></div>
+      <div class="phase"><div class="pnum">3</div><h4>Report</h4><p>Gap analysis, scored findings, prioritized POA&amp;M, executive read-out.</p></div>
+      <div class="phase"><div class="pnum">4</div><h4>Close</h4><p>Acceptance, archive, optional retainer transition into Sentinel monitoring.</p></div>
+    </div>
+
+    <div class="section-head"><h2>Team &amp; Qualifications</h2><span class="rule"></span></div>
+    <ul>
+      <li><b>Principal Consultant — Sean Murrill.</b> [10+ yrs information security, current InfoSec Analyst role, freelance compliance engagements. Add named certifications: Sec+, CySA+, CC, etc.]</li>
+      <li><b>Domain coverage.</b> NIST SP 800-171 Rev 2 (preparing for Rev 3), CMMC 2.0 L1/L2, NIST CSF, CIS Controls.</li>
+      <li><b>Tooling.</b> Vulnaguard Sentinel platform, [Splunk / CrowdStrike / Tenable / Defender — list yours], evidence collection automation.</li>
+      <li><b>Past performance.</b> [List 2&ndash;3 short bullets from your freelance engagements — type of client, scope, quantified outcome.]</li>
+    </ul>
+
+    <div class="section-head"><h2>Why Vulnaguard</h2><span class="rule"></span></div>
+    <div class="why-grid">
+      <div class="why"><h4>Right-Sized</h4><p>Built for $2.5K&ndash;$20K micro-purchase / SAP awards — no overhead drag on small ceilings.</p></div>
+      <div class="why"><h4>Owner-Delivered</h4><p>Engagement led personally by the Principal — no offshore handoff, no markup chain.</p></div>
+      <div class="why"><h4>Platform-Backed</h4><p>Sentinel automates evidence tracking so manual control reviews don't go stale.</p></div>
+    </div>
+  </main>
+
+  <footer class="foot">
+    <div class="left"><b>Vulnaguard LLC</b> · Proposal · Confidential</div>
+    <div class="mid">CAGE 21QQ7 · UEI CJ7ZXTUSN3W8 · NAICS 541512</div>
+    <div class="right">Page 2 / 3 <span>v 1.0</span></div>
+  </footer>
+</div>
+
+<!-- ═══════════════════════════════════════════════ PAGE 3 ═══ -->
+<div class="page page--detail">
+  <header class="brand slim">
+    <div class="brand-row">
+      <svg class="logo-mark" viewBox="0 0 56 56">
+        <defs><linearGradient id="tileP3" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="rgba(196,106,52,0.32)"/>
+          <stop offset="100%" stop-color="rgba(196,106,52,0)"/>
+        </linearGradient></defs>
+        <rect x="0.75" y="0.75" width="54.5" height="54.5" rx="14" fill="#161310" stroke="rgba(196,106,52,0.45)" stroke-width="1.2"/>
+        <rect x="0.75" y="0.75" width="54.5" height="54.5" rx="14" fill="url(#tileP3)"/>
+        <g transform="translate(13, 13) scale(1.25)">
+          <path d="M12 2.5 L20 6 V12 C20 17 16.5 20.5 12 22 C7.5 20.5 4 17 4 12 V6 Z" fill="#c46a34" fill-opacity="0.22" stroke="#c46a34" stroke-width="1.6" stroke-linejoin="round"/>
+          <path d="M9 12 L11.2 14.2 L15.5 9.8" fill="none" stroke="#c46a34" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+      </svg>
+      <div>
+        <h1 class="brand-name">VULNAGUARD<span class="accent"> LLC</span></h1>
+        <div class="doc-title">Proposal · Pricing &amp; Schedule</div>
+      </div>
+      <span class="version-pill">v 1.0</span>
+    </div>
+  </header>
+
+  <main class="section-body">
+    <div class="section-head"><h2>Deliverables &amp; Schedule</h2><span class="rule"></span></div>
+    <table class="lineitems" style="margin-bottom:14px">
+      <thead>
+        <tr>
+          <th style="width:50px">ID</th>
+          <th>Deliverable</th>
+          <th style="width:130px">Acceptance Criteria</th>
+          <th class="num" style="width:90px">Target Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>D1</td><td><b>[Kickoff brief]</b><span class="desc-sub">[Sponsor + scope confirmed]</span></td><td>[Attendance + sign-off]</td><td class="num">[YYYY-MM-DD]</td></tr>
+        <tr><td>D2</td><td><b>[Gap Analysis Report]</b><span class="desc-sub">[Per SOW §4.D2]</span></td><td>[110 controls covered]</td><td class="num">[YYYY-MM-DD]</td></tr>
+        <tr><td>D3</td><td><b>[Remediation Roadmap]</b><span class="desc-sub">[POA&amp;M-style spreadsheet]</span></td><td>[Owners + dates assigned]</td><td class="num">[YYYY-MM-DD]</td></tr>
+        <tr><td>D4</td><td><b>[Executive Read-Out]</b><span class="desc-sub">[60-min session]</span></td><td>[Delivered to named audience]</td><td class="num">[YYYY-MM-DD]</td></tr>
+        <tr><td>D5</td><td><b>[Final Report]</b><span class="desc-sub">[After 1 round of feedback]</span></td><td>[Per SOW §8]</td><td class="num">[YYYY-MM-DD]</td></tr>
+      </tbody>
+    </table>
+
+    <div class="section-head"><h2>Price Summary</h2><span class="rule"></span></div>
+    <table class="lineitems" style="margin-bottom:14px">
+      <thead>
+        <tr>
+          <th style="width:80px">Code</th>
+          <th>Component</th>
+          <th class="num" style="width:60px">Qty</th>
+          <th style="width:90px">Unit</th>
+          <th class="num" style="width:80px">Rate</th>
+          <th class="num" style="width:90px">Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="code">[GE-02]</td><td><b>CMMC L2 Readiness Assessment</b></td><td class="num">1</td><td>Fixed-price</td><td class="num">$7,500</td><td class="num">$7,500</td></tr>
+        <tr><td class="code">[OS-03]</td><td><b>Vendor Review (optional)</b></td><td class="num">1</td><td>Fixed-price</td><td class="num">$1,500</td><td class="num">$1,500</td></tr>
+        <tr><td class="code">[LR-02]</td><td><b>Discretionary T&amp;M</b></td><td class="num">10</td><td>Hours</td><td class="num">$175</td><td class="num">$1,750</td></tr>
+      </tbody>
+      <tfoot>
+        <tr><td colspan="5" class="label">Subtotal</td><td class="num">$10,750</td></tr>
+        <tr><td colspan="5" class="label">Discount (multi-line)</td><td class="num">($500)</td></tr>
+        <tr class="grand"><td colspan="5" class="label">Total (USD)</td><td class="num total">$10,250</td></tr>
+      </tfoot>
+    </table>
+
+    <div class="notes">
+      <b>Validity &amp; terms.</b> Pricing is firm for 90 days from submission.
+      Net 30 payment from acceptance per the deliverable schedule. Pricing
+      derived from Vulnaguard Government Pricing Matrix v1.0. Award qualifies
+      under the federal micro-purchase / Simplified Acquisition Procedure
+      thresholds. Vulnaguard is a Maryland LLC, registered in SAM.gov, and
+      ready to invoice under CAGE 21QQ7. Custom Statement of Work to follow
+      upon notice of award.
+    </div>
+
+    <div class="section-head" style="margin-top:8px"><h2>Acceptance of Proposal</h2><span class="rule"></span></div>
+    <div class="sign-grid">
+      <div>
+        <div class="sign-line"></div>
+        <div class="sign">Buyer / Contracting Officer</div>
+        <div style="font-size:9.5px;color:var(--muted);margin-top:6px">
+          Name: <span style="color:var(--ink)">[_________________________]</span><br/>
+          Title: <span style="color:var(--ink)">[_________________________]</span><br/>
+          Date: <span style="color:var(--ink)">[__________]</span>
+        </div>
+      </div>
+      <div>
+        <div class="sign-line"></div>
+        <div class="sign">Vulnaguard LLC</div>
+        <div style="font-size:9.5px;color:var(--muted);margin-top:6px">
+          Name: <span style="color:var(--ink)">Sean Murrill</span><br/>
+          Title: <span style="color:var(--ink)">Principal</span><br/>
+          Date: <span style="color:var(--ink)">[__________]</span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="foot">
+    <div class="left"><b>Vulnaguard LLC</b> · vulnaguard.com · seanmurrill@vulnaguard.com</div>
+    <div class="mid">CAGE 21QQ7 · UEI CJ7ZXTUSN3W8 · NAICS 541512</div>
+    <div class="right">Page 3 / 3 <span>v 1.0</span></div>
+  </footer>
+</div>
+</body>
+</html>

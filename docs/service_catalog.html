@@ -1,0 +1,786 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Vulnaguard LLC — Government Service Catalog v1.0</title>
+<style>
+  @page { size: letter; margin: 0; }
+
+  :root {
+    --ink-deep:    #0e0c0a;
+    --panel:       #211f1a;
+    --panel-light: #2d2924;
+
+    --brand:       #c46a34;
+    --brand-deep:  #9d5128;
+    --brand-bright:#d97b46;
+    --brand-tint:  #faecd9;
+    --amber:       #f5a352;
+
+    --paper:       #fefcf7;
+    --paper-deep:  #ebe2cf;
+    --cream:       #fdf8ed;
+
+    --ink:         #171410;
+    --muted:       #6b6356;
+    --rule:        #d9d0bf;
+    --rule-soft:   #ece4d3;
+  }
+
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--ink);
+    background: var(--paper-deep);
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .page {
+    width: 8.5in;
+    height: 11in;
+    margin: 0 auto;
+    background: var(--paper);
+    display: grid;
+    overflow: hidden;
+    position: relative;
+  }
+  .page + .page { page-break-before: always; }
+
+  /* ─── HEADER ──────────────────────────────────────────────── */
+  header.brand {
+    background:
+      radial-gradient(900px 220px at 85% -40%, rgba(196,106,52,.45), transparent 60%),
+      linear-gradient(135deg, var(--ink-deep) 0%, var(--panel) 55%, var(--panel-light) 100%);
+    color: #fff;
+    padding: 0.42in 0.55in 0.36in;
+    position: relative;
+  }
+  header.brand::after {
+    content: "";
+    position: absolute; left: 0; right: 0; bottom: 0; height: 4px;
+    background: linear-gradient(90deg, var(--brand-bright), var(--brand) 50%, var(--brand-deep));
+  }
+  .brand-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 16px;
+  }
+  .logo-mark { width: 52px; height: 52px; display: block; }
+
+  .brand-name {
+    font-size: 24px; font-weight: 800;
+    letter-spacing: 1.8px; margin: 0; line-height: 1.05;
+    color: #F0EDE8;
+  }
+  .brand-name .accent { color: #d97b46; font-weight: 600; letter-spacing: 1px; }
+  .doc-title {
+    font-size: 12px; font-weight: 600;
+    letter-spacing: 1.4px; text-transform: uppercase;
+    color: #f5c89c; margin-top: 5px;
+  }
+  .version-pill {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: var(--brand);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  /* slim header for page 2 */
+  header.brand.slim { padding: 0.28in 0.55in 0.24in; }
+  header.brand.slim .logo-mark { width: 36px; height: 36px; }
+  header.brand.slim .brand-name { font-size: 17px; letter-spacing: 1.4px; }
+  header.brand.slim .doc-title { font-size: 10px; margin-top: 2px; }
+
+  /* ─── BODY ────────────────────────────────────────────────── */
+  main {
+    padding: 0.32in 0.55in 0.2in;
+  }
+
+  .section-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 10px;
+  }
+  .section-head h2 {
+    font-size: 12px;
+    letter-spacing: 1.6px;
+    text-transform: uppercase;
+    color: var(--brand-deep);
+    margin: 0;
+    font-weight: 800;
+  }
+  .section-head .rule {
+    flex: 1;
+    height: 2px;
+    background: linear-gradient(90deg, var(--brand) 0%, var(--rule) 60%, transparent);
+  }
+
+  p.overview {
+    font-size: 11px;
+    line-height: 1.55;
+    color: var(--ink);
+    margin: 0 0 14px;
+  }
+
+  /* Subcontractor pricing band callout */
+  .band-callout {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, var(--brand-tint) 0%, #fff 75%);
+    border: 1px solid var(--brand);
+    box-shadow: 0 0 0 3px rgba(196,106,52,0.08);
+    margin-bottom: 12px;
+  }
+  .band-callout .icon {
+    width: 30px; height: 30px;
+    border-radius: 7px;
+    background: var(--brand);
+    color: #fff;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+  }
+  .band-callout .body h4 {
+    margin: 0;
+    font-size: 10.5px;
+    color: var(--brand-deep);
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    font-weight: 800;
+  }
+  .band-callout .body p {
+    margin: 2px 0 0;
+    font-size: 9.5px;
+    color: var(--ink);
+    line-height: 1.4;
+    max-width: 4.4in;
+  }
+  .band-callout .amount {
+    text-align: right;
+    border-left: 2px solid var(--brand);
+    padding-left: 14px;
+    line-height: 1.05;
+  }
+  .band-callout .amount .num {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--panel);
+    letter-spacing: -0.4px;
+  }
+  .band-callout .amount .qual {
+    font-size: 8.5px;
+    color: var(--brand-deep);
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  /* Service card grid */
+  .svc-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .svc .band-tag {
+    position: absolute;
+    top: 9px; right: 10px;
+    font-size: 8px;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    background: var(--brand);
+    color: #fff;
+    padding: 2px 7px;
+    border-radius: 999px;
+    font-weight: 800;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  .svc {
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 10px 12px 11px 40px;
+    background: linear-gradient(180deg, #fff 0%, var(--cream) 100%);
+    position: relative;
+    min-height: 88px;
+  }
+  .svc .num {
+    position: absolute;
+    left: 10px; top: 10px;
+    width: 22px; height: 22px;
+    border-radius: 6px;
+    background: var(--brand);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    display: grid;
+    place-items: center;
+    letter-spacing: 0;
+  }
+  .svc h3 {
+    margin: 0 0 2px;
+    font-size: 11.5px;
+    font-weight: 800;
+    color: var(--panel);
+    letter-spacing: 0.1px;
+    line-height: 1.25;
+  }
+  .svc .price {
+    display: inline-block;
+    color: var(--brand-deep);
+    font-weight: 800;
+    font-size: 12px;
+    margin-bottom: 3px;
+    letter-spacing: 0.2px;
+  }
+  .svc .meta {
+    font-size: 9.5px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .svc p.deliv {
+    margin: 0;
+    font-size: 10px;
+    line-height: 1.45;
+    color: var(--ink);
+  }
+  .svc p.deliv b { color: var(--panel); font-weight: 700; }
+
+  /* Subscription tiers */
+  .tier-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+  }
+  .tier {
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 12px 14px 13px;
+    background: #fff;
+    position: relative;
+    text-align: left;
+  }
+  .tier.featured {
+    border-color: var(--brand);
+    background:
+      linear-gradient(180deg, var(--brand-tint) 0%, #fff 60%);
+    box-shadow: 0 0 0 3px rgba(196,106,52,0.10);
+  }
+  .tier .tier-name {
+    font-size: 10px;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    color: var(--brand-deep);
+    font-weight: 800;
+    margin-bottom: 4px;
+  }
+  .tier .tier-price {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--panel);
+    letter-spacing: -0.2px;
+    line-height: 1.1;
+  }
+  .tier .tier-price small {
+    font-size: 10px;
+    color: var(--muted);
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+  .tier .tier-tag {
+    margin-top: 6px;
+    font-size: 9.5px;
+    color: var(--muted);
+    line-height: 1.45;
+  }
+  .tier .badge {
+    position: absolute;
+    top: -8px; right: 10px;
+    font-size: 8.5px;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    background: var(--brand);
+    color: #fff;
+    padding: 2px 7px;
+    border-radius: 999px;
+    font-weight: 800;
+  }
+
+  /* Two-col mini service grid (managed/training) */
+  .mini-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 9px;
+    margin-bottom: 12px;
+  }
+  .mini {
+    border: 1px solid var(--rule-soft);
+    border-radius: 6px;
+    background: var(--cream);
+    padding: 9px 11px 10px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .mini h4 {
+    margin: 0;
+    font-size: 10.5px;
+    color: var(--panel);
+    font-weight: 800;
+    letter-spacing: 0.1px;
+  }
+  .mini .mprice {
+    color: var(--brand-deep);
+    font-weight: 800;
+    font-size: 11px;
+    text-align: right;
+  }
+  .mini p {
+    grid-column: 1 / -1;
+    margin: 2px 0 0;
+    font-size: 9.5px;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+
+  /* Optional services chip strip */
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+  .chip {
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    background: #fff;
+    padding: 6px 10px;
+    font-size: 10px;
+    color: var(--ink);
+    display: inline-flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+  .chip b {
+    color: var(--brand-deep);
+    font-weight: 800;
+    font-size: 10.5px;
+  }
+
+  /* Rates table */
+  table.rates {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-bottom: 10px;
+    font-size: 11px;
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  table.rates thead th {
+    background: var(--panel);
+    color: #f5c89c;
+    text-align: left;
+    padding: 8px 12px;
+    font-size: 10px;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    font-weight: 800;
+  }
+  table.rates thead th:last-child { text-align: right; }
+  table.rates tbody td {
+    padding: 8px 12px;
+    border-top: 1px solid var(--rule-soft);
+    background: #fff;
+  }
+  table.rates tbody tr:nth-child(even) td { background: var(--cream); }
+  table.rates tbody td.rate {
+    text-align: right;
+    color: var(--brand-deep);
+    font-weight: 800;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+
+  /* Notes box */
+  .notes {
+    border-left: 3px solid var(--brand);
+    background: var(--brand-tint);
+    padding: 9px 12px;
+    border-radius: 0 6px 6px 0;
+    font-size: 10px;
+    line-height: 1.5;
+    color: var(--panel);
+  }
+  .notes b { color: var(--brand-deep); }
+
+  /* Footer */
+  footer.foot {
+    margin-top: auto;
+    background: linear-gradient(135deg, var(--ink-deep), var(--panel));
+    color: #fff;
+    padding: 0.22in 0.55in 0.24in;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 14px;
+    border-top: 3px solid var(--brand);
+    font-size: 10px;
+  }
+  footer.foot .left { color: #f5c89c; letter-spacing: 0.4px; }
+  footer.foot .left b { color: #fff; font-weight: 700; }
+  footer.foot .mid { text-align: center; color: rgba(255,255,255,0.78); }
+  footer.foot .right {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    text-align: right;
+    color: #fff;
+  }
+  footer.foot .right span {
+    display: inline-block;
+    background: rgba(255,255,255,.06);
+    border: 1px solid rgba(245,200,156,.32);
+    padding: 2px 8px;
+    border-radius: 999px;
+    margin-left: 6px;
+    font-size: 9.5px;
+  }
+
+  /* Page grid */
+  .page--cover  { grid-template-rows: auto auto 1fr auto; }
+  .page--detail { grid-template-rows: auto 1fr auto; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════ PAGE 1 ═══ -->
+<div class="page page--cover">
+
+  <header class="brand">
+    <div class="brand-row">
+      <!-- Vulnaguard mark -->
+      <svg class="logo-mark" viewBox="0 0 56 56" aria-label="Vulnaguard logo">
+        <defs>
+          <linearGradient id="tileGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="rgba(196,106,52,0.32)"/>
+            <stop offset="100%" stop-color="rgba(196,106,52,0)"/>
+          </linearGradient>
+        </defs>
+        <rect x="0.75" y="0.75" width="54.5" height="54.5" rx="14"
+              fill="#161310" stroke="rgba(196,106,52,0.45)" stroke-width="1.2"/>
+        <rect x="0.75" y="0.75" width="54.5" height="54.5" rx="14"
+              fill="url(#tileGrad)"/>
+        <g transform="translate(13, 13) scale(1.25)">
+          <path d="M12 2.5 L20 6 V12 C20 17 16.5 20.5 12 22 C7.5 20.5 4 17 4 12 V6 Z"
+                fill="#c46a34" fill-opacity="0.22"
+                stroke="#c46a34" stroke-width="1.6" stroke-linejoin="round"/>
+          <path d="M9 12 L11.2 14.2 L15.5 9.8"
+                fill="none" stroke="#c46a34" stroke-width="1.9"
+                stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+      </svg>
+
+      <div>
+        <h1 class="brand-name">VULNAGUARD<span class="accent"> LLC</span></h1>
+        <div class="doc-title">Government Service Catalog &amp; Standardized Pricing</div>
+      </div>
+
+      <span class="version-pill">v 1.0</span>
+    </div>
+  </header>
+
+  <main>
+    <div class="section-head">
+      <h2>Company Overview</h2>
+      <span class="rule"></span>
+    </div>
+    <p class="overview">
+      Vulnaguard LLC provides cybersecurity consulting, compliance readiness,
+      vulnerability management, and compliance automation solutions for government
+      contractors, regulated businesses, and organizations handling sensitive
+      information. This catalog establishes standardized starting prices for
+      fixed-price engagements; custom Statements of Work are available on request.
+    </p>
+
+    <div class="section-head">
+      <h2>Fixed-Price Engagements</h2>
+      <span class="rule"></span>
+    </div>
+
+    <!-- Subcontractor pricing band callout -->
+    <div class="band-callout">
+      <div class="icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 1v22M17 5H9.5a3.5 3.5 0 100 7h5a3.5 3.5 0 110 7H6"/>
+        </svg>
+      </div>
+      <div class="body">
+        <h4>Subcontractor Sweet Spot</h4>
+        <p>
+          Six of seven fixed-price engagements ship within the federal
+          micro-purchase / Simplified Acquisition range — ready for prime
+          subcontract or direct invoicing under CAGE&nbsp;21QQ7.
+        </p>
+      </div>
+      <div class="amount">
+        <div class="num">$2.5K&ndash;$20K</div>
+        <div class="qual">Micro-Purchase · SAP Eligible</div>
+      </div>
+    </div>
+
+    <div class="svc-grid">
+      <div class="svc">
+        <span class="num">1</span>
+        <span class="band-tag">≤ $20K</span>
+        <h3>Vulnerability Assessment</h3>
+        <div class="price">Starting at $2,500</div>
+        <div class="meta">3 – 5 Business Days</div>
+        <p class="deliv">
+          External attack surface assessment, vulnerability scan,
+          executive summary, technical remediation report, findings review.
+        </p>
+      </div>
+
+      <div class="svc">
+        <span class="num">2</span>
+        <span class="band-tag">≤ $20K</span>
+        <h3>CMMC Level 2 Readiness Assessment</h3>
+        <div class="price">Starting at $7,500</div>
+        <div class="meta">2 – 4 Weeks</div>
+        <p class="deliv">
+          NIST SP 800-171 review, gap analysis, remediation roadmap,
+          executive presentation.
+        </p>
+      </div>
+
+      <div class="svc">
+        <span class="num">3</span>
+        <span class="band-tag">≤ $20K</span>
+        <h3>NIST SP 800-171 Gap Assessment</h3>
+        <div class="price">Starting at $5,000</div>
+        <div class="meta">Fixed-Price Engagement</div>
+        <p class="deliv">
+          Control-by-control assessment, documentation review, policy
+          evaluation, compliance roadmap.
+        </p>
+      </div>
+
+      <div class="svc">
+        <span class="num">4</span>
+        <span class="band-tag">≤ $20K</span>
+        <h3>Security Program Assessment</h3>
+        <div class="price">Starting at $6,500</div>
+        <div class="meta">Fixed-Price Engagement</div>
+        <p class="deliv">
+          Security maturity review, governance assessment, policy review,
+          executive report.
+        </p>
+      </div>
+
+      <div class="svc">
+        <span class="num">5</span>
+        <span class="band-tag">≤ $20K</span>
+        <h3>Executive Risk Assessment</h3>
+        <div class="price">Starting at $3,500</div>
+        <div class="meta">Fixed-Price Engagement</div>
+        <p class="deliv">
+          Business risk review, executive dashboard, board-ready presentation.
+        </p>
+      </div>
+
+      <div class="svc">
+        <span class="num">6</span>
+        <h3>Security Policy Development</h3>
+        <div class="price">Starting at $2,000</div>
+        <div class="meta">Custom Policy Set</div>
+        <p class="deliv">
+          Access Control, Incident Response, Vendor Management, Risk Management,
+          and additional policies on request.
+        </p>
+      </div>
+
+      <div class="svc" style="grid-column: 1 / -1;">
+        <span class="num">7</span>
+        <span class="band-tag">≤ $20K</span>
+        <h3>Sentinel Implementation</h3>
+        <div class="price">Starting at $5,000</div>
+        <div class="meta">Platform Deployment &amp; Enablement</div>
+        <p class="deliv">
+          Platform deployment, onboarding, dashboard setup, reporting
+          configuration, and executive training.
+        </p>
+      </div>
+    </div>
+
+    <div class="section-head">
+      <h2>Sentinel Subscription Plans</h2>
+      <span class="rule"></span>
+    </div>
+
+    <div class="tier-grid">
+      <div class="tier">
+        <div class="tier-name">Essential</div>
+        <div class="tier-price">$499<small> /mo</small></div>
+        <div class="tier-tag">Core compliance visibility for small teams getting CMMC-ready.</div>
+      </div>
+      <div class="tier featured">
+        <div class="badge">Most Popular</div>
+        <div class="tier-name">Professional</div>
+        <div class="tier-price">$999<small> /mo</small></div>
+        <div class="tier-tag">Full Sentinel platform for active CMMC L2 / 800-171 programs.</div>
+      </div>
+      <div class="tier">
+        <div class="tier-name">Enterprise</div>
+        <div class="tier-price">$2,500<small> /mo+</small></div>
+        <div class="tier-tag">Multi-entity, integrations, and dedicated support — quoted.</div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="foot">
+    <div class="left"><b>Vulnaguard LLC</b> · Government Service Catalog</div>
+    <div class="mid">Confidential — Pricing valid as of 2026-06-30</div>
+    <div class="right">Page 1 / 2 <span>v 1.0</span></div>
+  </footer>
+</div>
+
+<!-- ═══════════════════════════════════════════════ PAGE 2 ═══ -->
+<div class="page page--detail">
+
+  <header class="brand slim">
+    <div class="brand-row">
+      <svg class="logo-mark" viewBox="0 0 56 56" aria-label="Vulnaguard logo">
+        <defs>
+          <linearGradient id="tileGrad2" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="rgba(196,106,52,0.32)"/>
+            <stop offset="100%" stop-color="rgba(196,106,52,0)"/>
+          </linearGradient>
+        </defs>
+        <rect x="0.75" y="0.75" width="54.5" height="54.5" rx="14"
+              fill="#161310" stroke="rgba(196,106,52,0.45)" stroke-width="1.2"/>
+        <rect x="0.75" y="0.75" width="54.5" height="54.5" rx="14"
+              fill="url(#tileGrad2)"/>
+        <g transform="translate(13, 13) scale(1.25)">
+          <path d="M12 2.5 L20 6 V12 C20 17 16.5 20.5 12 22 C7.5 20.5 4 17 4 12 V6 Z"
+                fill="#c46a34" fill-opacity="0.22"
+                stroke="#c46a34" stroke-width="1.6" stroke-linejoin="round"/>
+          <path d="M9 12 L11.2 14.2 L15.5 9.8"
+                fill="none" stroke="#c46a34" stroke-width="1.9"
+                stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+      </svg>
+      <div>
+        <h1 class="brand-name">VULNAGUARD<span class="accent"> LLC</span></h1>
+        <div class="doc-title">Service Catalog · Continued</div>
+      </div>
+      <span class="version-pill">v 1.0</span>
+    </div>
+  </header>
+
+  <main>
+    <div class="section-head">
+      <h2>Managed Services</h2>
+      <span class="rule"></span>
+    </div>
+
+    <div class="mini-grid">
+      <div class="mini">
+        <h4>Compliance Monitoring</h4>
+        <div class="mprice">$1,500<small style="font-weight:600;color:var(--muted)">/mo</small></div>
+        <p>Continuous control monitoring, evidence freshness, and drift alerts via the Sentinel platform.</p>
+      </div>
+      <div class="mini">
+        <h4>Virtual Security Advisor</h4>
+        <div class="mprice">$2,500<small style="font-weight:600;color:var(--muted)">/mo</small></div>
+        <p>Fractional security leadership: roadmap reviews, audit prep, executive reporting on retainer.</p>
+      </div>
+    </div>
+
+    <div class="section-head">
+      <h2>Training</h2>
+      <span class="rule"></span>
+    </div>
+
+    <div class="mini-grid" style="grid-template-columns: 1fr 1fr 1fr;">
+      <div class="mini">
+        <h4>Security Awareness</h4>
+        <div class="mprice">$750<small style="font-weight:600;color:var(--muted)">/session</small></div>
+        <p>End-user phishing &amp; data-handling workshop, tailored to CUI environments.</p>
+      </div>
+      <div class="mini">
+        <h4>CMMC Workshop</h4>
+        <div class="mprice">$1,500<small style="font-weight:600;color:var(--muted)">/workshop</small></div>
+        <p>Half-day session for engineering &amp; ops leads: scoping, evidence, assessor expectations.</p>
+      </div>
+      <div class="mini">
+        <h4>Executive Briefing</h4>
+        <div class="mprice">$1,000<small style="font-weight:600;color:var(--muted)">/session</small></div>
+        <p>Board / C-suite read-out: revenue-at-risk, posture, and next-quarter investment plan.</p>
+      </div>
+    </div>
+
+    <div class="section-head">
+      <h2>Optional Services</h2>
+      <span class="rule"></span>
+    </div>
+
+    <div class="chips">
+      <span class="chip">Security Questionnaires <b>$500+</b></span>
+      <span class="chip">Third-Party Risk Assessments <b>$2,000+</b></span>
+      <span class="chip">Vendor Reviews <b>$1,500+</b></span>
+      <span class="chip">Incident Response Planning <b>$3,500+</b></span>
+    </div>
+
+    <div class="section-head">
+      <h2>Professional Services Rates</h2>
+      <span class="rule"></span>
+    </div>
+
+    <table class="rates">
+      <thead>
+        <tr><th>Role</th><th>Hourly Rate</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Principal Cybersecurity Consultant</td><td class="rate">$225 / hr</td></tr>
+        <tr><td>Security Consultant</td>                <td class="rate">$175 / hr</td></tr>
+        <tr><td>Compliance Analyst</td>                 <td class="rate">$150 / hr</td></tr>
+        <tr><td>Technical Security Analyst</td>         <td class="rate">$145 / hr</td></tr>
+        <tr><td>Project Management</td>                 <td class="rate">$140 / hr</td></tr>
+      </tbody>
+    </table>
+
+    <div class="notes">
+      <b>Notes.</b> Fixed-price engagements are preferred. Custom Statements of
+      Work (SOWs) are available on request. Multi-project discounts may apply.
+      Emergency response services are quoted separately. Government micro-purchase
+      and Simplified Acquisition Procedure (SAP) awards (≤ $25K) are welcome and
+      can be invoiced under CAGE&nbsp;21QQ7 / UEI&nbsp;CJ7ZXTUSN3W8.
+    </div>
+  </main>
+
+  <footer class="foot">
+    <div class="left"><b>Vulnaguard LLC</b> · vulnaguard.com</div>
+    <div class="mid" style="white-space:nowrap">CAGE 21QQ7 · UEI CJ7ZXTUSN3W8 · NAICS 541512</div>
+    <div class="right">Page 2 / 2 <span>v 1.0</span></div>
+  </footer>
+</div>
+
+</body>
+</html>

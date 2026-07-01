@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Vulnaguard LLC — Government Pricing Matrix v1.0</title>
+<link rel="stylesheet" href="assets/brand.css" />
+<style>
+  table.matrix {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 0 0 12px;
+    font-size: 10px;
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  table.matrix thead th {
+    background: var(--panel);
+    color: #f5c89c;
+    text-align: left;
+    padding: 8px 10px;
+    font-size: 9px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    font-weight: 800;
+  }
+  table.matrix thead th.num { text-align: right; }
+  table.matrix tbody td {
+    padding: 6px 10px;
+    border-top: 1px solid var(--rule-soft);
+    background: #fff;
+    vertical-align: top;
+  }
+  table.matrix tbody tr:nth-child(even) td { background: var(--cream); }
+  table.matrix tbody td.code,
+  table.matrix tbody td.price {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  table.matrix tbody td.code { color: var(--brand-deep); font-weight: 700; }
+  table.matrix tbody td.cat {
+    font-size: 8.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+    color: var(--muted);
+    font-weight: 700;
+  }
+  table.matrix tbody td.svc b { color: var(--panel); }
+  table.matrix tbody td.svc span {
+    display: block;
+    color: var(--muted);
+    font-size: 9px;
+    margin-top: 1px;
+  }
+  table.matrix tbody td.unit { color: var(--muted); font-size: 9.5px; }
+  table.matrix tbody td.price { text-align: right; color: var(--brand-deep); font-weight: 800; font-size: 11px; }
+  table.matrix tbody td.notes { color: var(--ink); font-size: 9.5px; }
+  table.matrix tbody tr.section td {
+    background: var(--brand-tint);
+    color: var(--brand-deep);
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 1.3px;
+    font-weight: 800;
+    padding: 5px 10px;
+  }
+</style>
+</head>
+<body>
+<div class="page page--cover">
+
+  <header class="brand">
+    <div class="brand-row">
+      <svg class="logo-mark" viewBox="0 0 56 56" aria-label="Vulnaguard logo">
+        <defs>
+          <linearGradient id="tileGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="rgba(196,106,52,0.32)"/>
+            <stop offset="100%" stop-color="rgba(196,106,52,0)"/>
+          </linearGradient>
+        </defs>
+        <rect x="0.75" y="0.75" width="54.5" height="54.5" rx="14"
+              fill="#161310" stroke="rgba(196,106,52,0.45)" stroke-width="1.2"/>
+        <rect x="0.75" y="0.75" width="54.5" height="54.5" rx="14"
+              fill="url(#tileGrad)"/>
+        <g transform="translate(13, 13) scale(1.25)">
+          <path d="M12 2.5 L20 6 V12 C20 17 16.5 20.5 12 22 C7.5 20.5 4 17 4 12 V6 Z"
+                fill="#c46a34" fill-opacity="0.22"
+                stroke="#c46a34" stroke-width="1.6" stroke-linejoin="round"/>
+          <path d="M9 12 L11.2 14.2 L15.5 9.8"
+                fill="none" stroke="#c46a34" stroke-width="1.9"
+                stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+      </svg>
+      <div>
+        <h1 class="brand-name">VULNAGUARD<span class="accent"> LLC</span></h1>
+        <div class="doc-title">Government Pricing Matrix &amp; Rate Schedule</div>
+      </div>
+      <div class="doc-stamp">
+        <div class="label">Version</div><div class="value">1.0</div>
+        <div class="label" style="margin-top:4px">Effective</div><div class="value">2026-06-30</div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="section-head">
+      <h2>Rate Schedule — Part 1 of 2</h2>
+      <span class="rule"></span>
+    </div>
+    <p class="overview">
+      Standardized starting prices for all Vulnaguard fixed-price engagements,
+      subscriptions, managed services, training, optional add-ons, and hourly
+      labor rates. All items invoiced under <b>CAGE 21QQ7</b> ·
+      <b>UEI CJ7ZXTUSN3W8</b> · <b>NAICS 541512</b>. Government micro-purchase
+      and Simplified Acquisition (SAP) eligible; multi-project discounts
+      available on request.
+    </p>
+
+    <table class="matrix">
+      <thead>
+        <tr>
+          <th style="width: 60px">Code</th>
+          <th style="width: 78px">Category</th>
+          <th>Service</th>
+          <th style="width: 92px">Unit</th>
+          <th class="num" style="width: 88px">Starting</th>
+          <th style="width: 110px">Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="section"><td colspan="6">Fixed-Price Engagements</td></tr>
+        <tr><td class="code">GE-01</td><td class="cat">Engagement</td><td class="svc"><b>Vulnerability Assessment</b><span>External attack surface, scan, exec summary, remediation report.</span></td><td class="unit">Fixed-price</td><td class="price">$2,500</td><td class="notes">3–5 days · ≤ $20K</td></tr>
+        <tr><td class="code">GE-02</td><td class="cat">Engagement</td><td class="svc"><b>CMMC Level 2 Readiness Assessment</b><span>NIST 800-171 review, gap analysis, remediation roadmap.</span></td><td class="unit">Fixed-price</td><td class="price">$7,500</td><td class="notes">2–4 wks · ≤ $20K</td></tr>
+        <tr><td class="code">GE-03</td><td class="cat">Engagement</td><td class="svc"><b>NIST SP 800-171 Gap Assessment</b><span>Control-by-control review, policy evaluation, roadmap.</span></td><td class="unit">Fixed-price</td><td class="price">$5,000</td><td class="notes">≤ $20K</td></tr>
+        <tr><td class="code">GE-04</td><td class="cat">Engagement</td><td class="svc"><b>Security Program Assessment</b><span>Maturity review, governance, policy review, exec report.</span></td><td class="unit">Fixed-price</td><td class="price">$6,500</td><td class="notes">≤ $20K</td></tr>
+        <tr><td class="code">GE-05</td><td class="cat">Engagement</td><td class="svc"><b>Executive Risk Assessment</b><span>Business risk review, exec dashboard, board presentation.</span></td><td class="unit">Fixed-price</td><td class="price">$3,500</td><td class="notes">≤ $20K</td></tr>
+        <tr><td class="code">GE-06</td><td class="cat">Engagement</td><td class="svc"><b>Security Policy Development</b><span>Access Control, IR, Vendor Mgmt, Risk Mgmt, etc.</span></td><td class="unit">Per policy set</td><td class="price">$2,000+</td><td class="notes">Scales w/ scope</td></tr>
+        <tr><td class="code">GE-07</td><td class="cat">Engagement</td><td class="svc"><b>Sentinel Implementation</b><span>Deployment, onboarding, dashboards, exec training.</span></td><td class="unit">Fixed-price</td><td class="price">$5,000</td><td class="notes">≤ $20K</td></tr>
+
+        <tr class="section"><td colspan="6">Sentinel Subscription Plans</td></tr>
+        <tr><td class="code">SP-01</td><td class="cat">Subscription</td><td class="svc"><b>Sentinel — Essential</b><span>Core compliance visibility, small teams.</span></td><td class="unit">Monthly</td><td class="price">$499</td><td class="notes">Annual contract</td></tr>
+        <tr><td class="code">SP-02</td><td class="cat">Subscription</td><td class="svc"><b>Sentinel — Professional</b><span>Active CMMC L2 / 800-171 program support.</span></td><td class="unit">Monthly</td><td class="price">$999</td><td class="notes">Most popular</td></tr>
+        <tr><td class="code">SP-03</td><td class="cat">Subscription</td><td class="svc"><b>Sentinel — Enterprise</b><span>Multi-entity, integrations, dedicated support.</span></td><td class="unit">Monthly</td><td class="price">$2,500+</td><td class="notes">Quoted</td></tr>
+
+        <tr class="section"><td colspan="6">Managed Services</td></tr>
+        <tr><td class="code">MS-01</td><td class="cat">Managed</td><td class="svc"><b>Compliance Monitoring</b><span>Control monitoring, evidence freshness, drift alerts.</span></td><td class="unit">Monthly retainer</td><td class="price">$1,500+</td><td class="notes">Min. 3 mo</td></tr>
+        <tr><td class="code">MS-02</td><td class="cat">Managed</td><td class="svc"><b>Virtual Security Advisor</b><span>Fractional security leadership, audit prep.</span></td><td class="unit">Monthly retainer</td><td class="price">$2,500+</td><td class="notes">Min. 3 mo</td></tr>
+      </tbody>
+    </table>
+  </main>
+
+  <footer class="foot">
+    <div class="left"><b>Vulnaguard LLC</b> · vulnaguard.com</div>
+    <div class="mid">CAGE 21QQ7 · UEI CJ7ZXTUSN3W8 · NAICS 541512 · PSC D310</div>
+    <div class="right">Pricing Matrix · Page 1 / 2 <span>v 1.0</span></div>
+  </footer>
+</div>
+
+<!-- ═══════════════════════════════════════════════ PAGE 2 ═══ -->
+<div class="page page--detail">
+
+  <header class="brand slim">
+    <div class="brand-row">
+      <svg class="logo-mark" viewBox="0 0 56 56" aria-label="Vulnaguard logo">
+        <defs>
+          <linearGradient id="tileGrad2" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="rgba(196,106,52,0.32)"/>
+            <stop offset="100%" stop-color="rgba(196,106,52,0)"/>
+          </linearGradient>
+        </defs>
+        <rect x="0.75" y="0.75" width="54.5" height="54.5" rx="14"
+              fill="#161310" stroke="rgba(196,106,52,0.45)" stroke-width="1.2"/>
+        <rect x="0.75" y="0.75" width="54.5" height="54.5" rx="14"
+              fill="url(#tileGrad2)"/>
+        <g transform="translate(13, 13) scale(1.25)">
+          <path d="M12 2.5 L20 6 V12 C20 17 16.5 20.5 12 22 C7.5 20.5 4 17 4 12 V6 Z"
+                fill="#c46a34" fill-opacity="0.22"
+                stroke="#c46a34" stroke-width="1.6" stroke-linejoin="round"/>
+          <path d="M9 12 L11.2 14.2 L15.5 9.8"
+                fill="none" stroke="#c46a34" stroke-width="1.9"
+                stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+      </svg>
+      <div>
+        <h1 class="brand-name">VULNAGUARD<span class="accent"> LLC</span></h1>
+        <div class="doc-title">Pricing Matrix · Continued</div>
+      </div>
+      <div class="doc-stamp">
+        <div class="label">Version</div><div class="value">1.0</div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="section-head">
+      <h2>Rate Schedule — Part 2 of 2</h2>
+      <span class="rule"></span>
+    </div>
+
+    <table class="matrix">
+      <thead>
+        <tr>
+          <th style="width: 60px">Code</th>
+          <th style="width: 78px">Category</th>
+          <th>Service</th>
+          <th style="width: 92px">Unit</th>
+          <th class="num" style="width: 88px">Starting</th>
+          <th style="width: 110px">Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="section"><td colspan="6">Training</td></tr>
+        <tr><td class="code">TR-01</td><td class="cat">Training</td><td class="svc"><b>Security Awareness</b><span>End-user phishing &amp; data-handling workshop.</span></td><td class="unit">Per session</td><td class="price">$750</td><td class="notes">≤ 30 attendees</td></tr>
+        <tr><td class="code">TR-02</td><td class="cat">Training</td><td class="svc"><b>CMMC Workshop</b><span>Half-day for eng &amp; ops leads.</span></td><td class="unit">Per workshop</td><td class="price">$1,500</td><td class="notes">≤ 20 attendees</td></tr>
+        <tr><td class="code">TR-03</td><td class="cat">Training</td><td class="svc"><b>Executive Briefing</b><span>Board / C-suite read-out.</span></td><td class="unit">Per session</td><td class="price">$1,000</td><td class="notes">90 min</td></tr>
+
+        <tr class="section"><td colspan="6">Optional Services</td></tr>
+        <tr><td class="code">OS-01</td><td class="cat">Optional</td><td class="svc"><b>Security Questionnaires</b><span>Vendor questionnaire / SIG / CAIQ response.</span></td><td class="unit">Per document</td><td class="price">$500+</td><td class="notes">Scales w/ size</td></tr>
+        <tr><td class="code">OS-02</td><td class="cat">Optional</td><td class="svc"><b>Third-Party Risk Assessment</b><span>Vendor / supply chain risk evaluation.</span></td><td class="unit">Per engagement</td><td class="price">$2,000+</td><td class="notes">Per scope</td></tr>
+        <tr><td class="code">OS-03</td><td class="cat">Optional</td><td class="svc"><b>Vendor Review</b><span>Single-vendor security &amp; contract review.</span></td><td class="unit">Per vendor</td><td class="price">$1,500+</td><td class="notes">≤ $20K</td></tr>
+        <tr><td class="code">OS-04</td><td class="cat">Optional</td><td class="svc"><b>Incident Response Planning</b><span>IR plan, playbooks, tabletop exercise.</span></td><td class="unit">Per engagement</td><td class="price">$3,500+</td><td class="notes">≤ $20K</td></tr>
+
+        <tr class="section"><td colspan="6">Professional Services — Hourly Labor Rates</td></tr>
+        <tr><td class="code">LR-01</td><td class="cat">Labor</td><td class="svc"><b>Principal Cybersecurity Consultant</b></td><td class="unit">Hourly</td><td class="price">$225</td><td class="notes">T&amp;M</td></tr>
+        <tr><td class="code">LR-02</td><td class="cat">Labor</td><td class="svc"><b>Security Consultant</b></td><td class="unit">Hourly</td><td class="price">$175</td><td class="notes">T&amp;M</td></tr>
+        <tr><td class="code">LR-03</td><td class="cat">Labor</td><td class="svc"><b>Compliance Analyst</b></td><td class="unit">Hourly</td><td class="price">$150</td><td class="notes">T&amp;M</td></tr>
+        <tr><td class="code">LR-04</td><td class="cat">Labor</td><td class="svc"><b>Technical Security Analyst</b></td><td class="unit">Hourly</td><td class="price">$145</td><td class="notes">T&amp;M</td></tr>
+        <tr><td class="code">LR-05</td><td class="cat">Labor</td><td class="svc"><b>Project Management</b></td><td class="unit">Hourly</td><td class="price">$140</td><td class="notes">T&amp;M</td></tr>
+      </tbody>
+    </table>
+
+    <div class="notes">
+      <b>Pricing terms.</b> Prices in U.S. dollars and valid for 90 days from the
+      effective date above. Fixed-price engagements include one round of revisions
+      on written deliverables. Travel, tools, and pass-through costs billed at
+      cost. Multi-engagement, multi-year, and prime-subcontractor discounts
+      available. Custom Statements of Work are issued per engagement; this matrix
+      governs starting prices only and does not constitute an offer. Federal
+      micro-purchase and Simplified Acquisition Procedure (SAP) awards welcome.
+    </div>
+  </main>
+
+  <footer class="foot">
+    <div class="left"><b>Vulnaguard LLC</b> · vulnaguard.com · seanmurrill@vulnaguard.com</div>
+    <div class="mid">CAGE 21QQ7 · UEI CJ7ZXTUSN3W8 · NAICS 541512</div>
+    <div class="right">Pricing Matrix · Page 2 / 2 <span>v 1.0</span></div>
+  </footer>
+</div>
+</body>
+</html>

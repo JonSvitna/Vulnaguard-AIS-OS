@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Vulnaguard LLC — Deliverable Acceptance Form</title>
+<link rel="stylesheet" href="assets/brand.css" />
+<style>
+  .accept-block {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+  .accept-card {
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 12px 14px 14px;
+    background: #fff;
+  }
+  .accept-card h3 {
+    margin: 0 0 8px;
+    font-size: 10px;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    color: var(--panel);
+    font-weight: 800;
+  }
+  .accept-card.accepted { border-color: var(--brand); background: var(--brand-tint); }
+  .accept-card.rejected { border-color: #b04020; background: #fbe6dc; }
+  .check-row {
+    display: grid;
+    grid-template-columns: 16px 1fr;
+    gap: 9px;
+    align-items: start;
+    margin-bottom: 5px;
+    font-size: 10px;
+    line-height: 1.4;
+  }
+  .check-box {
+    width: 13px; height: 13px;
+    border: 1.5px solid var(--ink);
+    border-radius: 2px;
+    margin-top: 1px;
+    background: #fff;
+  }
+</style>
+</head>
+<body>
+<div class="page page--cover">
+
+  <header class="brand">
+    <div class="brand-row">
+      <svg class="logo-mark" viewBox="0 0 56 56" aria-label="Vulnaguard logo">
+        <defs>
+          <linearGradient id="tileG" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="rgba(196,106,52,0.32)"/>
+            <stop offset="100%" stop-color="rgba(196,106,52,0)"/>
+          </linearGradient>
+        </defs>
+        <rect x="0.75" y="0.75" width="54.5" height="54.5" rx="14"
+              fill="#161310" stroke="rgba(196,106,52,0.45)" stroke-width="1.2"/>
+        <rect x="0.75" y="0.75" width="54.5" height="54.5" rx="14"
+              fill="url(#tileG)"/>
+        <g transform="translate(13, 13) scale(1.25)">
+          <path d="M12 2.5 L20 6 V12 C20 17 16.5 20.5 12 22 C7.5 20.5 4 17 4 12 V6 Z"
+                fill="#c46a34" fill-opacity="0.22"
+                stroke="#c46a34" stroke-width="1.6" stroke-linejoin="round"/>
+          <path d="M9 12 L11.2 14.2 L15.5 9.8"
+                fill="none" stroke="#c46a34" stroke-width="1.9"
+                stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+      </svg>
+      <div>
+        <h1 class="brand-name">VULNAGUARD<span class="accent"> LLC</span></h1>
+        <div class="doc-title">Deliverable Acceptance Form</div>
+      </div>
+      <div class="doc-stamp">
+        <div class="label">Form #</div><div class="value">[DAF-YYYY-NNNN]</div>
+        <div class="label" style="margin-top:4px">Date</div><div class="value">[YYYY-MM-DD]</div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="party-grid">
+      <div class="party">
+        <h3>Engagement</h3>
+        <dl>
+          <dt>SOW #</dt>      <dd class="fillable">[SOW-YYYY-NNNN]</dd>
+          <dt>Client</dt>     <dd class="fillable">[Client legal name]</dd>
+          <dt>Project</dt>    <dd class="fillable">[Engagement title]</dd>
+          <dt>PO / Vehicle</dt><dd class="fillable">[Reference number]</dd>
+        </dl>
+      </div>
+      <div class="party">
+        <h3>Contractor</h3>
+        <dl>
+          <dt>Company</dt>    <dd>Vulnaguard LLC</dd>
+          <dt>Contact</dt>    <dd>Sean Murrill</dd>
+          <dt>Email</dt>      <dd>seanmurrill@vulnaguard.com</dd>
+          <dt>CAGE / UEI</dt> <dd class="mono">21QQ7 · CJ7ZXTUSN3W8</dd>
+        </dl>
+      </div>
+    </div>
+
+    <div class="section-head"><h2>Deliverable</h2><span class="rule"></span></div>
+    <div class="party" style="margin-bottom:14px">
+      <h3>Identification</h3>
+      <dl style="grid-template-columns: 130px 1fr">
+        <dt>Deliverable ID</dt>     <dd class="fillable">[D1 / D2 / D3 / …]</dd>
+        <dt>Title</dt>              <dd class="fillable">[e.g., NIST 800-171 Gap Analysis Report]</dd>
+        <dt>Format</dt>             <dd class="fillable">[PDF · Slides · Spreadsheet · Other]</dd>
+        <dt>Version</dt>            <dd class="fillable">[X.Y]</dd>
+        <dt>Delivered On</dt>       <dd class="fillable">[YYYY-MM-DD]</dd>
+        <dt>Delivery Method</dt>    <dd class="fillable">[Email · Secure Portal · Sentinel · Hand-off Meeting]</dd>
+        <dt>Acceptance Criteria</dt><dd class="fillable">[Per SOW §[4 / D[n]]: list specific criteria — e.g., "All 110 NIST 800-171 controls scored; remediation roadmap with owners and dates included; report exceeds 25 pages."]</dd>
+      </dl>
+    </div>
+
+    <div class="section-head"><h2>Acceptance Determination</h2><span class="rule"></span></div>
+    <div class="accept-block">
+      <div class="accept-card accepted">
+        <h3>☑ Accepted</h3>
+        <div class="check-row"><span class="check-box"></span><span>All acceptance criteria met as defined in the SOW.</span></div>
+        <div class="check-row"><span class="check-box"></span><span>Deliverable conforms to format, scope, and quality requirements.</span></div>
+        <div class="check-row"><span class="check-box"></span><span>No further revisions required for this milestone.</span></div>
+        <p style="margin:8px 0 0;font-size:10px;color:var(--panel);line-height:1.45">
+          <b>Effect.</b> Vulnaguard may invoice the milestone amount per SOW §6
+          (Pricing &amp; Payment) within 5 business days.
+        </p>
+      </div>
+      <div class="accept-card">
+        <h3>☐ Conditional Acceptance</h3>
+        <div class="check-row"><span class="check-box"></span><span>Deliverable meets material criteria with minor remarks (see below).</span></div>
+        <div class="check-row"><span class="check-box"></span><span>Remarks to be addressed in a single revision within 10 business days.</span></div>
+        <div class="check-row"><span class="check-box"></span><span>Invoice may issue upon close-out of remarks.</span></div>
+        <p style="margin:8px 0 0;font-size:9.5px;color:var(--muted);line-height:1.45">
+          Remarks must identify specific non-conformance with cited
+          acceptance criteria; general dissatisfaction is not non-conformance.
+        </p>
+      </div>
+      <div class="accept-card rejected">
+        <h3>☐ Rejected — Material Non-Conformance</h3>
+        <div class="check-row"><span class="check-box"></span><span>Deliverable fails one or more material acceptance criteria.</span></div>
+        <div class="check-row"><span class="check-box"></span><span>Specific defects cited below.</span></div>
+        <div class="check-row"><span class="check-box"></span><span>Vulnaguard to cure within 10 business days per SOW §8.</span></div>
+        <p style="margin:8px 0 0;font-size:9.5px;color:#7a2810;line-height:1.45">
+          <b>Caution.</b> Per SOW §8, deemed acceptance occurs 10 business days
+          after delivery absent written rejection citing specific
+          non-conformance.
+        </p>
+      </div>
+      <div class="accept-card">
+        <h3>Remarks / Defects</h3>
+        <div style="border-top:1px solid var(--rule-soft); margin:4px 0; height:60px"></div>
+        <div style="border-top:1px solid var(--rule-soft); margin:4px 0; height:14px"></div>
+        <div style="border-top:1px solid var(--rule-soft); margin:4px 0; height:14px"></div>
+        <div style="border-top:1px solid var(--rule-soft); margin:4px 0; height:14px"></div>
+      </div>
+    </div>
+
+    <div class="notes">
+      <b>Invoicing trigger.</b> A signed "Accepted" or remark-closed "Conditional
+      Acceptance" determination authorizes invoicing of the milestone payment
+      under SOW §6. Late acceptance without written rejection becomes deemed
+      acceptance after 10 business days from delivery (SOW §8).
+    </div>
+
+    <div class="sign-grid">
+      <div>
+        <div class="sign-line"></div>
+        <div class="sign">Client — Authorized Acceptor</div>
+        <div style="font-size:9.5px;color:var(--muted);margin-top:6px">
+          Name: <span style="color:var(--ink)">[_________________________]</span><br/>
+          Title: <span style="color:var(--ink)">[_________________________]</span><br/>
+          Date: <span style="color:var(--ink)">[__________]</span>
+        </div>
+      </div>
+      <div>
+        <div class="sign-line"></div>
+        <div class="sign">Vulnaguard LLC — Engagement Lead</div>
+        <div style="font-size:9.5px;color:var(--muted);margin-top:6px">
+          Name: <span style="color:var(--ink)">Sean Murrill</span><br/>
+          Title: <span style="color:var(--ink)">Principal</span><br/>
+          Date: <span style="color:var(--ink)">[__________]</span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="foot">
+    <div class="left"><b>Vulnaguard LLC</b> · vulnaguard.com</div>
+    <div class="mid">CAGE 21QQ7 · UEI CJ7ZXTUSN3W8 · NAICS 541512</div>
+    <div class="right">Deliverable Acceptance <span>v 1.0</span></div>
+  </footer>
+</div>
+</body>
+</html>

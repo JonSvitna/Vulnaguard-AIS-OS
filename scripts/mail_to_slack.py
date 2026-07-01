@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 """
 Poll the M365 mailbox for new mail since the last run and post each to a
-Slack channel. Dedup cursor is read back from Slack itself (the timestamp
-embedded in our own last posted message) rather than mutating the mailbox's
-isRead state — this only needs Mail.Read, not Mail.ReadWrite, which isn't
-granted on this Azure app registration.
+Slack channel. Dedup state (cursor + seen message ID hashes) is stored in
+Slack history itself so no filesystem persistence is needed — Railway-safe.
 
 Usage:
     python3 scripts/mail_to_slack.py --channel C0123456789 [--top 25] [--lookback-minutes 60]
@@ -13,6 +11,7 @@ Reads MS365_CLIENT_ID/MS365_TENANT_ID/MS365_CLIENT_SECRET/MS365_USER_UPN
 and SLACK_BOT_TOKEN from .env (or real env vars in production).
 """
 import argparse
+import hashlib
 import re
 import sys
 import urllib.parse
@@ -26,19 +25,31 @@ from slack_api import api_call as slack_call
 import os
 
 REF_RE = re.compile(r"_ref:([0-9T:\-\.]+Z)_")
+MID_RE = re.compile(r"_mid:([a-f0-9]{12})_")
+HISTORY_SCAN = 100  # how many recent Slack messages to scan for seen IDs
 
 
-def get_last_cursor(channel: str) -> str | None:
-    """Find the receivedDateTime of the last mail we posted, embedded as a
-    hidden marker in our own previous Slack message text."""
-    data = slack_call("conversations.history", params={"channel": channel, "limit": 50})
+def _mid_hash(msg_id: str) -> str:
+    """Short stable fingerprint of an M365 message ID."""
+    return hashlib.sha256(msg_id.encode()).hexdigest()[:12]
+
+
+def read_slack_state(channel: str) -> tuple[str | None, set]:
+    """Return (last_cursor, seen_mid_hashes) from recent Slack history."""
+    data = slack_call("conversations.history", params={"channel": channel, "limit": HISTORY_SCAN})
+    cursor = None
+    seen = set()
     for msg in data.get("messages", []):
         if not msg.get("bot_id"):
             continue
-        match = REF_RE.search(msg.get("text", ""))
-        if match:
-            return match.group(1)
-    return None
+        text = msg.get("text", "")
+        if cursor is None:
+            m = REF_RE.search(text)
+            if m:
+                cursor = m.group(1)
+        for m in MID_RE.finditer(text):
+            seen.add(m.group(1))
+    return cursor, seen
 
 
 def fetch_since(token: str, upn: str, since_iso: str, top: int):
@@ -58,7 +69,8 @@ def post_to_slack(channel: str, msg: dict):
     subject = msg.get("subject", "(no subject)")
     preview = msg.get("bodyPreview", "").strip().replace("\n", " ")
     received = msg["receivedDateTime"]
-    text = f"*New mail* from `{sender}`\n*{subject}*\n{preview[:300]}\n_ref:{received}_"
+    mid = _mid_hash(msg.get("id", received))
+    text = f"*New mail* from `{sender}`\n*{subject}*\n{preview[:300]}\n_ref:{received}_ _mid:{mid}_"
     slack_call("chat.postMessage", http_method="POST", params={"channel": channel, "text": text})
 
 
@@ -74,10 +86,12 @@ def main():
     upn = os.environ["MS365_USER_UPN"]
     mail_token = get_mail_token()
 
-    cursor = get_last_cursor(args.channel)
+    cursor, seen_mids = read_slack_state(args.channel)
+    print(f"Loaded {len(seen_mids)} seen message fingerprints from Slack history.")
+
     if not cursor:
         cursor = (datetime.now(timezone.utc) - timedelta(minutes=args.lookback_minutes)).strftime("%Y-%m-%dT%H:%M:%SZ")
-        print(f"No prior cursor found in channel, defaulting to lookback: {cursor}")
+        print(f"No prior cursor found, defaulting to lookback: {cursor}")
     else:
         # Graph's `gt` filter on receivedDateTime isn't reliably exclusive at exact
         # second-precision matches — bump by 1s to avoid re-posting the last message.
@@ -90,11 +104,19 @@ def main():
         print("No new mail.")
         return
 
+    posted = 0
+    skipped = 0
     for msg in new_mail:
+        mid = _mid_hash(msg.get("id", msg["receivedDateTime"]))
+        if mid in seen_mids:
+            print(f"Skipped (duplicate): {msg.get('subject')} ({msg['receivedDateTime']})")
+            skipped += 1
+            continue
         post_to_slack(args.channel, msg)
         print(f"Posted: {msg.get('subject')} ({msg['receivedDateTime']})")
+        posted += 1
 
-    print(f"Done: {len(new_mail)} message(s) posted to Slack.")
+    print(f"Done: {posted} posted, {skipped} skipped as duplicates.")
 
 
 if __name__ == "__main__":

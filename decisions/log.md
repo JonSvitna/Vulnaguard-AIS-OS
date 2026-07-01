@@ -2,6 +2,10 @@
 
 Append-only record of meaningful decisions and why they were made. `/level-up` Phase 2 (Method interview) writes scoped automation specs here. You can also append manually whenever you decide something worth remembering.
 
+## 2026-06-30 — New Engagement: AfterSwing (NIST-171)
+
+Started NIST SP 800-171 Gap Assessment engagement for AfterSwing. Primary contact: Don Weston. Engagement ID: 2026-07_AfterSwing_NIST-171. Period: 2026-07-01 – 2026-11-01. Folder: playbook/engagements/2026-07_AfterSwing_NIST-171/. Client contact email: seanmurrill@gmail.com.
+
 **Format per entry:**
 
 ```

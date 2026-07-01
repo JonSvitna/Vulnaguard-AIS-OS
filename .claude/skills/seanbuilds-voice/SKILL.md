@@ -5,6 +5,12 @@ description: Apply SeanBuilds brand voice, persona, and tone whenever writing co
 
 # SeanBuilds Voice & Persona Skill
 
+## Routing Note
+
+This skill governs SeanBuilds, Mectofitness, and BlueAlamo content. For **Vulnaguard external BD emails** (solicitation responses, RFI replies, partnership outreach, client follow-ups), use `references/vulnaguard-bd-voice.md` instead — same directness, different objective and persona. The rules below still apply for banned words and tone, but the structural framework and persona there override this skill for those contexts.
+
+---
+
 ## The Persona
 
 The builder who explains complicated things like you're standing in the garage together.

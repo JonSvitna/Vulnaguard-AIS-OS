@@ -4,7 +4,7 @@ Revenue/KPI connection — closes the gap flagged in the 2026-06-19 audit: the A
 
 ## Status
 
-Scaffolded and **live** as of 2026-06-19 — `STRIPE_SECRET_KEY` is set, all four commands verified against the real account. This is the primary revenue plan named in `CLAUDE.md` ("Stripe (primary, not yet configured)"); Mercury Bank is the invoicing fallback, not wired here. Account currently shows $0 balance, 0 charges, 0 subscriptions — expected, no clients yet.
+**Read commands** live as of 2026-06-19 — `STRIPE_SECRET_KEY` set, all four verified. **Invoicing commands** added 2026-07-01 to support first client payment (AfterSwing deposit, SOW VG-2026-001). Mercury Bank invoicing fallback is not wired here.
 
 ## Auth flow
 
@@ -47,12 +47,39 @@ MRR isn't a native Stripe field — compute it by normalizing each subscription'
 
 `scripts/stripe_api.py` — stdlib-only Python (no `stripe` SDK dependency, matches the convention in `scripts/microsoft365_api.py`).
 
+### Read commands
 ```
 python3 scripts/stripe_api.py balance
 python3 scripts/stripe_api.py charges --days 30
 python3 scripts/stripe_api.py subscriptions
 python3 scripts/stripe_api.py mrr
 ```
+
+### Customer + invoicing workflow
+```bash
+# Step 1: find or create the client as a Stripe customer
+python3 scripts/stripe_api.py customer --email "don@afterswing.com" --name "Don Weston"
+# → prints customer ID, e.g. cus_XXXXXXXXXXXX
+
+# Step 2: create and finalize an invoice (prints hosted URL + invoice ID)
+python3 scripts/stripe_api.py invoice create \
+  --customer cus_XXXXXXXXXXXX \
+  --amount 3500 \
+  --description "NIST SP 800-171 Gap Assessment — Deposit (SOW VG-2026-001)" \
+  --days-until-due 7 \
+  --memo "Vulnaguard engagement VG-2026-001, 50% deposit per payment schedule"
+
+# Step 3: send the invoice email via Stripe
+python3 scripts/stripe_api.py invoice send in_XXXXXXXXXXXX
+
+# Check status later
+python3 scripts/stripe_api.py invoice status in_XXXXXXXXXXXX
+
+# List all open invoices
+python3 scripts/stripe_api.py invoice list
+```
+
+**Payment flow:** `collection_method=send_invoice` — Stripe emails the client a hosted payment page, they pay by card. Funds land in your Stripe balance minus fees.
 
 ## Verified working
 

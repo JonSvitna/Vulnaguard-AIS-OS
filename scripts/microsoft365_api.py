@@ -6,12 +6,14 @@ Stdlib only (no requests/msal) so it runs anywhere python3 does.
 Usage:
     python3 scripts/microsoft365_api.py events [--days 7]
     python3 scripts/microsoft365_api.py mail [--top 10]
-    python3 scripts/microsoft365_api.py send --to a@b.com --subject "Hi" --body "Text"
+    python3 scripts/microsoft365_api.py send --to a@b.com --subject "Hi" --body "Text" [--attach file.docx ...]
 
 Reads MS365_CLIENT_ID, MS365_TENANT_ID, MS365_CLIENT_SECRET, MS365_USER_UPN from .env.
 """
 import argparse
+import base64
 import json
+import mimetypes
 import os
 import sys
 import urllib.request
@@ -94,17 +96,34 @@ def list_mail(token: str, upn: str, top: int):
         print(f"{msg['receivedDateTime']}  {sender}  {msg['subject']}")
 
 
-def send_mail(token: str, upn: str, to: str, subject: str, body: str):
+def send_mail(token: str, upn: str, to: str, subject: str, body: str, attach: list[str] | None = None):
     path = f"/users/{upn}/sendMail"
-    payload = {
-        "message": {
-            "subject": subject,
-            "body": {"contentType": "Text", "content": body},
-            "toRecipients": [{"emailAddress": {"address": to}}],
-        }
+    message: dict = {
+        "subject": subject,
+        "body": {"contentType": "Text", "content": body},
+        "toRecipients": [{"emailAddress": {"address": to}}],
     }
-    graph_request(path, token, method="POST", body=payload)
-    print(f"Sent to {to}")
+    if attach:
+        attachments = []
+        for file_path in attach:
+            p = Path(file_path)
+            if not p.exists():
+                print(f"Warning: attachment not found — {file_path}", file=sys.stderr)
+                continue
+            content_type = mimetypes.guess_type(str(p))[0] or "application/octet-stream"
+            content_bytes = base64.b64encode(p.read_bytes()).decode()
+            attachments.append({
+                "@odata.type": "#microsoft.graph.fileAttachment",
+                "name": p.name,
+                "contentType": content_type,
+                "contentBytes": content_bytes,
+            })
+        if attachments:
+            message["attachments"] = attachments
+    graph_request(path, token, method="POST", body={"message": message})
+    attached_names = [Path(f).name for f in (attach or []) if Path(f).exists()]
+    suffix = f" with {len(attached_names)} attachment(s): {', '.join(attached_names)}" if attached_names else ""
+    print(f"Sent to {to}{suffix}")
 
 
 def list_rules(token: str, upn: str):
@@ -184,6 +203,8 @@ def main():
     p_send.add_argument("--to", required=True)
     p_send.add_argument("--subject", required=True)
     p_send.add_argument("--body", required=True)
+    p_send.add_argument("--attach", nargs="*", default=None, metavar="FILE",
+                        help="One or more file paths to attach")
 
     sub.add_parser("rules")
 
@@ -221,7 +242,7 @@ def main():
     elif args.command == "mail":
         list_mail(token, upn, args.top)
     elif args.command == "send":
-        send_mail(token, upn, args.to, args.subject, args.body)
+        send_mail(token, upn, args.to, args.subject, args.body, args.attach)
     elif args.command == "rules":
         list_rules(token, upn)
     elif args.command == "rule-forward":

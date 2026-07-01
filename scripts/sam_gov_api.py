@@ -23,6 +23,7 @@ import csv
 import json
 import os
 import sys
+import time
 import urllib.request
 import urllib.parse
 import urllib.error
@@ -180,6 +181,7 @@ def sam_search(query: str, posted_from: str, posted_to: str, api_key: str,
         params["q"] = query
     url = SAM_API_BASE + "?" + urllib.parse.urlencode(params)
     req = urllib.request.Request(url, headers={"Accept": "application/json"})
+    time.sleep(3)  # SAM.gov public API: stay well under 10 req/min
     try:
         with urllib.request.urlopen(req, timeout=30) as resp:
             data = json.loads(resp.read().decode())
@@ -255,7 +257,11 @@ def score_opportunity(opp: dict) -> int:
     psc_score = 35 if psc in CYBER_PSC else 0  # PSC D310 = Cyber Security is gold
     code_score = max(naics_score, psc_score)
 
-    # Must have at least one signal to proceed
+    # Require title keywords OR a gold PSC (D310 = Cyber Security).
+    # NAICS alone is too broad — it matches every rubber gasket on a DoD contract.
+    if title_score == 0 and psc not in CYBER_PSC:
+        return 0
+
     base = title_score + code_score
     if base == 0:
         return 0
@@ -528,10 +534,6 @@ def main():
         nid = opp.get("noticeId")
         title = opp.get("title") or "Untitled"
 
-        # Extract contacts regardless of dry-run (always capture)
-        contact_rows = extract_contacts(opp, score, today_str)
-        all_contact_rows.extend(contact_rows)
-
         if args.dry_run:
             pocs = opp.get("pointOfContact") or []
             poc_str = "; ".join(
@@ -548,20 +550,26 @@ def main():
             print(f"  POC     : {poc_str}")
             print(f"  URL     : {opportunity_url(opp)}")
         else:
+            contact_rows = extract_contacts(opp, score, today_str)
+            all_contact_rows.extend(contact_rows)
+
             if slack_token:
                 blocks, fallback = build_slack_blocks(opp, score)
                 slack_post(slack_channel, blocks, slack_token, fallback)
                 print(f"  Posted: [{score}] {title}")
 
-        if nid:
-            new_ids.append(nid)
+            if nid:
+                new_ids.append(nid)
 
-    # Save all contacts to CSV
+    if args.dry_run:
+        print(f"\nDry run complete — no data written.")
+        return
+
+    # Save contacts and update cache
     if all_contact_rows:
         append_contacts(all_contact_rows)
         print(f"\nSaved {len(all_contact_rows)} contacts to {CONTACTS_CSV}")
 
-    # Update cache
     cache["seen"] = list(seen_ids | set(new_ids))
     cache["last_run"] = today_dt.isoformat()
     save_cache(cache)

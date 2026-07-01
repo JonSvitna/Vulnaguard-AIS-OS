@@ -26,10 +26,11 @@ The authoritative source for how Vulnaguard delivers every engagement. All runbo
 
 ## Standard Engagement Lifecycle
 
-Every engagement follows the same 9-phase structure. Service runbooks specify which phases apply and how long each phase runs.
+Every engagement follows the same structure. Phase 0 is mandatory before any billable work begins. Phase 10 runs only when a client offboards from Sentinel.
 
 | Phase | File |
 |---|---|
+| 0. Client Onboarding | [phases/00-client-onboarding.md](phases/00-client-onboarding.md) |
 | 1. Discovery | [phases/01-discovery.md](phases/01-discovery.md) |
 | 2. Planning | [phases/02-planning.md](phases/02-planning.md) |
 | 3. Assessment | [phases/03-assessment.md](phases/03-assessment.md) |
@@ -39,6 +40,7 @@ Every engagement follows the same 9-phase structure. Service runbooks specify wh
 | 7. Validation | [phases/07-validation.md](phases/07-validation.md) |
 | 8. Closeout | [phases/08-closeout.md](phases/08-closeout.md) |
 | 9. Sentinel Onboarding (Optional) | [phases/09-sentinel-onboarding.md](phases/09-sentinel-onboarding.md) |
+| 10. Sentinel Offboarding | [phases/10-sentinel-offboarding.md](phases/10-sentinel-offboarding.md) |
 
 ---
 
@@ -46,10 +48,11 @@ Every engagement follows the same 9-phase structure. Service runbooks specify wh
 
 | Template | File | Used In |
 |---|---|---|
-| Proposal | [templates/proposal.md](templates/proposal.md) | Pre-engagement |
-| Statement of Work | [templates/sow.md](templates/sow.md) | Pre-engagement |
-| Master Services Agreement | [templates/msa.md](templates/msa.md) | Pre-engagement |
-| NDA | [templates/nda.md](templates/nda.md) | Pre-engagement |
+| Proposal | [templates/proposal.md](templates/proposal.md) | Phase 0 |
+| Statement of Work | [templates/sow.md](templates/sow.md) | Phase 0 |
+| Master Services Agreement | [templates/msa.md](templates/msa.md) | Phase 0 |
+| NDA | [templates/nda.md](templates/nda.md) | Phase 0 |
+| Welcome Letter | [templates/welcome-letter.md](templates/welcome-letter.md) | Phase 0 |
 | Discovery Questionnaire | [templates/discovery-questionnaire.md](templates/discovery-questionnaire.md) | Phase 1 |
 | Kickoff Agenda | [templates/kickoff-agenda.md](templates/kickoff-agenda.md) | Phase 2 |
 | Status Report | [templates/status-report.md](templates/status-report.md) | All phases |
@@ -61,6 +64,8 @@ Every engagement follows the same 9-phase structure. Service runbooks specify wh
 | Executive Presentation | [templates/executive-presentation.md](templates/executive-presentation.md) | Phase 5 |
 | Closeout Report | [templates/closeout-report.md](templates/closeout-report.md) | Phase 8 |
 | Client Acceptance Form | [templates/acceptance-form.md](templates/acceptance-form.md) | Phase 8 |
+| Rules of Engagement | [templates/rules-of-engagement.md](templates/rules-of-engagement.md) | Phase 2 |
+| Change Order | [templates/change-order.md](templates/change-order.md) | Any phase |
 
 ---
 

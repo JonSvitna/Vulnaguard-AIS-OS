@@ -12,6 +12,9 @@
 
 ```
 2026-07_AfterSwing_NIST-171/
+  00-onboarding/
+    onboarding-checklist.md         ← Track NDA/MSA/SOW signatures + deposit
+    welcome-letter.md               ← Send to Don Weston at engagement start
   01-discovery/
     discovery-questionnaire.md     ← Send to Don Weston, due 2026-07-08
   02-planning/

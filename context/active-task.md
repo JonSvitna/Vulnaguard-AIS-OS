@@ -3,41 +3,47 @@
 Updated whenever Sean switches coding agents mid-task (Claude Code ↔ Codex ↔ Cursor) so the next agent can pick up cold. If this file says "none," there's nothing in flight — read CLAUDE.md and proceed normally.
 
 **Status:** in progress
-**Switched from:** Cursor → Codex (manual switch)
-**Updated:** 2026-06-22
+**Switched from:** Codex → Cursor (manual switch)
+**Updated:** 2026-07-01
 
 ## What we're doing
 
-Clean handoff — no specific coding task was active in the Cursor session that triggered this. Repo is on `main` with a clean working tree. Sean is switching to Codex for general AIOS work; tell Codex what to pick up next.
+SAM.gov contract scanner hardening + gov lead strategy. Scanner fixes done. USASpending scraper refocused on **small contract reverse-engineering** — individual awards in the $5k–$100k range that a startup could replicate to build past performance (not big-prime awardee lists).
 
 ## Done so far
 
-- NEXUS OS dashboard revamp shipped (`5c8e7ab`): `dashboard/public/` UI overhaul, `command.css`, `/api/graph` + `/api/overview` in `dashboard/server.js`
-- Website-design lead finder added (`c0ec25f`): `.claude/agents/website-design-lead-finder.md`, `leads/website-design-inbox.md` populated with 6 Baltimore-metro prospects
-- Agent manuals synced: `scripts/sync_agent_manuals.py` was missing from repo (documented but never committed) — recreated and run; `AGENTS.md` + `.cursor/rules/aios.mdc` now include the Obsidian vault section from `CLAUDE.md`
+- **Rate limiting added** (`scripts/sam_gov_api.py:184`): `time.sleep(3)` before every API call — scanner was bursting 21 requests with no delay, triggering the SAM.gov IP block
+- **Dry-run bug fixed**: contacts CSV and seen-IDs cache were being written even with `--dry-run`. Now fully read-only in dry-run mode (`scripts/sam_gov_api.py:537-575`)
+- **Scoring tightened** (`scripts/sam_gov_api.py:262`): NAICS code alone no longer clears the threshold — opportunity must have cyber keywords in the title OR be PSC D310 (Cyber Security). Previously any DoD contract with NAICS 541512 scored 40, pulling in rubber gaskets, engines, janitorial services, etc.
+- **CSV deduped and cleaned** (`leads/sam_gov_contacts.csv`): was 221 rows of mostly hardware procurement contacts → now 1 row (effectively empty/reset). Will rebuild clean with new scoring rules.
+- **Slack bot confirmed working**: bot is a member of `#gov-contracts` (channel ID `C0BF5NSMMCY`), `.env` has correct `SLACK_GOV_CONTRACTS_CHANNEL` value. First scan ran at 2:40 UTC before the bot was in the channel, which is why no messages appeared.
+- **Strategic decision made**: gov POC contacts from SAM.gov are NOT the right outreach targets for Sentinel CMMC. They're Contracting Officers, not defense contractors needing certification. The play for Sentinel CMMC prospects is USASpending.gov awardee data (who won cybersecurity contracts).
+- **USASpending scraper refocused** (`scripts/usaspending_api.py`): default mode finds individual small awards ($5k–$100k) with cyber service descriptions — reverse-engineer what agencies bought and who won. Output: `leads/usaspending_opportunities.csv`. First run: 92 opportunities (all agencies, 12mo lookback). `--mode companies` kept for legacy big-awardee view.
 
 ## Next step
 
-Ask Sean what to work on, or pick from open priorities in `decisions/log.md`:
-
-1. **Website dev pipeline** — run `website-design-lead-finder` for another industry/city, or qualify the 6 leads in `leads/website-design-inbox.md` (several flagged borderline on "not solo" ICP)
-2. **Sentinel CMMC pilot readiness** — control catalog divergence is still CRITICAL (`decisions/log.md` 2026-06-19 entry): production loads 48-control copy vs 110-control repo root
-3. **Dashboard** — start with `cd dashboard && npm start` (not `npm run dev` from repo root; no root `package.json`)
+1. Review `leads/usaspending_opportunities.csv` — filter `replicability=high`, pick 5–10 awards Sean could actually deliver. Cross-reference awardees (who won similar work) and agencies (who's buying).
+2. When SAM.gov IP block clears, run opportunity scanner for active solicitations (complements spending data — what's being bought vs. what's open now).
+```
+python3 scripts/sam_gov_api.py --reset
+python3 scripts/sam_gov_api.py --dry-run --days 7
+```
+Confirm cyber-relevant titles, then run live for Slack `#gov-contracts` monitoring (separate from awardee outreach).
 
 ## Key files
 
-- `context/priorities.md` — quarter goals (Sentinel cert, 10 clients, SEO traffic)
-- `decisions/log.md` — append-only decisions; read tail for latest context
-- `leads/website-design-inbox.md` — website dev lead staging (6 rows, needs qualification)
-- `dashboard/server.js` — Express server; graph + overview APIs
-- `dashboard/public/app.js` — NEXUS OS frontend (3D memory graph, orbit, sparklines)
-- `CLAUDE.md` — canonical operating manual (Codex reads generated `AGENTS.md`)
+- `scripts/sam_gov_api.py` — opportunity scanner (Slack alerts, not outreach targets)
+- `scripts/usaspending_api.py` — small contract opportunity reverse-engineering (default)
+- `leads/usaspending_opportunities.csv` — individual awards to replicate
+- `leads/usaspending_awardees.csv` — legacy big-company list (`--mode companies`)
+- `leads/sam_gov_contacts.csv` — contracting officer POCs (monitoring only, not for blast outreach)
+- `leads/sam_gov_seen.json` — SAM.gov seen-IDs cache; run `--reset` before first post-fix scan
 
 ## Watch out for
 
-- `scripts/sync_agent_manuals.py` was referenced everywhere but never committed until this handoff — re-run after any `CLAUDE.md` edit
-- Dashboard has no `dev` script — use `npm start` from `dashboard/`
-- Several website-design leads lack public email; phone-only outreach may need a different channel than Resend cold email
+- SAM.gov API is currently unreachable (TLS handshake timeout from IP block). Do NOT try to run the scanner yet.
+- USASpending default mode is **award-level** (what work got bought), not company totals. Use `replicability` column: `high` = services you could bid, `intel_only` = software/license buys.
+- `sam_gov_contacts.csv` POCs are contracting officers — separate from this play.
 
 <!--
 Template for an in-flight task:

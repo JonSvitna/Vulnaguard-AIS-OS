@@ -17,6 +17,7 @@ Read `references/3ms-framework.md` once. It's how Sean thinks about AI work. Min
 - `/onboard` — already run if you're seeing this filled in. Re-run any time to refresh from an edited `aios-intake.md`.
 - `/audit` — Four-Cs gap report. Run on Day 7, then weekly. Watch your score climb.
 - `/level-up` — Weekly 3Ms interview. Find one automation, scope it, ship it. One per week.
+- `/engagement-start` — Scaffold a new Vulnaguard client engagement. Creates folder structure, populates all templates, exports Word docs. Run when a new client engagement kicks off.
 
 ## Where things live
 
@@ -25,6 +26,7 @@ Read `references/3ms-framework.md` once. It's how Sean thinks about AI work. Min
 - `connections.md` — registry of every system your AIOS can reach
 - `decisions/log.md` — append-only record of decisions and why
 - `archives/` — old stuff. Don't delete. Move here.
+- `playbook/` — Vulnaguard delivery playbook. Service runbooks, phase checklists, templates, and client engagement folders. Source of truth for all client delivery. See `playbook/index.md`.
 
 See `EXPANSIONS.md` for what to add as you grow.
 

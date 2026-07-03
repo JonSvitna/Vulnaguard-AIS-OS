@@ -11,6 +11,8 @@ from fastapi import FastAPI, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
+from comms_sources import build_comms
+
 load_dotenv()
 
 app = FastAPI(title="Sentinel OS API")
@@ -301,16 +303,10 @@ async def globe_points():
 
 @api.get("/comms")
 async def comms_feed():
-    # Decorative — wiring this to a real feed needs the Microsoft Graph / Slack
-    # scripts already in this repo; left as a clearly-labeled stub (surfaced as
-    # "SIM" in the UI) that at least mirrors the real channels this AIOS reaches.
-    msgs = [
-        {"from": "Slack", "channel": "#build", "preview": "Sentinel cert checklist updated · 2 items left", "unread": True},
-        {"from": "M365", "channel": "inbox", "preview": "2 solicitation notices flagged for triage", "unread": True},
-        {"from": "Resend", "channel": "outreach", "preview": "25 warm-intro emails queued for send", "unread": False},
-        {"from": "Slack", "channel": "#pipeline", "preview": "Meridian Defense moved to hot", "unread": False},
-    ]
-    return {"unread": sum(1 for m in msgs if m["unread"]), "messages": msgs}
+    # Live feed from Slack + Microsoft Graph via the repo's API scripts. Falls
+    # back to a clearly-labeled SIM stub (surfaced as "SIM" in the UI) when the
+    # tokens/channels aren't configured. build_comms never raises.
+    return build_comms()
 
 
 PRIORITY_RE = re.compile(r"^\s*\d+\.\s+\*\*(.+?)\*\*\s*(.*)$")

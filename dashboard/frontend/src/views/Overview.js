@@ -104,7 +104,11 @@ export default function Overview({ stats, memory, network, tools, comms, brief, 
       </div>
 
       <div className="block span-4">
-        <div className="block-head"><span className="title display">Comms</span><span className="sim-tag">SIM</span><span className="led" style={{ marginLeft: "auto", background: "var(--warn)", boxShadow: "0 0 6px rgba(251,191,36,.7)" }} /></div>
+        <div className="block-head">
+          <span className="title display">Comms</span>
+          {comms?.simulated !== false ? <span className="sim-tag">SIM</span> : null}
+          <span className="led" style={{ marginLeft: "auto", background: comms?.simulated === false ? "var(--cyan)" : "var(--warn)", boxShadow: comms?.simulated === false ? "0 0 6px rgba(34,211,238,.8)" : "0 0 6px rgba(251,191,36,.7)" }} />
+        </div>
         {commRows.length ? commRows.map((m, i) => (
           <div key={i} className="comm">
             {m.unread ? <span className="unread" /> : null}

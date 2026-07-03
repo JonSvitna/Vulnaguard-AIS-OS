@@ -13,7 +13,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-app = FastAPI(title="JARVIS OS API")
+app = FastAPI(title="Sentinel OS API")
 api = APIRouter(prefix="/api")
 
 SERVER_START = time.time()
@@ -211,6 +211,8 @@ async def system_stats():
         "network_throughput": len(edges) * 10,
         "uptime_hours": uptime_hours,
         "active_processes": skill_count + agent_count,
+        "skills": skill_count,
+        "agents": agent_count,
         "shield_integrity": online_pct,
         "gauges": [
             {"id": "reactor", "label": "ARC REACTOR", "value": online_pct, "unit": "%"},
@@ -296,14 +298,14 @@ async def globe_points():
 
 @api.get("/comms")
 async def comms_feed():
-    # Decorative — wiring this to real mail/Slack would need the Microsoft
-    # Graph / Slack scripts already used elsewhere in this repo; left as a
-    # clearly-labeled stub for now rather than faking a live feed.
+    # Decorative — wiring this to a real feed needs the Microsoft Graph / Slack
+    # scripts already in this repo; left as a clearly-labeled stub (surfaced as
+    # "SIM" in the UI) that at least mirrors the real channels this AIOS reaches.
     msgs = [
-        {"from": "PEPPER POTTS", "channel": "PRIORITY", "preview": "Board review moved to 0900.", "unread": True},
-        {"from": "WORKSHOP", "channel": "SYSTEM", "preview": "Mark VII calibration complete.", "unread": False},
-        {"from": "S.H.I.E.L.D.", "channel": "SECURE", "preview": "Encrypted packet received.", "unread": True},
-        {"from": "TREASURY", "channel": "FINANCE", "preview": "Quarterly burn within range.", "unread": False},
+        {"from": "Slack", "channel": "#build", "preview": "Sentinel cert checklist updated · 2 items left", "unread": True},
+        {"from": "M365", "channel": "inbox", "preview": "2 solicitation notices flagged for triage", "unread": True},
+        {"from": "Resend", "channel": "outreach", "preview": "25 warm-intro emails queued for send", "unread": False},
+        {"from": "Slack", "channel": "#pipeline", "preview": "Meridian Defense moved to hot", "unread": False},
     ]
     return {"unread": sum(1 for m in msgs if m["unread"]), "messages": msgs}
 

@@ -24,6 +24,9 @@ OBSIDIAN_WIKI_DIR = Path(os.environ.get("HOME", "")) / "Documents/Obsidian Vault
 SKILLS_DIR = REPO_ROOT / ".claude/skills"
 AGENTS_DIR = REPO_ROOT / ".claude/agents"
 CONNECTIONS_MD = REPO_ROOT / "connections.md"
+PRIORITIES_MD = REPO_ROOT / "context/priorities.md"
+DECISIONS_MD = REPO_ROOT / "decisions/log.md"
+LEADS_INBOX_MD = REPO_ROOT / "leads/inbox.md"
 
 SECTIONS = [
     {"id": "overview", "label": "OVERVIEW", "code": "SYS-01", "scene": "globe"},
@@ -308,6 +311,73 @@ async def comms_feed():
         {"from": "Slack", "channel": "#pipeline", "preview": "Meridian Defense moved to hot", "unread": False},
     ]
     return {"unread": sum(1 for m in msgs if m["unread"]), "messages": msgs}
+
+
+PRIORITY_RE = re.compile(r"^\s*\d+\.\s+\*\*(.+?)\*\*\s*(.*)$")
+DECISION_RE = re.compile(r"^##\s+(\d{4}-\d{2}-\d{2})\s+[—–-]\s+(.+?)\s*$")
+
+
+@api.get("/brief")
+async def daily_brief():
+    """Top priorities parsed from context/priorities.md — drives the Daily Brief."""
+    raw = read_safe(PRIORITIES_MD) or ""
+    items = []
+    theme = None
+    for line in raw.splitlines():
+        m = PRIORITY_RE.match(line)
+        if m:
+            detail = (m.group(2) or "").strip().lstrip("—–-").strip()
+            items.append({"title": m.group(1).strip(), "detail": detail})
+        elif line.lower().startswith("standing theme"):
+            # e.g. "Standing theme: automation that removes workload is always welcome…"
+            theme = line.split(":", 1)[1].strip() if ":" in line else line.strip()
+    return {"date": _now_iso(), "priorities": items, "theme": theme}
+
+
+@api.get("/decisions")
+async def decisions_log():
+    """Recent decision headings parsed from decisions/log.md (newest first)."""
+    raw = read_safe(DECISIONS_MD) or ""
+    entries = []
+    for line in raw.splitlines():
+        m = DECISION_RE.match(line)
+        if m:
+            entries.append({"date": m.group(1), "title": m.group(2).strip()})
+    entries.sort(key=lambda e: e["date"], reverse=True)
+    return {"total": len(entries), "decisions": entries[:6]}
+
+
+def _relevance(notes: str):
+    """Classify a lead's CMMC relevance straight from the triage note wording."""
+    low = (notes or "").lower()
+    if "moderate" in low:
+        return "moderate"
+    if "no cmmc relevance" in low or "low cmmc relevance" in low or "low-to-moderate" in low:
+        return "low"
+    return "review"
+
+
+@api.get("/leads")
+async def leads_inbox():
+    """Staged leads parsed from the leads/inbox.md markdown table."""
+    raw = read_safe(LEADS_INBOX_MD) or ""
+    lines = [l for l in raw.splitlines() if l.strip().startswith("|")]
+    rows = []
+    for line in lines[2:]:  # drop header + separator
+        cells = [c.strip() for c in line.split("|")[1:-1]]
+        if len(cells) < 6:
+            continue
+        date_found, agency, location, contract, source, notes = cells[:6]
+        rows.append({
+            "date": date_found,
+            "name": agency,
+            "location": location,
+            "source": source,
+            "relevance": _relevance(notes),
+        })
+    rows.sort(key=lambda r: r["date"], reverse=True)
+    hot = sum(1 for r in rows if r["relevance"] == "moderate")
+    return {"inbox": len(rows), "hot": hot, "closed": 0, "leads": rows[:5]}
 
 
 app.include_router(api)

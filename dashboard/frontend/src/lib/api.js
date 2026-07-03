@@ -16,6 +16,9 @@ export const api = {
   networkGraph: () => client.get("/network/graph").then((r) => r.data),
   tools: () => client.get("/tools").then((r) => r.data),
   comms: () => client.get("/comms").then((r) => r.data),
+  brief: () => client.get("/brief").then((r) => r.data),
+  decisions: () => client.get("/decisions").then((r) => r.data),
+  leads: () => client.get("/leads").then((r) => r.data),
 };
 
 export default api;

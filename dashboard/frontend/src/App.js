@@ -11,7 +11,7 @@ import Comms from "./views/Comms";
 
 export default function App() {
   const [activeId, setActiveId] = useState("overview");
-  const [data, setData] = useState({ stats: null, memory: null, network: null, tools: null, comms: null });
+  const [data, setData] = useState({ stats: null, memory: null, network: null, tools: null, comms: null, brief: null, decisions: null, leads: null });
   const [booted, setBooted] = useState(false);
   const [online, setOnline] = useState(false);
 
@@ -20,10 +20,11 @@ export default function App() {
     let mounted = true;
     Promise.allSettled([
       api.systemStats(), api.memoryNodes(), api.networkGraph(), api.tools(), api.comms(),
+      api.brief(), api.decisions(), api.leads(),
     ]).then((res) => {
       if (!mounted) return;
-      const [stats, memory, network, tools, comms] = res.map((r) => (r.status === "fulfilled" ? r.value : null));
-      setData({ stats, memory, network, tools, comms });
+      const [stats, memory, network, tools, comms, brief, decisions, leads] = res.map((r) => (r.status === "fulfilled" ? r.value : null));
+      setData({ stats, memory, network, tools, comms, brief, decisions, leads });
       setOnline(res.some((r) => r.status === "fulfilled"));
       setBooted(true);
     });
@@ -70,7 +71,7 @@ export default function App() {
       <main>
         <CommandBar section={section} online={online} />
         {activeId === "overview" && (
-          <Overview stats={data.stats} memory={data.memory} network={data.network} tools={data.tools} comms={data.comms} onNavigate={navigate} />
+          <Overview stats={data.stats} memory={data.memory} network={data.network} tools={data.tools} comms={data.comms} brief={data.brief} decisions={data.decisions} leads={data.leads} onNavigate={navigate} />
         )}
         {activeId === "network" && <Network network={data.network} />}
         {activeId === "memory" && <Memory memory={data.memory} />}

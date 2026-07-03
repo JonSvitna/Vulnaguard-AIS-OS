@@ -1,6 +1,5 @@
 import math
 import os
-import random
 import re
 import time
 from datetime import datetime, timezone
@@ -11,9 +10,11 @@ from fastapi import FastAPI, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
+from comms_sources import build_comms
+
 load_dotenv()
 
-app = FastAPI(title="JARVIS OS API")
+app = FastAPI(title="Sentinel OS API")
 api = APIRouter(prefix="/api")
 
 SERVER_START = time.time()
@@ -24,6 +25,9 @@ OBSIDIAN_WIKI_DIR = Path(os.environ.get("HOME", "")) / "Documents/Obsidian Vault
 SKILLS_DIR = REPO_ROOT / ".claude/skills"
 AGENTS_DIR = REPO_ROOT / ".claude/agents"
 CONNECTIONS_MD = REPO_ROOT / "connections.md"
+PRIORITIES_MD = REPO_ROOT / "context/priorities.md"
+DECISIONS_MD = REPO_ROOT / "decisions/log.md"
+LEADS_INBOX_MD = REPO_ROOT / "leads/inbox.md"
 
 SECTIONS = [
     {"id": "overview", "label": "OVERVIEW", "code": "SYS-01", "scene": "globe"},
@@ -36,10 +40,6 @@ SECTIONS = [
 
 def _now_iso():
     return datetime.now(timezone.utc).isoformat()
-
-
-def _series(n, base, spread):
-    return [round(base + random.uniform(-spread, spread), 1) for _ in range(n)]
 
 
 def read_safe(path: Path):
@@ -186,6 +186,29 @@ async def get_sections():
     return {"sections": SECTIONS}
 
 
+def knowledge_activity_series(days=14):
+    """Real activity histogram: count of knowledge-base files modified per day
+    over the last `days` days (AIOS memory + Obsidian vault). Oldest first."""
+    files = list_md_files(MEMORY_DIR) + list_md_files_recursive(OBSIDIAN_WIKI_DIR)
+    today = datetime.now(timezone.utc).date()
+    buckets = [0] * days
+    for file_path in files:
+        try:
+            mtime = datetime.fromtimestamp(file_path.stat().st_mtime, tz=timezone.utc).date()
+        except OSError:
+            continue
+        delta = (today - mtime).days
+        if 0 <= delta < days:
+            buckets[days - 1 - delta] += 1
+    return buckets
+
+
+def count_wikilinks(raw: str):
+    """Number of outgoing [[wikilinks]] in a note body (real graph out-degree)."""
+    _, content = parse_frontmatter(raw)
+    return len(re.findall(r"\[\[([^\]|#]+)", content))
+
+
 @api.get("/system/stats")
 async def system_stats():
     nodes, edges = build_knowledge_graph()
@@ -202,23 +225,15 @@ async def system_stats():
 
     return {
         "timestamp": _now_iso(),
-        # decorative flavor — no real sensor behind these, kept for the HUD feel
-        "core_temp": round(random.uniform(38, 46), 1),
-        "power_output": round(random.uniform(82, 99), 1),
-        "cpu_load": round(random.uniform(28, 74), 1),
-        # grounded in real data
-        "memory_load": min(100, round(len(nodes) / 2, 1)),
-        "network_throughput": len(edges) * 10,
         "uptime_hours": uptime_hours,
         "active_processes": skill_count + agent_count,
+        "skills": skill_count,
+        "agents": agent_count,
+        "node_count": len(nodes),
+        "edge_count": len(edges),
         "shield_integrity": online_pct,
-        "gauges": [
-            {"id": "reactor", "label": "ARC REACTOR", "value": online_pct, "unit": "%"},
-            {"id": "thermal", "label": "THERMAL", "value": round(random.uniform(40, 70), 0), "unit": "%"},
-            {"id": "bandwidth", "label": "BANDWIDTH", "value": round(random.uniform(55, 92), 0), "unit": "%"},
-        ],
-        "throughput_series": _series(24, 60, 30),
-        "load_series": _series(24, 55, 22),
+        # real 14-day histogram of knowledge-base file activity (drives sparklines)
+        "activity_series": knowledge_activity_series(),
     }
 
 
@@ -237,15 +252,14 @@ async def memory_nodes():
             "id": file_path.stem,
             "label": (data.get("name") or file_path.stem).upper().replace("-", " "),
             "kind": str(node_type).upper(),
-            "size_mb": round(stat.st_size / (1024 * 1024), 3),
-            "integrity": round(random.uniform(96, 100), 1),
+            "size_kb": round(stat.st_size / 1024, 1),
+            "links": count_wikilinks(raw),
             "last_access": datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc).isoformat(),
         })
     entries.sort(key=lambda e: e["last_access"], reverse=True)
     return {
         "total_nodes": len(entries),
         "indexed": len(entries),
-        "fragmentation": round(random.uniform(1.2, 4.8), 1),
         "nodes": entries[:8],
     }
 
@@ -272,40 +286,84 @@ async def connected_tools():
             "id": row["num"],
             "name": row["domain"].upper(),
             "status": status,
-            "latency_ms": random.randint(20, 90) if status == "online" else 0,
+            "last_checked": (row.get("lastChecked") or "").strip() or "—",
         })
     return {"connected": sum(1 for t in tools if t["status"] == "online"), "tools": tools}
 
 
-@api.get("/globe/points")
-async def globe_points():
-    # Decorative city markers — visual flavor for the literal-globe scene,
-    # not tied to a real geo data source (this AIOS has no live location feed).
-    pts = [
-        {"name": "NEW YORK", "lat": 40.71, "lng": -74.00, "level": "high"},
-        {"name": "LONDON", "lat": 51.50, "lng": -0.12, "level": "high"},
-        {"name": "TOKYO", "lat": 35.68, "lng": 139.69, "level": "high"},
-        {"name": "MALIBU", "lat": 34.02, "lng": -118.78, "level": "critical"},
-        {"name": "DUBAI", "lat": 25.20, "lng": 55.27, "level": "mid"},
-        {"name": "SYDNEY", "lat": -33.86, "lng": 151.20, "level": "mid"},
-        {"name": "SAO PAULO", "lat": -23.55, "lng": -46.63, "level": "mid"},
-        {"name": "GENEVA", "lat": 46.20, "lng": 6.14, "level": "high"},
-    ]
-    return {"points": pts}
-
-
 @api.get("/comms")
 async def comms_feed():
-    # Decorative — wiring this to real mail/Slack would need the Microsoft
-    # Graph / Slack scripts already used elsewhere in this repo; left as a
-    # clearly-labeled stub for now rather than faking a live feed.
-    msgs = [
-        {"from": "PEPPER POTTS", "channel": "PRIORITY", "preview": "Board review moved to 0900.", "unread": True},
-        {"from": "WORKSHOP", "channel": "SYSTEM", "preview": "Mark VII calibration complete.", "unread": False},
-        {"from": "S.H.I.E.L.D.", "channel": "SECURE", "preview": "Encrypted packet received.", "unread": True},
-        {"from": "TREASURY", "channel": "FINANCE", "preview": "Quarterly burn within range.", "unread": False},
-    ]
-    return {"unread": sum(1 for m in msgs if m["unread"]), "messages": msgs}
+    # Live feed from Slack + Microsoft Graph via the repo's API scripts. Falls
+    # back to a clearly-labeled SIM stub (surfaced as "SIM" in the UI) when the
+    # tokens/channels aren't configured. build_comms never raises.
+    return build_comms()
+
+
+PRIORITY_RE = re.compile(r"^\s*\d+\.\s+\*\*(.+?)\*\*\s*(.*)$")
+DECISION_RE = re.compile(r"^##\s+(\d{4}-\d{2}-\d{2})\s+[—–-]\s+(.+?)\s*$")
+
+
+@api.get("/brief")
+async def daily_brief():
+    """Top priorities parsed from context/priorities.md — drives the Daily Brief."""
+    raw = read_safe(PRIORITIES_MD) or ""
+    items = []
+    theme = None
+    for line in raw.splitlines():
+        m = PRIORITY_RE.match(line)
+        if m:
+            detail = (m.group(2) or "").strip().lstrip("—–-").strip()
+            items.append({"title": m.group(1).strip(), "detail": detail})
+        elif line.lower().startswith("standing theme"):
+            # e.g. "Standing theme: automation that removes workload is always welcome…"
+            theme = line.split(":", 1)[1].strip() if ":" in line else line.strip()
+    return {"date": _now_iso(), "priorities": items, "theme": theme}
+
+
+@api.get("/decisions")
+async def decisions_log():
+    """Recent decision headings parsed from decisions/log.md (newest first)."""
+    raw = read_safe(DECISIONS_MD) or ""
+    entries = []
+    for line in raw.splitlines():
+        m = DECISION_RE.match(line)
+        if m:
+            entries.append({"date": m.group(1), "title": m.group(2).strip()})
+    entries.sort(key=lambda e: e["date"], reverse=True)
+    return {"total": len(entries), "decisions": entries[:6]}
+
+
+def _relevance(notes: str):
+    """Classify a lead's CMMC relevance straight from the triage note wording."""
+    low = (notes or "").lower()
+    if "moderate" in low:
+        return "moderate"
+    if "no cmmc relevance" in low or "low cmmc relevance" in low or "low-to-moderate" in low:
+        return "low"
+    return "review"
+
+
+@api.get("/leads")
+async def leads_inbox():
+    """Staged leads parsed from the leads/inbox.md markdown table."""
+    raw = read_safe(LEADS_INBOX_MD) or ""
+    lines = [l for l in raw.splitlines() if l.strip().startswith("|")]
+    rows = []
+    for line in lines[2:]:  # drop header + separator
+        cells = [c.strip() for c in line.split("|")[1:-1]]
+        if len(cells) < 6:
+            continue
+        date_found, agency, location, contract, source, notes = cells[:6]
+        rows.append({
+            "date": date_found,
+            "name": agency,
+            "location": location,
+            "source": source,
+            "relevance": _relevance(notes),
+        })
+    rows.sort(key=lambda r: r["date"], reverse=True)
+    hot = sum(1 for r in rows if r["relevance"] == "moderate")
+    return {"inbox": len(rows), "hot": hot, "closed": 0, "leads": rows[:5]}
 
 
 app.include_router(api)

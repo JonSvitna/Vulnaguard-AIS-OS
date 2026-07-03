@@ -1,102 +1,87 @@
 import React, { useCallback, useEffect, useState } from "react";
-import "./App.css";
-import { SECTIONS } from "./data/sections";
 import api from "./lib/api";
-import { usePointer } from "./hooks/usePointer";
-import SceneCanvas from "./scenes/SceneCanvas";
-import HudFrame from "./components/HudFrame";
-import SectionPanels from "./components/SectionPanels";
-import Dial from "./components/Dial";
-import DetailOverlay from "./components/DetailOverlay";
+import { SECTIONS, sectionIndex } from "./data/sections";
+import Sidebar from "./components/Sidebar";
+import CommandBar from "./components/CommandBar";
+import Overview from "./views/Overview";
+import Network from "./views/Network";
+import Memory from "./views/Memory";
+import Systems from "./views/Systems";
+import Comms from "./views/Comms";
 
 export default function App() {
-  const [active, setActive] = useState(0);
-  const [data, setData] = useState({ stats: null, memory: null, network: null, tools: null, comms: null });
-  const [points, setPoints] = useState([]);
-  const [detail, setDetail] = useState(null);
-  const [hovered, setHovered] = useState(null);
+  const [activeId, setActiveId] = useState("overview");
+  const [data, setData] = useState({ stats: null, memory: null, network: null, tools: null, comms: null, brief: null, decisions: null, leads: null });
   const [booted, setBooted] = useState(false);
-  const pointer = usePointer();
+  const [online, setOnline] = useState(false);
 
-  const section = SECTIONS[active];
-
-  // initial load
+  // Initial load — allSettled so one dead endpoint never blanks the whole app.
   useEffect(() => {
     let mounted = true;
     Promise.allSettled([
-      api.systemStats(), api.memoryNodes(), api.networkGraph(),
-      api.tools(), api.comms(), api.globePoints(),
+      api.systemStats(), api.memoryNodes(), api.networkGraph(), api.tools(), api.comms(),
+      api.brief(), api.decisions(), api.leads(),
     ]).then((res) => {
       if (!mounted) return;
-      const [stats, memory, network, tools, comms, gp] = res.map((r) => (r.status === "fulfilled" ? r.value : null));
-      setData({ stats, memory, network, tools, comms });
-      if (gp?.points) setPoints(gp.points);
+      const [stats, memory, network, tools, comms, brief, decisions, leads] = res.map((r) => (r.status === "fulfilled" ? r.value : null));
+      setData({ stats, memory, network, tools, comms, brief, decisions, leads });
+      setOnline(res.some((r) => r.status === "fulfilled"));
       setBooted(true);
     });
     return () => { mounted = false; };
   }, []);
 
-  // live-feel polling of system stats
+  // Live-feel: refresh system stats periodically.
   useEffect(() => {
     const id = setInterval(() => {
-      api.systemStats().then((s) => setData((d) => ({ ...d, stats: s }))).catch(() => {});
-    }, 4000);
+      api.systemStats()
+        .then((s) => { setData((d) => ({ ...d, stats: s })); setOnline(true); })
+        .catch(() => setOnline(false));
+    }, 5000);
     return () => clearInterval(id);
   }, []);
 
-  const navigate = useCallback((idx) => {
-    setActive(((idx % SECTIONS.length) + SECTIONS.length) % SECTIONS.length);
-    setDetail(null);
+  const navigate = useCallback((id) => {
+    if (sectionIndex(id) >= 0) setActiveId(id);
   }, []);
 
-  const onPointSelect = useCallback((p) => {
-    setDetail({
-      title: p.name, code: p.level.toUpperCase(),
-      rows: [
-        { label: "LATITUDE", value: p.lat.toFixed(2) },
-        { label: "LONGITUDE", value: p.lng.toFixed(2) },
-        { label: "PRIORITY", value: p.level.toUpperCase() },
-      ],
-      note: "Tracked node. Live geospatial relay established.",
-    });
-  }, []);
+  const section = SECTIONS[Math.max(0, sectionIndex(activeId))];
+
+  const tools = data.tools?.tools || [];
+  const health = {
+    online: tools.filter((t) => t.status === "online").length,
+    warn: tools.filter((t) => t.status === "standby").length,
+    idle: tools.filter((t) => t.status === "offline").length,
+    total: tools.length,
+  };
+  const counts = {
+    memory: data.memory?.total_nodes,
+    systems: data.tools ? `${data.tools.connected}/${tools.length}` : undefined,
+  };
 
   return (
-    <div className="app" data-testid="jarvis-app">
-      <SceneCanvas
-        scene={section.scene}
-        points={points}
-        graph={data.network}
-        onPointHover={setHovered}
-        onPointSelect={onPointSelect}
+    <div className="app">
+      <Sidebar
+        sections={SECTIONS}
+        active={activeId}
+        onNavigate={navigate}
+        counts={counts}
+        health={health}
       />
-
-      <div className="hud-grid-overlay" />
-
-      <HudFrame active={section.label} status={booted ? "ONLINE" : "BOOTING"} />
-
-      <SectionPanels active={section.id} data={data} pointer={pointer} onDetail={setDetail} />
-
-      {hovered && (
-        <div className="point-tooltip" data-testid="point-tooltip"
-          style={{ left: "50%", bottom: "30%" }}>
-          <span className="tt-name">{hovered.name}</span>
-          <span className="tt-meta">{hovered.lat.toFixed(1)}, {hovered.lng.toFixed(1)} · {hovered.level.toUpperCase()}</span>
-        </div>
-      )}
-
-      <div className="section-caption" data-testid="section-caption">
-        <span className="cap-code font-display">{section.code}</span>
-        <span className="cap-desc">{section.desc}</span>
-      </div>
-
-      <Dial activeIndex={active} onNavigate={navigate} />
-
-      <DetailOverlay detail={detail} onClose={() => setDetail(null)} />
+      <main>
+        <CommandBar section={section} online={online} />
+        {activeId === "overview" && (
+          <Overview stats={data.stats} memory={data.memory} network={data.network} tools={data.tools} comms={data.comms} brief={data.brief} decisions={data.decisions} leads={data.leads} onNavigate={navigate} />
+        )}
+        {activeId === "network" && <Network network={data.network} />}
+        {activeId === "memory" && <Memory memory={data.memory} />}
+        {activeId === "systems" && <Systems tools={data.tools} stats={data.stats} />}
+        {activeId === "comms" && <Comms comms={data.comms} />}
+      </main>
 
       {!booted && (
-        <div className="boot-screen" data-testid="boot-screen">
-          <span className="boot-text font-display">INITIALIZING JARVIS</span>
+        <div className="boot">
+          <span className="boot-text display">Initializing Sentinel OS</span>
           <div className="boot-bar"><span /></div>
         </div>
       )}

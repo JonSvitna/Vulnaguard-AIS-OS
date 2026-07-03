@@ -39,8 +39,9 @@ export default function Overview({ stats, memory, network, tools, comms, brief, 
   const connected = tools?.connected;
   const totalTools = tools?.tools?.length;
   const warnTools = (tools?.tools || []).filter((t) => t.status === "standby").length;
-  const load = stats?.load_series;
-  const flow = stats?.throughput_series;
+  // Real 14-day knowledge-base activity histogram; only show it when non-flat.
+  const activityRaw = stats?.activity_series;
+  const activity = Array.isArray(activityRaw) && activityRaw.some((v) => v > 0) ? activityRaw : undefined;
 
   const toolRows = (tools?.tools || []).slice(0, 6);
   const commRows = (comms?.messages || []).slice(0, 4);
@@ -55,10 +56,9 @@ export default function Overview({ stats, memory, network, tools, comms, brief, 
         suffix={agents != null ? `·${agents}` : undefined}
         accent
         delta="loaded"
-        series={load}
       />
-      <StatTile label="Memory Nodes" value={memNodes != null ? memNodes : "—"} delta="indexed" series={load} />
-      <StatTile label="Graph Links" value={links != null ? compact(links) : "—"} delta="linked" series={flow} />
+      <StatTile label="Memory Nodes" value={memNodes != null ? memNodes : "—"} delta="indexed" series={activity} />
+      <StatTile label="Graph Links" value={links != null ? compact(links) : "—"} delta="linked" series={activity} />
       <StatTile
         label="Connections"
         value={connected != null ? connected : "—"}
@@ -86,7 +86,7 @@ export default function Overview({ stats, memory, network, tools, comms, brief, 
           <div key={t.id} className="row">
             <span className="sys">{titleCase(t.name)}</span>
             <Pill tone={toolTone(t.status)}>{toolLabel(t.status)}</Pill>
-            <span className="ts">{t.latency_ms ? `${t.latency_ms}ms` : "—"}</span>
+            <span className="ts">{shortDate(t.last_checked)}</span>
           </div>
         )) : <div className="empty">No connections indexed.</div>}
       </div>

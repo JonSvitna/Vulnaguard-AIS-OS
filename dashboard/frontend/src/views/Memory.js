@@ -54,12 +54,12 @@ export default function Memory({ memory }) {
           ))}
         </div>
         <div className="mtable">
-          <div className="mrow head"><span>Node</span><span style={{ textAlign: "center" }}>Kind</span><span style={{ textAlign: "center" }}>Int%</span><span style={{ textAlign: "right" }}>Updated</span></div>
+          <div className="mrow head"><span>Node</span><span style={{ textAlign: "center" }}>Kind</span><span style={{ textAlign: "center" }}>Links</span><span style={{ textAlign: "right" }}>Updated</span></div>
           {filtered.length ? filtered.map((n) => (
             <div key={n.id} className="mrow">
               <span className="mt">{titleCase(n.label)}</span>
               <Pill tone={kindTone(n.kind)} style={{ justifySelf: "center" }}>{(n.kind || "node").toLowerCase()}</Pill>
-              <span className="ml">{n.integrity != null ? n.integrity : "—"}</span>
+              <span className="ml">{n.links != null ? n.links : "—"}</span>
               <span className="mu">{relativeTime(n.last_access)}</span>
             </div>
           )) : <div className="empty">No nodes match this filter.</div>}

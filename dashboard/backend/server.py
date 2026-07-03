@@ -1,6 +1,5 @@
 import math
 import os
-import random
 import re
 import time
 from datetime import datetime, timezone
@@ -41,10 +40,6 @@ SECTIONS = [
 
 def _now_iso():
     return datetime.now(timezone.utc).isoformat()
-
-
-def _series(n, base, spread):
-    return [round(base + random.uniform(-spread, spread), 1) for _ in range(n)]
 
 
 def read_safe(path: Path):
@@ -191,6 +186,29 @@ async def get_sections():
     return {"sections": SECTIONS}
 
 
+def knowledge_activity_series(days=14):
+    """Real activity histogram: count of knowledge-base files modified per day
+    over the last `days` days (AIOS memory + Obsidian vault). Oldest first."""
+    files = list_md_files(MEMORY_DIR) + list_md_files_recursive(OBSIDIAN_WIKI_DIR)
+    today = datetime.now(timezone.utc).date()
+    buckets = [0] * days
+    for file_path in files:
+        try:
+            mtime = datetime.fromtimestamp(file_path.stat().st_mtime, tz=timezone.utc).date()
+        except OSError:
+            continue
+        delta = (today - mtime).days
+        if 0 <= delta < days:
+            buckets[days - 1 - delta] += 1
+    return buckets
+
+
+def count_wikilinks(raw: str):
+    """Number of outgoing [[wikilinks]] in a note body (real graph out-degree)."""
+    _, content = parse_frontmatter(raw)
+    return len(re.findall(r"\[\[([^\]|#]+)", content))
+
+
 @api.get("/system/stats")
 async def system_stats():
     nodes, edges = build_knowledge_graph()
@@ -207,25 +225,15 @@ async def system_stats():
 
     return {
         "timestamp": _now_iso(),
-        # decorative flavor — no real sensor behind these, kept for the HUD feel
-        "core_temp": round(random.uniform(38, 46), 1),
-        "power_output": round(random.uniform(82, 99), 1),
-        "cpu_load": round(random.uniform(28, 74), 1),
-        # grounded in real data
-        "memory_load": min(100, round(len(nodes) / 2, 1)),
-        "network_throughput": len(edges) * 10,
         "uptime_hours": uptime_hours,
         "active_processes": skill_count + agent_count,
         "skills": skill_count,
         "agents": agent_count,
+        "node_count": len(nodes),
+        "edge_count": len(edges),
         "shield_integrity": online_pct,
-        "gauges": [
-            {"id": "reactor", "label": "ARC REACTOR", "value": online_pct, "unit": "%"},
-            {"id": "thermal", "label": "THERMAL", "value": round(random.uniform(40, 70), 0), "unit": "%"},
-            {"id": "bandwidth", "label": "BANDWIDTH", "value": round(random.uniform(55, 92), 0), "unit": "%"},
-        ],
-        "throughput_series": _series(24, 60, 30),
-        "load_series": _series(24, 55, 22),
+        # real 14-day histogram of knowledge-base file activity (drives sparklines)
+        "activity_series": knowledge_activity_series(),
     }
 
 
@@ -244,15 +252,14 @@ async def memory_nodes():
             "id": file_path.stem,
             "label": (data.get("name") or file_path.stem).upper().replace("-", " "),
             "kind": str(node_type).upper(),
-            "size_mb": round(stat.st_size / (1024 * 1024), 3),
-            "integrity": round(random.uniform(96, 100), 1),
+            "size_kb": round(stat.st_size / 1024, 1),
+            "links": count_wikilinks(raw),
             "last_access": datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc).isoformat(),
         })
     entries.sort(key=lambda e: e["last_access"], reverse=True)
     return {
         "total_nodes": len(entries),
         "indexed": len(entries),
-        "fragmentation": round(random.uniform(1.2, 4.8), 1),
         "nodes": entries[:8],
     }
 
@@ -279,26 +286,9 @@ async def connected_tools():
             "id": row["num"],
             "name": row["domain"].upper(),
             "status": status,
-            "latency_ms": random.randint(20, 90) if status == "online" else 0,
+            "last_checked": (row.get("lastChecked") or "").strip() or "—",
         })
     return {"connected": sum(1 for t in tools if t["status"] == "online"), "tools": tools}
-
-
-@api.get("/globe/points")
-async def globe_points():
-    # Decorative city markers — visual flavor for the literal-globe scene,
-    # not tied to a real geo data source (this AIOS has no live location feed).
-    pts = [
-        {"name": "NEW YORK", "lat": 40.71, "lng": -74.00, "level": "high"},
-        {"name": "LONDON", "lat": 51.50, "lng": -0.12, "level": "high"},
-        {"name": "TOKYO", "lat": 35.68, "lng": 139.69, "level": "high"},
-        {"name": "MALIBU", "lat": 34.02, "lng": -118.78, "level": "critical"},
-        {"name": "DUBAI", "lat": 25.20, "lng": 55.27, "level": "mid"},
-        {"name": "SYDNEY", "lat": -33.86, "lng": 151.20, "level": "mid"},
-        {"name": "SAO PAULO", "lat": -23.55, "lng": -46.63, "level": "mid"},
-        {"name": "GENEVA", "lat": 46.20, "lng": 6.14, "level": "high"},
-    ]
-    return {"points": pts}
 
 
 @api.get("/comms")

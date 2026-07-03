@@ -39,9 +39,9 @@ export default function Systems({ tools, stats }) {
                   <Pill tone={toolTone(t.status)} style={{ marginLeft: "auto" }}>{toolLabel(t.status)}</Pill>
                 </div>
                 <div className="tool-foot">
-                  <span className="tsync">{t.latency_ms ? `${t.latency_ms}ms latency` : "no signal"}</span>
+                  <span className="tsync">{t.last_checked && t.last_checked !== "—" ? `checked ${t.last_checked}` : "not checked"}</span>
                   <span className="bar" style={{ width: 84 }}>
-                    <i style={{ width: `${t.latency_ms ? Math.min(100, t.latency_ms) : offlineWidth(t.status)}%` }} />
+                    <i style={{ width: `${freshness(t.last_checked)}%` }} />
                   </span>
                 </div>
               </div>
@@ -65,7 +65,12 @@ export default function Systems({ tools, stats }) {
   );
 }
 
-// Give standby/offline a small visible sliver so the bar isn't empty.
-function offlineWidth(status) {
-  return status === "standby" ? 30 : 6;
+// Freshness bar: how recently this connection was verified in connections.md.
+// Full at "checked today", tapering to a sliver by ~30 days; empty if never.
+function freshness(lastChecked) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(lastChecked || "");
+  if (!m) return 4;
+  const days = Math.floor((Date.now() - new Date(m[0]).getTime()) / 86400000);
+  if (Number.isNaN(days)) return 4;
+  return Math.max(6, Math.min(100, Math.round(100 - (days / 30) * 100)));
 }

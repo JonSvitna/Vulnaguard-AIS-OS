@@ -28,18 +28,31 @@ The frontend defaults to `http://localhost:8000` for the API. Override with
 `Promise.allSettled`, so a missing source renders an empty state rather than
 crashing the app.
 
-## Real vs. stub data
+## Data sources — all real
 
-- **Real**: `/api/system/stats` (skills + agents counts, memory/graph size,
-  connection health), `/api/memory/nodes`, `/api/network/graph` (AIOS memory +
-  Obsidian vault, linked by `[[wikilinks]]`), `/api/tools` (parsed from
-  `../connections.md`).
-- **Decorative stub, by design**: `/api/comms` — mirrors the real channels this
-  AIOS reaches (Slack / M365 / Resend) but is not a live feed yet; surfaced in the
-  UI with a `SIM` tag. Wiring it up needs the Microsoft Graph / Slack scripts used
-  elsewhere in this repo.
-- **Curated (no source yet)**: the Daily Brief tasks, Decisions Log, and Leads
-  Pipeline on Overview are hand-kept until file/API sources are wired.
+Every endpoint reads from the repo or a live API. Nothing is randomized; where a
+metric has no real source it is omitted rather than faked.
+
+- `/api/system/stats` — skills/agents counts (`.claude/`), node/edge counts and a
+  real 14-day knowledge-base activity histogram (memory + vault file mtimes),
+  connection health, server uptime.
+- `/api/memory/nodes` — AIOS memory notes with real outgoing `[[wikilink]]` counts.
+- `/api/network/graph` — AIOS memory + Obsidian vault, linked by `[[wikilinks]]`.
+- `/api/tools` — parsed from `../connections.md`, with the real `last_checked` date
+  driving each tool's freshness.
+- `/api/brief` — top priorities from `context/priorities.md`.
+- `/api/decisions` — decision headings from `decisions/log.md`.
+- `/api/leads` — staged leads from `leads/inbox.md`; CMMC relevance read from the
+  triage-note wording.
+- `/api/comms` — **live** feed from Slack + Microsoft Graph via the repo's API
+  scripts. Falls back to a clearly-labeled `SIM` stub (`simulated: true`) when the
+  tokens/channels aren't configured. Set `SLACK_COMMS_CHANNELS` (defaults to
+  `#all-vulnaguard-sentinel`) plus the existing `SLACK_BOT_TOKEN` / `MS365_*`
+  secrets in `.env` to go live.
+
+Note: the memory + Obsidian paths in `server.py` are the author's local machine
+paths, so `/memory` and `/network` return empty (graceful empty states in the UI)
+anywhere those dirs don't exist.
 
 ## Stack notes
 

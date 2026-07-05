@@ -2,19 +2,19 @@
 """
 SAM.gov Opportunities scanner for Vulnaguard / Sentinel CMMC.
 
-Searches the SAM.gov Opportunities v2 API for cybersecurity/CMMC-relevant
-federal contracts, deduplicates against a seen-IDs cache, scores by
-relevance, captures POC contacts to a CSV for follow-up outreach, and
-posts new high-scoring opportunities to Slack.
+Queries vulnaguard-capture-os's deployed API (not SAM.gov directly — see
+2026-07-05 decisions/log.md entry), deduplicates against a seen-IDs cache,
+captures POC contacts to a CSV for follow-up outreach, and posts new
+high-scoring opportunities to Slack.
 
 Usage:
     python3 scripts/sam_gov_api.py             # run scan, post to Slack
     python3 scripts/sam_gov_api.py --dry-run   # print without posting
     python3 scripts/sam_gov_api.py --reset     # clear the seen-IDs cache
     python3 scripts/sam_gov_api.py --days 7    # look back N days (default 3)
-    python3 scripts/sam_gov_api.py --min-score 20  # relevance threshold (default 25)
+    python3 scripts/sam_gov_api.py --min-score 20  # relevance threshold (default 40)
 
-Reads SAM_GOV_API_KEY, SLACK_BOT_TOKEN, SLACK_GOV_CONTRACTS_CHANNEL from .env.
+Reads SLACK_BOT_TOKEN, SLACK_GOV_CONTRACTS_CHANNEL from .env.
 Cache file   : leads/sam_gov_seen.json
 Contacts CSV : leads/sam_gov_contacts.csv
 """
@@ -23,97 +23,26 @@ import csv
 import json
 import os
 import sys
-import time
 import urllib.request
 import urllib.parse
 import urllib.error
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-SAM_API_BASE = "https://api.sam.gov/opportunities/v2/search"
-SAM_OPP_BASE = "https://sam.gov/opp"
+# vulnaguard-capture-os is the canonical owner of SAM.gov querying — it
+# harvests title-keyword + all NAICS/PSC codes server-side and returns
+# already-scored opportunities. This script no longer talks to SAM.gov
+# directly (see decisions/log.md, 2026-07-05).
+CAPTURE_OS_API_BASE = "https://contract-hunter-production-c52f.up.railway.app/api"
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 CACHE_FILE = REPO_ROOT / "leads" / "sam_gov_seen.json"
 CONTACTS_CSV = REPO_ROOT / "leads" / "sam_gov_contacts.csv"
 
-# Keyword searches — only meaningful when title also contains the term.
-# Avoid broad DFARS/CMMC queries: those clauses appear in ALL DoD solicitations
-# as mandatory boilerplate, so every rubber gasket and O-ring "matches".
-KEYWORD_QUERIES = [
-    "cybersecurity assessment",
-    "information security",
-    "CMMC certification",
-    "cyber compliance",
-    "zero trust",
-    "penetration testing",
-    "vulnerability assessment",
-    "security operations center",
-    "incident response",
-    "NIST 800-171 assessment",
-]
-
-# NAICS codes to query directly — pre-filtered at the API level to IT/cyber contracts
-NAICS_QUERIES = [
-    "541512",  # Computer Systems Design Services — primary
-    "541519",  # Other Computer Related Services
-    "541690",  # Other Scientific and Technical Consulting
-    "541611",  # Admin Mgmt Consulting
-    "541990",  # All Other Prof/Scientific/Technical Services
-    "561621",  # Security Systems Services
-    "611420",  # Computer Training
-]
-
-# PSC codes to query — D-series = IT; R-series = professional support
-PSC_QUERIES = [
-    "D310",  # Cyber Security
-    "D307",  # IT and Telecom — IT/Telecom Operations and Maintenance
-    "R425",  # Support: Policy Review/Development
-    "R408",  # Support: Program Management/Support
-]
-
-CYBER_NAICS = {
-    "541512",  # Computer Systems Design Services — primary
-    "541519",  # Other Computer Related Services
-    "541690",  # Other Scientific and Technical Consulting
-    "541611",  # Admin Mgmt and General Mgmt Consulting
-    "541990",  # All Other Professional, Scientific, and Technical Services
-    "561621",  # Security Systems Services
-    "611420",  # Computer Training
-    "541511",  # Custom Computer Programming Services
-    "541513",  # Computer Facilities Management
-    "541715",  # Research and Development in Physical, Engineering, and Life Sciences
-    "541330",  # Engineering Services
-}
-
-# PSC (Product/Service Codes) — DoD/federal procurement categories for cyber work
-CYBER_PSC = {"D310", "D307", "R425", "R408"}
-
-# NAICS prefixes that are clearly non-IT — skip DoD bonus and derank
-HARDWARE_NAICS_PREFIXES = (
-    "23",   # construction
-    "31", "32", "33",  # manufacturing
-    "48", "49",  # transportation/warehousing
-    "72",   # food/accommodation
-    "56172",  # janitorial
-    "811",  # repair services
-    "324",  # petroleum
-    "326",  # plastics/rubber
-    "332", "333", "334", "335", "336",  # fabricated metal / machinery / electronics / transport equip
-)
-
-DOD_AGENCIES = [
-    "DEPT OF DEFENSE", "DEPARTMENT OF DEFENSE", "DEPT OF THE ARMY",
-    "DEPT OF THE NAVY", "DEPT OF THE AIR FORCE", "MARINE CORPS",
-    "DISA", "DIA", "NSA", "DARPA", "SOCOM", "CENTCOM", "CYBERCOM",
-    "DEFENSE INFORMATION SYSTEMS", "DEFENSE INTELLIGENCE",
-    "DEFENSE CONTRACT", "DEFENSE LOGISTICS",
-]
-
 CONTACTS_HEADER = [
     "date_found", "notice_id", "solicitation_number", "title",
     "agency", "poc_type", "poc_name", "poc_email", "poc_phone",
-    "posted_date", "archive_date", "score", "sam_url",
+    "posted_date", "due_date", "score", "sam_url",
 ]
 
 
@@ -160,159 +89,53 @@ def append_contacts(rows: list[dict]):
 
 
 # ---------------------------------------------------------------------------
-# SAM.gov API
+# Capture OS API
 # ---------------------------------------------------------------------------
 
-def sam_search(query: str, posted_from: str, posted_to: str, api_key: str,
-               naics_code: str | None = None, psc_code: str | None = None,
-               limit: int = 100) -> list[dict]:
-    # SAM.gov's search API silently ignores unrecognized query params instead
-    # of erroring — `naicsCode`/`psc`/`q` are all no-ops and return the full
-    # unfiltered firehose (confirmed against the live API 2026-07-05, same bug
-    # found and fixed in vulnaguard-capture-os). Real param names: `ncode`,
-    # `ccode`, `title`.
-    params = {
-        "api_key": api_key,
-        "postedFrom": posted_from,
-        "postedTo": posted_to,
-        "active": "Yes",
-        "limit": limit,
-    }
-    if naics_code:
-        params["ncode"] = naics_code
-    elif psc_code:
-        params["ccode"] = psc_code
-    else:
-        params["title"] = query
-    url = SAM_API_BASE + "?" + urllib.parse.urlencode(params)
+def capture_os_search(days: int, min_score: int, keyword: str = "cybersecurity",
+                       limit: int = 200) -> list[dict]:
+    """One call covers title-keyword + all NAICS/PSC codes server-side —
+    replaces this script's old per-code/per-phrase SAM.gov query loop."""
+    params = {"keyword": keyword, "days": days, "min_score": min_score, "limit": limit}
+    url = f"{CAPTURE_OS_API_BASE}/opportunities/search?" + urllib.parse.urlencode(params)
     req = urllib.request.Request(url, headers={"Accept": "application/json"})
-    time.sleep(3)  # SAM.gov public API: stay well under 10 req/min
     try:
-        with urllib.request.urlopen(req, timeout=30) as resp:
-            data = json.loads(resp.read().decode())
-        return data.get("opportunitiesData") or []
+        with urllib.request.urlopen(req, timeout=90) as resp:
+            return json.loads(resp.read().decode())
     except urllib.error.HTTPError as e:
         body = e.read().decode()
-        print(f"SAM.gov HTTP {e.code} for query '{query}': {body[:300]}", file=sys.stderr)
+        print(f"Capture OS API HTTP {e.code}: {body[:300]}", file=sys.stderr)
         return []
     except Exception as e:
-        print(f"SAM.gov error for query '{query}': {e}", file=sys.stderr)
+        print(f"Capture OS API error: {e}", file=sys.stderr)
         return []
-
-
-# ---------------------------------------------------------------------------
-# Relevance scoring
-# ---------------------------------------------------------------------------
-
-def is_hardware_naics(naics: str) -> bool:
-    return any(naics.startswith(p) for p in HARDWARE_NAICS_PREFIXES)
-
-
-def score_opportunity(opp: dict) -> int:
-    title = (opp.get("title") or "").lower()
-    agency = (opp.get("fullParentPathName") or "").upper()
-    naics = str(opp.get("naicsCode") or "")
-    set_aside = (opp.get("typeOfSetAsideDescription") or "").lower()
-    opp_type = (opp.get("type") or "").lower()
-
-    # --- Title keyword score ---
-    # Only titles are reliable signals. Description-body keyword matches
-    # are polluted by mandatory DFARS/CMMC boilerplate on all DoD contracts.
-    title_score = 0
-    if "cmmc" in title:
-        title_score += 50
-    if "nist 800-171" in title or "nist sp 800-171" in title:
-        title_score += 40
-    if "dfars" in title:
-        title_score += 25
-    if "cui" in title and ("security" in title or "protect" in title or "handling" in title):
-        title_score += 25
-    if "zero trust" in title:
-        title_score += 25
-    if "cybersecurity" in title or "cyber security" in title:
-        title_score += 20
-    if "information security" in title:
-        title_score += 18
-    if "information assurance" in title:
-        title_score += 18
-    if "accreditation" in title and "cyber" not in title:
-        title_score += 10  # accreditation alone is weaker signal
-    if "risk management framework" in title or " rmf " in title:
-        title_score += 18
-    if "security assessment" in title or "security audit" in title:
-        title_score += 15
-    if "penetration test" in title or "pen test" in title or "pentest" in title:
-        title_score += 20
-    if "security operations" in title or " soc " in title:
-        title_score += 15
-    if "vulnerability" in title:
-        title_score += 12
-    if "incident response" in title:
-        title_score += 12
-    if "managed security" in title or "mssp" in title:
-        title_score += 15
-    if "cyber" in title and "security" in title:
-        title_score += 10
-
-    # --- NAICS / PSC baseline score ---
-    # These are pre-filtered at the API level to IT/cyber scope.
-    # Give a baseline so they clear the threshold even without title keywords.
-    psc = str(opp.get("classificationCode") or "")
-    naics_score = 25 if naics in CYBER_NAICS else 0
-    psc_score = 35 if psc in CYBER_PSC else 0  # PSC D310 = Cyber Security is gold
-    code_score = max(naics_score, psc_score)
-
-    # Require title keywords OR a gold PSC (D310 = Cyber Security).
-    # NAICS alone is too broad — it matches every rubber gasket on a DoD contract.
-    if title_score == 0 and psc not in CYBER_PSC:
-        return 0
-
-    base = title_score + code_score
-    if base == 0:
-        return 0
-
-    score = base
-
-    # --- Context bonuses ---
-    is_dod = any(a in agency for a in DOD_AGENCIES)
-    if is_dod and not is_hardware_naics(naics):
-        score += 15
-
-    if "small business" in set_aside or "8(a)" in set_aside or "8a" in set_aside:
-        score += 8
-
-    if "sources sought" in opp_type or "sources sought" in title:
-        score += 5
-
-    return score
 
 
 def opportunity_url(opp: dict) -> str:
-    notice_id = opp.get("noticeId") or ""
-    return f"{SAM_OPP_BASE}/{notice_id}/view"
+    return opp.get("source_url") or f"https://sam.gov/opp/{opp.get('notice_id', '')}/view"
 
 
-def extract_contacts(opp: dict, score: int, today: str) -> list[dict]:
+def extract_contacts(opp: dict, today: str) -> list[dict]:
     """Pull all POC entries from an opportunity into flat contact rows."""
-    pocs = opp.get("pointOfContact") or []
+    pocs = opp.get("point_of_contact") or []
     if not pocs:
         return []
     base = {
         "date_found": today,
-        "notice_id": opp.get("noticeId") or "",
-        "solicitation_number": opp.get("solicitationNumber") or "",
+        "notice_id": opp.get("notice_id") or "",
+        "solicitation_number": opp.get("solicitation_number") or "",
         "title": opp.get("title") or "",
-        "agency": opp.get("fullParentPathName") or "",
-        "posted_date": opp.get("postedDate") or "",
-        "archive_date": opp.get("archiveDate") or "",
-        "score": score,
+        "agency": opp.get("agency") or "",
+        "posted_date": opp.get("posted_date") or "",
+        "due_date": opp.get("due_date") or "",
+        "score": opp.get("fit_score") or 0,
         "sam_url": opportunity_url(opp),
     }
     rows = []
     for poc in pocs:
         row = {**base}
         row["poc_type"] = poc.get("type") or ""
-        row["poc_name"] = poc.get("fullName") or poc.get("name") or ""
+        row["poc_name"] = poc.get("name") or ""
         row["poc_email"] = poc.get("email") or ""
         row["poc_phone"] = poc.get("phone") or ""
         rows.append(row)
@@ -346,27 +169,24 @@ def slack_post(channel: str, blocks: list, token: str, fallback_text: str):
         print(f"Slack error: {result.get('error')}", file=sys.stderr)
 
 
-def build_slack_blocks(opp: dict, score: int) -> tuple[list, str]:
+def build_slack_blocks(opp: dict) -> tuple[list, str]:
     title = opp.get("title") or "Untitled"
-    agency = opp.get("fullParentPathName") or "Unknown Agency"
-    sol_num = opp.get("solicitationNumber") or "N/A"
-    posted = opp.get("postedDate") or "N/A"
-    opp_type = opp.get("type") or opp.get("baseType") or "N/A"
-    naics = opp.get("naicsCode") or "N/A"
-    psc = opp.get("classificationCode") or "N/A"
-    set_aside = opp.get("typeOfSetAsideDescription") or "None"
-    archive_date = opp.get("archiveDate") or "N/A"
+    agency = opp.get("agency") or "Unknown Agency"
+    sol_num = opp.get("solicitation_number") or "N/A"
+    posted = opp.get("posted_date") or "N/A"
+    opp_type = opp.get("notice_type") or "N/A"
+    naics = ", ".join(opp.get("naics") or []) or "N/A"
+    psc = ", ".join(opp.get("psc") or []) or "N/A"
+    set_aside = opp.get("set_aside") or "None"
+    due_date = opp.get("due_date") or "N/A"
+    score = opp.get("fit_score") or 0
     link = opportunity_url(opp)
 
-    # Primary POC for quick display
-    pocs = opp.get("pointOfContact") or []
+    pocs = opp.get("point_of_contact") or []
     poc_line = "N/A"
     if pocs:
         p = pocs[0]
-        name = p.get("fullName") or p.get("name") or ""
-        email = p.get("email") or ""
-        phone = p.get("phone") or ""
-        parts = [x for x in [name, email, phone] if x]
+        parts = [x for x in [p.get("name"), p.get("email"), p.get("phone")] if x]
         poc_line = " | ".join(parts) if parts else "N/A"
 
     if score >= 60:
@@ -392,7 +212,7 @@ def build_slack_blocks(opp: dict, score: int) -> tuple[list, str]:
                 {"type": "mrkdwn", "text": f"*NAICS*\n{naics}"},
                 {"type": "mrkdwn", "text": f"*PSC*\n{psc}"},
                 {"type": "mrkdwn", "text": f"*Posted*\n{posted}"},
-                {"type": "mrkdwn", "text": f"*Closes / Archives*\n{archive_date}"},
+                {"type": "mrkdwn", "text": f"*Due / Closes*\n{due_date}"},
                 {"type": "mrkdwn", "text": f"*Set-Aside*\n{set_aside}"},
                 {"type": "mrkdwn", "text": f"*Relevance Score*\n{score}/100"},
             ],
@@ -429,7 +249,7 @@ def build_slack_blocks(opp: dict, score: int) -> tuple[list, str]:
 # ---------------------------------------------------------------------------
 
 def main():
-    parser = argparse.ArgumentParser(description="SAM.gov contract scanner")
+    parser = argparse.ArgumentParser(description="SAM.gov contract scanner (via vulnaguard-capture-os)")
     parser.add_argument("--dry-run", action="store_true", help="Print results, don't post to Slack")
     parser.add_argument("--reset", action="store_true", help="Clear seen-IDs cache")
     parser.add_argument("--days", type=int, default=3, help="Days to look back (default 3)")
@@ -437,11 +257,6 @@ def main():
     args = parser.parse_args()
 
     load_env()
-
-    api_key = os.environ.get("SAM_GOV_API_KEY")
-    if not api_key:
-        print("SAM_GOV_API_KEY not set in .env", file=sys.stderr)
-        sys.exit(1)
 
     slack_token = os.environ.get("SLACK_BOT_TOKEN")
     slack_channel = os.environ.get("SLACK_GOV_CONTRACTS_CHANNEL", "gov-contracts")
@@ -454,62 +269,23 @@ def main():
     cache = load_cache()
 
     today_dt = datetime.now(timezone.utc)
-    posted_to = today_dt.strftime("%m/%d/%Y")
-    posted_from = (today_dt - timedelta(days=args.days)).strftime("%m/%d/%Y")
     today_str = today_dt.strftime("%Y-%m-%d")
 
-    print(f"Searching SAM.gov {posted_from} → {posted_to} | min score {args.min_score}")
+    print(f"Querying vulnaguard-capture-os | lookback {args.days}d | min score {args.min_score}")
 
     seen_ids: set = set(cache.get("seen") or [])
-    all_opps: dict[str, dict] = {}
+    opportunities = capture_os_search(days=args.days, min_score=args.min_score)
+    print(f"Capture OS returned {len(opportunities)} opportunities")
 
-    # PSC-based searches — most targeted: D310 = Cyber Security is the money code
-    print("  [PSC searches]")
-    for psc in PSC_QUERIES:
-        results = sam_search("", posted_from, posted_to, api_key, psc_code=psc)
-        print(f"  PSC {psc} → {len(results)} results")
-        for opp in results:
-            nid = opp.get("noticeId")
-            if nid and nid not in all_opps:
-                all_opps[nid] = opp
-
-    # NAICS-based searches — pre-filtered to IT/cyber service contracts
-    print("  [NAICS searches]")
-    for naics in NAICS_QUERIES:
-        results = sam_search("", posted_from, posted_to, api_key, naics_code=naics)
-        print(f"  NAICS {naics} → {len(results)} results")
-        for opp in results:
-            nid = opp.get("noticeId")
-            if nid and nid not in all_opps:
-                all_opps[nid] = opp
-
-    # Keyword searches — narrow phrases only found in genuine cyber solicitation titles
-    print("  [Keyword searches]")
-    for query in KEYWORD_QUERIES:
-        results = sam_search(query, posted_from, posted_to, api_key)
-        print(f"  '{query}' → {len(results)} results")
-        for opp in results:
-            nid = opp.get("noticeId")
-            if nid and nid not in all_opps:
-                all_opps[nid] = opp
-
-    print(f"Total unique opportunities: {len(all_opps)}")
-
-    scored = []
-    for nid, opp in all_opps.items():
-        if nid in seen_ids:
-            continue
-        s = score_opportunity(opp)
-        if s >= args.min_score:
-            scored.append((s, opp))
-
-    scored.sort(key=lambda x: x[0], reverse=True)
+    scored = [o for o in opportunities if o.get("notice_id") not in seen_ids]
+    scored.sort(key=lambda o: o.get("fit_score") or 0, reverse=True)
     print(f"New opportunities above threshold: {len(scored)}")
 
     if not scored:
         print("No new relevant opportunities found.")
-        cache["last_run"] = today_dt.isoformat()
-        save_cache(cache)
+        if not args.dry_run:
+            cache["last_run"] = today_dt.isoformat()
+            save_cache(cache)
         return
 
     # Post summary header to Slack
@@ -535,31 +311,31 @@ def main():
     new_ids = []
     all_contact_rows = []
 
-    for score, opp in scored:
-        nid = opp.get("noticeId")
+    for opp in scored:
+        nid = opp.get("notice_id")
         title = opp.get("title") or "Untitled"
+        score = opp.get("fit_score") or 0
 
         if args.dry_run:
-            pocs = opp.get("pointOfContact") or []
+            pocs = opp.get("point_of_contact") or []
             poc_str = "; ".join(
-                f"{p.get('fullName') or p.get('name', '?')} <{p.get('email', '')}>"
-                for p in pocs
+                f"{p.get('name', '?')} <{p.get('email', '')}>" for p in pocs
             ) or "No POC listed"
             print(f"\n[SCORE {score}] {title}")
-            print(f"  Agency  : {opp.get('fullParentPathName')}")
-            print(f"  Sol #   : {opp.get('solicitationNumber')}")
-            print(f"  Type    : {opp.get('type')}")
-            print(f"  NAICS   : {opp.get('naicsCode')}  |  PSC: {opp.get('classificationCode')}")
-            print(f"  Posted  : {opp.get('postedDate')}")
-            print(f"  Closes  : {opp.get('archiveDate')}")
+            print(f"  Agency  : {opp.get('agency')}")
+            print(f"  Sol #   : {opp.get('solicitation_number')}")
+            print(f"  Type    : {opp.get('notice_type')}")
+            print(f"  NAICS   : {opp.get('naics')}  |  PSC: {opp.get('psc')}")
+            print(f"  Posted  : {opp.get('posted_date')}")
+            print(f"  Closes  : {opp.get('due_date')}")
             print(f"  POC     : {poc_str}")
             print(f"  URL     : {opportunity_url(opp)}")
         else:
-            contact_rows = extract_contacts(opp, score, today_str)
+            contact_rows = extract_contacts(opp, today_str)
             all_contact_rows.extend(contact_rows)
 
             if slack_token:
-                blocks, fallback = build_slack_blocks(opp, score)
+                blocks, fallback = build_slack_blocks(opp)
                 slack_post(slack_channel, blocks, slack_token, fallback)
                 print(f"  Posted: [{score}] {title}")
 

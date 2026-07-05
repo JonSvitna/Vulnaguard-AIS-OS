@@ -166,6 +166,11 @@ def append_contacts(rows: list[dict]):
 def sam_search(query: str, posted_from: str, posted_to: str, api_key: str,
                naics_code: str | None = None, psc_code: str | None = None,
                limit: int = 100) -> list[dict]:
+    # SAM.gov's search API silently ignores unrecognized query params instead
+    # of erroring — `naicsCode`/`psc`/`q` are all no-ops and return the full
+    # unfiltered firehose (confirmed against the live API 2026-07-05, same bug
+    # found and fixed in vulnaguard-capture-os). Real param names: `ncode`,
+    # `ccode`, `title`.
     params = {
         "api_key": api_key,
         "postedFrom": posted_from,
@@ -174,11 +179,11 @@ def sam_search(query: str, posted_from: str, posted_to: str, api_key: str,
         "limit": limit,
     }
     if naics_code:
-        params["naicsCode"] = naics_code
+        params["ncode"] = naics_code
     elif psc_code:
-        params["psc"] = psc_code
+        params["ccode"] = psc_code
     else:
-        params["q"] = query
+        params["title"] = query
     url = SAM_API_BASE + "?" + urllib.parse.urlencode(params)
     req = urllib.request.Request(url, headers={"Accept": "application/json"})
     time.sleep(3)  # SAM.gov public API: stay well under 10 req/min

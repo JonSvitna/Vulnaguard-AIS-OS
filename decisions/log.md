@@ -572,3 +572,17 @@ Capture OS's API gained `notice_id`, `solicitation_number`, `set_aside`, and `po
 **Alternatives considered:** Keeping both the direct-SAM.gov path and the new Capture OS path with a feature flag — rejected, adds complexity for no benefit once Capture OS's endpoint was verified working. Running multiple keyword calls against Capture OS to preserve full keyword-phrase coverage — rejected per the tradeoff above.
 
 **Owner:** Sean. If a specific keyword phrase turns out to matter (something NAICS/PSC codes are missing), the right fix is adding it to Capture OS's own keyword/scoring logic (`apps/api/app/services/sam_client.py` / `scoring.py`), not re-adding a parallel query path here.
+
+## 2026-07-06 — Vulnerability scanner tooling: Nessus Professional as the anchor, ZAP kept for web only
+
+**Decision:** For the Vulnerability Assessment service line, standardize on **Nessus Professional (Tenable)** as the primary network/host scanner. Keep **OWASP ZAP** as the web-application (DAST) tool only — it cannot serve as the primary scanner because it does not do network/host scanning, which is the bulk of a federal VA. Documented a solo buy-first sequence and a scanning-host/OS standard in `playbook/methodology/technical-standards.md` (new "Solo Starter Stack" and "Scanning Host / OS" sections).
+
+Buy-first order: Nessus Professional (anchor) → ZAP + Nmap (free, keep) → Metasploit Community (authorized exploitation only) → Burp Suite Pro (later, when web volume justifies it). Pre-revenue bridge: OpenVAS/Greenbone Community for network scanning until the first invoice funds a Nessus license.
+
+Scanning host: Kali Linux in a snapshottable VM, one clean snapshot per engagement; a dedicated cloud instance (DigitalOcean droplet) with a static IP listed in the ROE for external scans so the client whitelists a known source.
+
+**Why:** Sean asked which scanner is most *credible* and *lowest overhead* for a solo new to gov work. Credibility: DoD's mandated ACAS solution is built on Tenable, so the Nessus name is the recognized standard with COs and defense contractors — and this repo's own `technical-standards.md` and `technical-report.md` template already assumed Nessus. Overhead: a single Nessus Pro seat installs on a laptop with no server infra, so the paid tool is actually lower operational burden than self-hosting OpenVAS. Licensing trap flagged: Nessus Essentials (free) is capped at 16 IPs and its license prohibits commercial/consulting use, so it cannot be used for paid client work.
+
+**Alternatives considered:** Leading with ZAP (Sean's preferred tool) — rejected as primary because ZAP is web-app DAST only and leaves the network/host scope uncovered; kept it in its correct web-layer slot. Rapid7 InsightVM — a sanctioned alternate, but heavier and pricier than a solo needs to start. OpenVAS/Greenbone as the standing primary — rejected except as a pre-revenue bridge due to higher setup/maintenance and weaker name recognition on a report.
+
+**Owner:** Sean. Reviewing when back from the gym. Open follow-up he raised: pick and stand up the scanning host/OS (Kali VM + Nessus Pro install, plus the static-IP cloud instance for external scans).

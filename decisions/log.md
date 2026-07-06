@@ -586,3 +586,13 @@ Scanning host: Kali Linux in a snapshottable VM, one clean snapshot per engageme
 **Alternatives considered:** Leading with ZAP (Sean's preferred tool) — rejected as primary because ZAP is web-app DAST only and leaves the network/host scope uncovered; kept it in its correct web-layer slot. Rapid7 InsightVM — a sanctioned alternate, but heavier and pricier than a solo needs to start. OpenVAS/Greenbone as the standing primary — rejected except as a pre-revenue bridge due to higher setup/maintenance and weaker name recognition on a report.
 
 **Owner:** Sean. Reviewing when back from the gym. Open follow-up he raised: pick and stand up the scanning host/OS (Kali VM + Nessus Pro install, plus the static-IP cloud instance for external scans).
+
+## 2026-07-06 — Documentation made mandatory across the AIOS
+
+**Decision:** Documentation is now a hard requirement, not optional. Nothing is "done" until it's documented. Created `references/documentation-standard.md` as the single source of truth (definition-of-done includes docs, a where-it-lives table, and the federal/CMMC client-documentation requirements), wired the rule into `CLAUDE.md` under "How you work with me" so it's enforced every session, and started `references/gov-contract-progress-log.md` as the running completion record for the gov-contract initiative (seeded with this session's three completed items).
+
+**Why:** Sean stated it directly — documentation for everything completed is mandatory. For federal and CMMC work this is not just hygiene: the documentation *is* the deliverable, auditors and contracting officers require a complete paper trail, and documented small wins are what become the past-performance record that unlocks larger contracts. Putting the rule in `CLAUDE.md` (rather than only in a reference file) is what makes it actually enforced every session instead of aspirational.
+
+**Alternatives considered:** Leaving documentation as an implicit habit — rejected, Sean wants it mandatory and enforceable, not best-effort. A single global log for everything — rejected in favor of routing records to the right existing home (decisions → `decisions/log.md`, process → `playbook/`, progress → per-initiative log in `references/`, handoff → `context/active-task.md`, client evidence → engagement folders) so records stay traceable and don't collide.
+
+**Owner:** Sean. The standard is the source of truth; future work in this repo follows it by default.

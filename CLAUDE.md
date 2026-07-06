@@ -57,3 +57,4 @@ Path: `~/Documents/Obsidian Vault`. This is Sean's business brain — domain-fir
 - When I make a decision, suggest logging it via the decisions log.
 - When you spot a manual task I'm doing 3+ times, surface it next time `/level-up` runs.
 - Default Shift: when I bring a new task, ask "to what extent could AI be leveraged here?" before assuming I'll do it the old way.
+- Documentation is mandatory. Nothing is "done" until it's documented — treat "and document it" as the implicit final step of every task. See `references/documentation-standard.md` for what gets recorded where. Definition of Done includes the write-up.

@@ -1,0 +1,4 @@
+# Pending vault updates — 2026-07-06 AM
+
+- **SeanBuilds voice: "Practical Advice Over Tool Hype" positioning added** (`.claude/skills/seanbuilds-voice/SKILL.md`, commit `9ca5740`, 2026-06-29). Added a new guiding principle section — Sean's content leads with the situation/decision, never the tool name. Tools get mentioned only in service of the advice; "the shovel is just a tool" becomes the signature template move (name it, deflate it, pivot to the real point). New analogy also added to the voice library. This is a deliberate brand positioning choice for SeanBuilds content, worth logging under the vault's SeanBuilds/content domain if you keep a page there.
+- **No new decisions or leads since 2026-06-26.** `decisions/log.md`, `leads/inbox.md`, and `context/` are all unchanged since the last catch-up note (`pending-2026-06-29-PM.md`). No commits in the last 14 hours.

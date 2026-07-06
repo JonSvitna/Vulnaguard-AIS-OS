@@ -75,6 +75,33 @@ Vulnaguard assessments follow a structured, evidence-based methodology grounded 
 
 ---
 
+## Solo Starter Stack (buy-first sequence)
+
+The Approved Tooling table lists every sanctioned tool. As a one-person shop, do not buy all of it. Acquire in this order:
+
+1. **Nessus Professional** — the anchor. Standardize on it. DoD's mandated ACAS solution is built on Tenable, so the Nessus name carries credibility with COs and defense contractors. Single seat, unlimited IPs, installs on the scanning host, no server infra. ~$4k/year.
+   - **Licensing trap:** Nessus *Essentials* (free) is capped at 16 IPs and its license **prohibits commercial/consulting use**. Never run paid client work on Essentials.
+   - **Pre-revenue bridge only:** if the first Nessus license must wait for the first invoice, run **OpenVAS / Greenbone Community** for network scanning in the interim. Free, but more setup/maintenance and less name recognition on a report. Switch to Nessus as soon as revenue allows.
+2. **OWASP ZAP + Nmap** — free, keep. ZAP covers the web-application layer only (DAST); it is never the primary scanner for a network/host assessment. Nmap handles enumeration.
+3. **Metasploit Framework (Community)** — free, only for authorized exploitation validation per the ROE.
+4. **Burp Suite Professional** — add later, only when web-app engagement volume justifies the spend.
+
+Tool brand is table stakes. What makes the deliverable credible is manual validation of every Critical/High finding and mapping findings to NIST 800-171 / 800-53 controls, not the scanner logo.
+
+---
+
+## Scanning Host / OS
+
+Run scans from a dedicated, controlled host, never from a daily-driver machine.
+
+- **Base OS:** **Kali Linux** in a snapshottable VM (VirtualBox / VMware / Proxmox). Kali ships Nmap, Metasploit, and the enumeration toolset, and the name is recognized. Install Nessus Professional from Tenable's Debian package on top. A minimal hardened Ubuntu LTS is an acceptable alternative if Kali's extra tooling isn't wanted.
+- **One clean snapshot per engagement.** Snapshot before testing begins and preserve it for evidence integrity and reproducibility. Do not reuse a host across clients without a clean snapshot.
+- **External scans need a known source IP.** Stand up a dedicated cloud instance (e.g. a DigitalOcean droplet) with a stable static IP, list that IP in the signed Rules of Engagement, and have the client whitelist it. This keeps attribution clean and satisfies the ROE authorized-source requirement.
+- **Internal/credentialed scans** run from a VM placed on the client network or reached over the provisioned VPN (see the VA pre-assessment checklist).
+- Client scan data and evidence stay in the engagement folder only, per Data Handling below. Wipe or destroy the engagement snapshot per the retention and destruction rules after closeout.
+
+---
+
 ## Vulnerability Scoring
 
 All CVEs are scored using CVSS v3.1 base scores as a starting point. Vulnaguard applies environmental and temporal adjustments per the risk rating model.

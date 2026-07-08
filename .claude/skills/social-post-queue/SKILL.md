@@ -1,6 +1,6 @@
 ---
 name: social-post-queue
-description: Pull the next unposted draft from references/content-bank.md, adapt it per platform (Facebook/Instagram/LinkedIn via Buffer, IndieHackers manually), show Sean for review/edit, then queue or hand off the approved version. Use for "post to social", "what's next in the content queue", "queue this week's posts", "post to IndieHackers", or as a standing cadence to hit 5 posts/week minimum.
+description: Pull the next unposted draft from vulnaguard-seo-agent's content-pipeline (already generated per-platform), show Sean for review/edit, then queue to Buffer (Facebook/Instagram/LinkedIn) or hand off to IndieHackers manually. Use for "post to social", "what's next in the content queue", "queue this week's posts", "post to IndieHackers", or as a standing cadence to hit 5 posts/week minimum.
 bike-method-phase: 1
 three-ms-attribution: |
   Adapted from The Three Ms of AI™ © 2026 Nate Herk.
@@ -32,14 +32,16 @@ hands off to Sean for manual copy/paste/submit).
 
 ## Execution
 
-1. **Read `references/content-bank.md`.** Find the next entry without a `[posted YYYY-MM-DD]` tag.
-   If the bank has fewer than 3 unposted drafts left, flag it and offer to write more
-   via the `seanbuilds-voice` skill before continuing.
-2. **Adapt per platform** (one AI step — this is the only judgment call in the pipeline):
-   - LinkedIn: post as-is, long-form is fine.
-   - Facebook: trim to ~2-3 sentences + CTA.
-   - Instagram: trim to caption length, and call out that an image/graphic is needed
-     (this skill doesn't generate images — flag it, don't silently skip Instagram).
+1. **`GET /api/content-pipeline/next-unposted?brand=<vulnaguard|seanbuilds>` on
+   vulnaguard-seo-agent.** Call it once per domain — this returns the oldest record still
+   missing at least one of linkedin/facebook/instagram. If it returns `record: null` for a
+   domain, that domain's queue is dry — trigger `content-calendar`'s "expand an idea" step
+   for that domain before continuing.
+2. **The per-platform variants are already generated** (`record.linkedin`,
+   `record.instagram`, `record.facebook`) — no adapting step needed here anymore. For
+   Instagram, if the post needs a graphic, hand off to Creative OS
+   (`~/Documents/GitHub/creative-os`) to produce the asset from `record.video_brief` or the
+   post copy, then bring the result back here to attach before queuing.
 3. **Show Sean all three platform variants together.** Wait for explicit approval or edits
    before continuing. Do not queue anything unapproved.
 4. **Queue approved posts into Buffer:**
@@ -48,25 +50,30 @@ hands off to Sean for manual copy/paste/submit).
    ```
    Use `--scheduled-at` to spread posts across the week rather than dumping all 5 at once —
    space them to land on different days to hit the 5/week cadence evenly, not in a burst.
-5. **Mark the source draft `[posted YYYY-MM-DD]`** in `content-bank.md` once all platform
-   variants for it are queued.
+5. **Mark each queued platform posted** via `PATCH /api/content-pipeline/<record.id>/posted`
+   with `{ "platform": "linkedin" | "facebook" | "instagram", "postedAt": "<ISO timestamp>" }`
+   — one call per platform, right after that platform's Buffer queue call succeeds.
 6. **Log progress** — if this closes out a week's 5-post quota, note it in `decisions/log.md`
    only if something changed about the approach; routine weeks don't need a log entry.
 
 ### IndieHackers branch (weekly, separate from the steps above)
 
-1. **Pick a bank entry suited to IndieHackers' audience** — build-in-public, technical,
-   lessons-learned. Not every entry qualifies; generic promo content doesn't fit this
-   audience and should be skipped rather than forced.
+1. **Pick a record suited to IndieHackers' audience** from recent `content-pipeline`
+   history (`GET /api/content-pipeline/generate` history endpoint, or ask Creative
+   for the recent list) — build-in-public, technical, lessons-learned. Not every
+   record qualifies; generic promo content doesn't fit this audience and should be
+   skipped rather than forced.
 2. **Rewrite into IndieHackers' register** (one AI step): longer-form, conversational,
    build-log voice — no hashtags, no CTA-style social copy. This is a different register
-   from the Facebook/Instagram/LinkedIn adaptation in step 2 above, not a trim of it.
+   from the Facebook/Instagram/LinkedIn variants `content-pipeline` already generated,
+   not a trim of them.
 3. **Show Sean the draft.** Wait for explicit approval or edits.
 4. **Hand off — do not attempt to post it.** IndieHackers has no posting API. Once
    approved, tell Sean the draft is ready for him to copy, paste, and submit manually.
-5. **Mark the source draft `[posted-ih YYYY-MM-DD]`** in `content-bank.md` once Sean
-   confirms he's posted it (separate tag from the Buffer-platform `[posted ...]` tag,
-   since the same bank entry can run on both tracks independently).
+5. **Mark it posted** via `PATCH /api/content-pipeline/<record.id>/posted` with
+   `{ "platform": "indiehackers", "postedAt": "<ISO timestamp>" }` once Sean confirms
+   he's posted it (separate field from the Buffer-platform tracking, since the same
+   record can run on both tracks independently).
 
 ## Setup required before first real run
 

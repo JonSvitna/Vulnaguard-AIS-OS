@@ -1,10 +1,15 @@
-# Content Bank
+# Content Bank (frozen 2026-07-08)
 
-Social post drafts, written in the `seanbuilds-voice` register, ready to pull into the SEO app's content queue. Each entry is a draft — review/edit before posting, per `CLAUDE.md`'s rule on not posting externally without a look first.
+**Deprecated.** As of 2026-07-08, new drafts are generated via `vulnaguard-seo-agent`'s
+`content-pipeline` (DB-backed, multi-brand, generates all platform variants in one call) —
+see `content-calendar`'s and `social-post-queue`'s skills for the new flow. This file is not
+being written to anymore; it's kept only as a historical record and as a manual backlog of
+the entries below, which predate the fusion and haven't been posted yet. Clear them the old
+way (copy into Buffer manually) or re-run them as `rawInput` through `content-pipeline` to
+get fresh platform variants — either is fine, this is a one-time drain, not an ongoing process.
 
-Drafts here are sourced from `references/content-calendar.md` via the `content-calendar` skill ("expand idea N") once an idea is picked to actually write. Don't write new entries from scratch first — check the calendar for the next unexpanded idea.
-
-Add new drafts at the bottom as they're written. Mark posted ones with `[posted YYYY-MM-DD]`.
+Drafts below were written in the `seanbuilds-voice` register. Mark posted ones with
+`[posted YYYY-MM-DD]`.
 
 ---
 

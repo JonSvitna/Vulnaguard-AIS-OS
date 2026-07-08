@@ -1,16 +1,20 @@
 ---
 name: content-calendar
-description: Generate and maintain a 30-day content idea calendar across SeanBuilds and Vulnaguard, then expand picked ideas into full drafts for content-bank.md. Use for "build my content calendar", "generate this month's content ideas", "what should I post about", "expand calendar idea N", or "regenerate the calendar".
+description: Generate and maintain a 30-day content idea calendar across SeanBuilds and Vulnaguard, then expand picked ideas by calling vulnaguard-seo-agent's content-pipeline to generate full platform-ready drafts. Use for "build my content calendar", "generate this month's content ideas", "what should I post about", "expand calendar idea N", or "regenerate the calendar".
 ---
 
 > Personal accountability tool. Not for sale, not client-facing. Two domains only: **SeanBuilds** and **Vulnaguard**.
 
 ## What this closes
 
-Sean's recurring blocker: drafts exist in `references/content-bank.md` and `social-post-queue`
-posts them, but nothing generates *what to write about* on a schedule — so the bank runs dry
-and posting stalls on "I don't know what to talk about today." This skill is the idea engine
-that feeds the bank; `social-post-queue` remains the only thing that actually posts.
+Sean's recurring blocker: nothing generated *what to write about* on a schedule, so posting
+stalled on "I don't know what to talk about today." This skill is the idea engine.
+
+As of 2026-07-08, drafting itself is fused into `vulnaguard-seo-agent`'s `content-pipeline`
+(a real generation engine with DB + multi-brand voice support) instead of hand-writing drafts
+into `references/content-bank.md` — that file is now historical/frozen (see its header).
+`content-calendar` still owns *what to write about*; `content-pipeline` now owns turning that
+into platform-ready drafts; `social-post-queue` still owns the only posting step.
 
 ```
 hermes agent (scans commits for real moments)
@@ -22,10 +26,11 @@ references/hermes-opportunities.md (staged real entries, unused/used)
 content-calendar  →  references/content-calendar.md (30 days of one-line hooks)
        │ expand picked rows
        ▼
-references/content-bank.md (full drafts, seanbuilds-voice)
-       │
+vulnaguard-seo-agent POST /api/content-pipeline/generate
+  (voiceSkillSlug: seans-voice-vulnaguard | seanbuilds-voice)
+       │ generates linkedin/instagram/facebook/youtube + video_brief in one call
        ▼
-social-post-queue (per-platform adapt → Buffer / IndieHackers)
+social-post-queue (pulls via GET /api/content-pipeline/next-unposted → Buffer / IndieHackers)
 ```
 
 ## Domains and pillars
@@ -117,30 +122,36 @@ not improvised per post:
 ## Expanding an idea into a draft
 
 Triggered by "expand calendar idea N" or "expand today's idea" or as part of the
-weekly `social-post-queue` cadence when the bank runs low (per that skill's step 1).
+weekly `social-post-queue` cadence when the queue runs low (per that skill's step 1).
 
 1. Find the row in `references/content-calendar.md`.
-2. Write the full draft via the `seanbuilds-voice` register — same length/style as
-   existing `content-bank.md` entries (one paragraph + a `CTA:` line).
-3. Append it to the correct domain section in `content-bank.md` (create the section
-   if needed — currently the bank's sections are Vulnaguard/Sentinel CMMC, Web Dev,
-   SEO Agent, Builder Philosophy; map SeanBuilds pillars to "Builder Philosophy" and
-   Vulnaguard pillars to "Vulnaguard/Sentinel CMMC" or "SEO Agent" by content).
-4. Mark the calendar row `[expanded YYYY-MM-DD]` so it's not expanded twice.
-5. Show Sean the draft — same review-before-anything-external rule as
+2. Call `POST /api/content-pipeline/generate` on `vulnaguard-seo-agent` with:
+   - `rawInput`: the hook + 3 talking points, concatenated
+   - `captureMode`: `"type"`
+   - `brand`: `"vulnaguard"` for Vulnaguard-pillar rows, `"seanbuilds"` for
+     SeanBuilds-pillar rows (keeps the two queues separable in `next-unposted`)
+   - `voiceSkillSlug`: `"seans-voice-vulnaguard"` or `"seanbuilds-voice"` to match
+   This returns a `content_pipeline_records` row with linkedin/instagram/facebook/
+   youtube_desc/youtube_short + a `video_brief` already generated — no separate
+   per-platform drafting step needed.
+3. Mark the calendar row `[expanded YYYY-MM-DD]` so it's not expanded twice.
+4. Show Sean the generated record — same review-before-anything-external rule as
    `social-post-queue`. This skill never posts anything itself.
 
 ## What this skill is NOT
 
 - Not a publisher — `social-post-queue` owns posting, this owns ideas only.
+- Not a drafting tool itself anymore — `content-pipeline` (vulnaguard-seo-agent) does
+  the actual writing now; this skill picks *what* to write about and hands off the
+  raw idea.
 - Not market-facing — this calendar and its hooks are never shown to anyone outside
-  Sean; if an idea is good enough to publish, it gets expanded into the bank first.
+  Sean; if an idea is good enough to publish, it gets expanded via content-pipeline first.
 - Not a third-domain generator — SeanBuilds and Vulnaguard only, per Sean's explicit
   scope. Mectofitness/BlueAlamo are out of scope unless he says otherwise.
 
 ## KPI
 
 Bucket: **more customers** (top-of-funnel, ties to `context/priorities.md` #2/#3).
-Metric: **bank never runs below 3 unexpanded ideas per domain** — the calendar's whole
-job is making sure `social-post-queue` step 1 never has to stall and ask Sean to think
-of something on the spot.
+Metric: **at least 3 unexpanded calendar ideas per domain at all times** — the
+calendar's whole job is making sure `social-post-queue` step 1 never has to stall and
+ask Sean to think of something on the spot.

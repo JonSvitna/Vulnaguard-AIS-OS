@@ -238,6 +238,123 @@
     },
     {
       "parameters": {
+        "jsCode": "const source = $input.first().json || {};\nconst analysis = source.analysis_payload || {};\nconst summary = source.pattern_summary || {};\nconst confidence = typeof source.analysis_confidence === 'number' ? source.analysis_confidence : null;\nconst reasoningParts = [\n  analysis.reasoning || analysis.why_this_format || '',\n  summary.caption_structure || '',\n  summary.hashtag_cluster || ''\n].filter(Boolean);\n\nreturn [{\n  json: {\n    ...source,\n    playbook_status: 'pending',\n    playbook_page_id: null,\n    playbook_synced_at: null,\n    playbook_payload: {\n      batch_id: source.batch_id || null,\n      platform_video_id: source.platform_video_id || null,\n      creator_name: source.creator_name || analysis.creator_name || null,\n      topic_type: source.topic_category || analysis.topic_category || 'uncategorized',\n      recommended_format: source.primary_format || analysis.primary_format || 'unknown',\n      engagement_tier: source.engagement_tier || analysis.engagement_tier || 'unknown',\n      confidence,\n      reasoning: reasoningParts.join(' | ').slice(0, 1800),\n      example_reference: source.title || analysis.title || null,\n      source_url: source.profile_url || null,\n      published_at: source.published_at || null,\n      evidence: analysis.evidence || summary || {}\n    }\n  }\n}];"
+      },
+      "id": "stage-4-playbook-mapper",
+      "name": "Stage 4 Playbook Mapper",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2880, 500]
+    },
+    {
+      "parameters": {
+        "value1": "={{$json.analysis_status}}",
+        "rules": [
+          {
+            "operation": "equal",
+            "value2": "analyzed"
+          },
+          {
+            "operation": "notEqual",
+            "value2": "analyzed"
+          }
+        ]
+      },
+      "id": "stage-4-eligibility-switch",
+      "name": "Stage 4 Eligibility Switch",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 2,
+      "position": [3120, 500]
+    },
+    {
+      "parameters": {
+        "url": "https://api.notion.com/v1/pages",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParametersUi": {
+          "parameter": [
+            {
+              "name": "Authorization",
+              "value": "={{'Bearer ' + $env.NOTION_API_KEY}}"
+            },
+            {
+              "name": "Notion-Version",
+              "value": "2022-06-28"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"parent\": { \"database_id\": $env.NOTION_CONTENT_PLAYBOOK_DATABASE_ID },\n  \"properties\": {\n    \"Topic type\": { \"select\": { \"name\": $json.playbook_payload.topic_type } },\n    \"Recommended format\": { \"select\": { \"name\": $json.playbook_payload.recommended_format } },\n    \"Reasoning\": { \"rich_text\": [{ \"text\": { \"content\": $json.playbook_payload.reasoning || \"No reasoning provided\" } }] },\n    \"Example reference\": { \"title\": [{ \"text\": { \"content\": ($json.playbook_payload.example_reference || 'Untitled example').slice(0, 1800) } }] },\n    \"Creator\": { \"rich_text\": [{ \"text\": { \"content\": $json.playbook_payload.creator_name || \"unknown\" } }] },\n    \"Source URL\": { \"url\": $json.playbook_payload.source_url || null }\n  }\n}"
+      },
+      "id": "stage-4-notion-upsert",
+      "name": "Stage 4 Notion Upsert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [3360, 420]
+    },
+    {
+      "parameters": {
+        "jsCode": "const source = $input.first().json || {};\nreturn [{\n  json: {\n    ...source,\n    playbook_status: 'skipped_not_analyzed',\n    playbook_page_id: null,\n    playbook_synced_at: null,\n    playbook_payload: {\n      ...(source.playbook_payload || {}),\n      skip_reason: `analysis_status_${source.analysis_status || 'unknown'}`\n    }\n  }\n}];"
+      },
+      "id": "stage-4-skip",
+      "name": "Stage 4 Skip Notion",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3360, 580]
+    },
+    {
+      "parameters": {
+        "jsCode": "const source = $('Stage 4 Playbook Mapper').first().json || {};\nconst response = $input.first().json || {};\nreturn [{\n  json: {\n    ...source,\n    playbook_status: 'synced',\n    playbook_page_id: response.id || null,\n    playbook_synced_at: new Date().toISOString(),\n    playbook_payload: {\n      ...(source.playbook_payload || {}),\n      notion_response_id: response.id || null,\n      notion_url: response.url || null\n    }\n  }\n}];"
+      },
+      "id": "stage-4-parse-notion-result",
+      "name": "Stage 4 Parse Notion Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3600, 420]
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "schema": "public",
+        "table": "content_intelligence_videos",
+        "columns": "platform_video_id,playbook_status,playbook_page_id,playbook_synced_at,playbook_payload"
+      },
+      "id": "stage-4-persist-status",
+      "name": "Stage 4 Persist Playbook Status",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [3840, 500]
+    },
+    {
+      "parameters": {
+        "jsCode": "const source = $input.first().json || {};\nconst eligible = source.analysis_status === 'analyzed' && source.playbook_status === 'synced';\nconst score = eligible && typeof source.analysis_confidence === 'number'\n  ? Number(source.analysis_confidence.toFixed(4))\n  : null;\n\nreturn [{\n  json: {\n    ...source,\n    feedback_status: 'pending_first_party_data',\n    feedback_score: score,\n    feedback_payload: {\n      batch_id: source.batch_id || null,\n      platform_video_id: source.platform_video_id || null,\n      stage4_status: source.playbook_status || 'unknown',\n      analysis_status: source.analysis_status || 'unknown',\n      scaffold_mode: 'deferred_until_first_party_metrics',\n      eligible_for_blend: Boolean(eligible),\n      next_action: 'ingest_first_party_posts'\n    }\n  }\n}];"
+      },
+      "id": "stage-5-feedback-scaffold",
+      "name": "Stage 5 Feedback Scaffold",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [4080, 500]
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "schema": "public",
+        "table": "content_intelligence_videos",
+        "columns": "platform_video_id,feedback_status,feedback_score,feedback_payload"
+      },
+      "id": "stage-5-persist-feedback-status",
+      "name": "Stage 5 Persist Feedback Status",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [4320, 500]
+    },
+    {
+      "parameters": {
         "mode": "passThrough"
       },
       "id": "merge-upserts",
@@ -425,6 +542,95 @@
         [
           {
             "node": "Merge Upserts",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Stage 4 Playbook Mapper",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Stage 4 Playbook Mapper": {
+      "main": [
+        [
+          {
+            "node": "Stage 4 Eligibility Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Stage 4 Eligibility Switch": {
+      "main": [
+        [
+          {
+            "node": "Stage 4 Notion Upsert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stage 4 Skip Notion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Stage 4 Notion Upsert": {
+      "main": [
+        [
+          {
+            "node": "Stage 4 Parse Notion Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Stage 4 Parse Notion Result": {
+      "main": [
+        [
+          {
+            "node": "Stage 4 Persist Playbook Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Stage 4 Skip Notion": {
+      "main": [
+        [
+          {
+            "node": "Stage 4 Persist Playbook Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Stage 4 Persist Playbook Status": {
+      "main": [
+        [
+          {
+            "node": "Stage 5 Feedback Scaffold",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Stage 5 Feedback Scaffold": {
+      "main": [
+        [
+          {
+            "node": "Stage 5 Persist Feedback Status",
             "type": "main",
             "index": 0
           }

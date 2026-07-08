@@ -33,6 +33,13 @@ create table if not exists content_intelligence_videos (
   engagement_tier text,
   analysis_confidence numeric(5,4),
   pattern_summary jsonb not null default '{}'::jsonb,
+  playbook_status text not null default 'pending',
+  playbook_page_id text,
+  playbook_synced_at timestamptz,
+  playbook_payload jsonb not null default '{}'::jsonb,
+  feedback_status text not null default 'pending_first_party_data',
+  feedback_score numeric(5,4),
+  feedback_payload jsonb not null default '{}'::jsonb,
   embedding vector,
   raw_payload jsonb not null,
   format_tags jsonb not null default '[]'::jsonb,
@@ -51,6 +58,34 @@ create index if not exists content_intelligence_videos_platform_video_id_idx
 
 create index if not exists content_intelligence_videos_batch_id_idx
   on content_intelligence_videos (batch_id);
+
+create index if not exists content_intelligence_videos_playbook_status_idx
+  on content_intelligence_videos (playbook_status);
+
+create index if not exists content_intelligence_videos_feedback_status_idx
+  on content_intelligence_videos (feedback_status);
+
+create table if not exists content_intelligence_first_party_posts (
+  id uuid primary key default gen_random_uuid(),
+  platform text not null,
+  platform_post_id text not null unique,
+  post_title text,
+  posted_at timestamptz,
+  topic_category text,
+  primary_format text,
+  view_count integer not null default 0,
+  like_count integer not null default 0,
+  comment_count integer not null default 0,
+  save_count integer not null default 0,
+  share_count integer not null default 0,
+  engagement_rate numeric(10,4),
+  source_payload jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists content_intelligence_first_party_posts_posted_at_idx
+  on content_intelligence_first_party_posts (posted_at desc);
 
 create table if not exists content_intelligence_batches (
   id uuid primary key default gen_random_uuid(),

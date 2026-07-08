@@ -88,6 +88,14 @@ Output contract:
 
 n8n writes analysis outputs into Notion database: Content Playbook.
 
+Stage 4 scaffold behavior:
+
+- runs after video upsert so Stage 3 data is already persisted
+- maps each analyzed video into a Notion page payload
+- writes to Notion when `analysis_status=analyzed`
+- marks non-analyzed rows as `playbook_status=skipped_not_analyzed`
+- stores Notion sync metadata back into Supabase for replay/debug
+
 Fields:
 
 - Topic type
@@ -97,16 +105,23 @@ Fields:
 
 `content-calendar` reads this playbook when deciding format for new ideas.
 
-## Stage 5 — Feedback loop (later)
+## Stage 5 — Feedback loop (first-party blend scaffold)
 
-Once Sean's own posting history exists, feed his performance data back into the same loop so recommendations move from external creator mimicry toward SeanBuilds-specific performance.
+Stage 5 scaffold behavior:
+
+- runs after Stage 4 status persistence
+- writes a deterministic feedback status for every processed record
+- marks records as `pending_first_party_data` until SeanBuilds post-performance rows exist
+- persists a `feedback_payload` contract so later blending can replay without reprocessing Stage 1-4
+
+Once Sean's own posting history exists, Stage 5 will blend first-party performance into format recommendations so outputs shift from external creator mimicry toward SeanBuilds-specific performance.
 
 ## Build order
 
 1. Stage 1 -> Stage 2 first; manually inspect data quality.
 2. Then Stage 3 (analysis).
 3. Then Stage 4 (Notion playbook output).
-4. Stage 5 only after enough first-party posting history exists.
+4. Stage 5 scaffold can run now; first-party weighting activates after enough posting history exists.
 
 ## Open decisions
 
@@ -161,7 +176,24 @@ The matching database migration draft lives at `references/sql/content-intellige
    - If provider is `deferred`, skip model calls and persist `deferred_session_limit` status for later replay.
    - Emit the provider-specific request payload and keep the other branch as fallback wiring.
 
-9. Stage marker
+9. Stage 4 playbook mapper
+   - Build a Notion-ready payload from Stage 3 classifications and evidence fields.
+
+10. Stage 4 Notion writer
+   - If `analysis_status=analyzed`, create/update a page in the Content Playbook database.
+   - If not analyzed, skip Notion write and persist skip status for later replay.
+
+11. Stage 4 status persist
+   - Upsert `playbook_status`, `playbook_page_id`, `playbook_synced_at`, and `playbook_payload` to video rows.
+
+12. Stage 5 feedback scaffold
+   - Generate `feedback_status`, `feedback_score`, and `feedback_payload` for each record.
+   - Default to `pending_first_party_data` until first-party metrics are available.
+
+13. Stage 5 status persist
+   - Upsert Stage 5 feedback fields to video rows for replay and future weighting.
+
+14. Stage marker
    - Mark the record batch as ingested so it is not processed twice.
 
 ### Supabase tables
@@ -200,9 +232,33 @@ The matching database migration draft lives at `references/sql/content-intellige
 - `engagement_tier` text
 - `analysis_confidence` numeric(5,4)
 - `pattern_summary` jsonb not null default '{}'::jsonb
+- `playbook_status` text not null default 'pending'
+- `playbook_page_id` text
+- `playbook_synced_at` timestamptz
+- `playbook_payload` jsonb not null default '{}'::jsonb
+- `feedback_status` text not null default 'pending_first_party_data'
+- `feedback_score` numeric(5,4)
+- `feedback_payload` jsonb not null default '{}'::jsonb
 - `embedding` vector
 - `raw_payload` jsonb not null
 - `format_tags` jsonb not null default '[]'::jsonb
+
+`content_intelligence_first_party_posts`
+
+- `id` uuid primary key
+- `platform` text not null
+- `platform_post_id` text not null unique
+- `post_title` text
+- `posted_at` timestamptz
+- `topic_category` text
+- `primary_format` text
+- `view_count` integer not null default 0
+- `like_count` integer not null default 0
+- `comment_count` integer not null default 0
+- `save_count` integer not null default 0
+- `share_count` integer not null default 0
+- `engagement_rate` numeric(10,4)
+- `source_payload` jsonb not null default '{}'::jsonb
 - `created_at` timestamptz not null default now()
 - `updated_at` timestamptz not null default now()
 

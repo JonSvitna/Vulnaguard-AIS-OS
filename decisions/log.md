@@ -610,3 +610,15 @@ Scanning host: Kali Linux in a snapshottable VM, one clean snapshot per engageme
 **Alternatives considered:** Migrating `content-bank.md`/`social-post-queue` data and logic physically into `creative-os` — this was the initial plan and Sean's first answer, but he then clarified AIS-OS is meant to stay the master controller of everything, so moving live data/credentials out of it would have worked against that model; reverted before any live data or the `hermes-cron` Railway service was touched. Standing up a new internal n8n instance immediately — deferred; Sean confirmed AIS-OS will own that orchestration flow long-term with other OSes (Creative OS, etc.) called into specific steps, but no concrete workflow spec exists yet to scaffold against.
 
 **Owner:** Sean. Follow-ups: (1) drain the 8 pre-fusion drafts still sitting unposted in `content-bank.md` the old way or re-run them through `content-pipeline`; (2) fill in the Facebook Buffer profile ID; (3) design the actual n8n workflow map once the business-wide flow is concrete enough to scaffold.
+
+## 2026-07-08 — Content Intelligence Pipeline accepted from Claude markup; AIS-OS owns orchestration
+
+**Decision:** Accepted and documented the staged Content Intelligence Pipeline spec as the concrete implementation path for format decisions. Added `references/content-intelligence-pipeline.md` and updated `connections.md` row 18 from placeholder to implementation-scoped architecture. Locked ownership split: `Vulnaguard-AIS-OS` owns orchestration, queue state, and approvals; `creative-os` is a called specialist for asset production/editing; `vulnaguard-capture-os` is out of scope for social publishing workflow ownership.
+
+Pipeline stages locked to this order: Stage 1 scrape via Apify -> Stage 2 Supabase storage + embeddings -> Stage 3 Claude/GPT classification and pattern extraction (JSON output only) -> Stage 4 Notion Content Playbook output consumed by `content-calendar` -> Stage 5 feedback loop after enough first-party performance data exists.
+
+**Why:** Sean had already produced a concrete Claude markup and asked to "get this started and implemented correctly" without more architecture drift. The prior row 18 state (planned but unspecific) was no longer acceptable for execution. This update closes that ambiguity and aligns with the already-locked repo hierarchy where AIS-OS is the master orchestrator.
+
+**Alternatives considered:** Moving pipeline ownership into `creative-os` (rejected — conflicts with the AIS-OS-as-master model and would split queue/state from business orchestration). Leaving it in `vulnaguard-capture-os` (rejected — outside Capture OS mission and already identified as redundancy).
+
+**Owner:** Sean. Immediate next step is Stage 1 -> Stage 2 implementation and data quality validation before adding model judgment layers.

@@ -1,0 +1,455 @@
+{
+  "name": "Content Intelligence Pipeline v1",
+  "nodes": [
+    {
+      "parameters": {
+        "triggerTimes": [
+          {
+            "mode": "everyWeek",
+            "weekday": "monday",
+            "hour": 9,
+            "minute": 0
+          }
+        ]
+      },
+      "id": "cron-trigger",
+      "name": "Cron Trigger",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { searchQueries: [\"AI automation creators\", \"YouTube automation tutorial creators\", \"Instagram AI workflow creators\"], referenceCreators: [\"Nate Zerk\"] } }];"
+      },
+      "id": "build-queries",
+      "name": "Build Search Queries",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://api.tavily.com/search",
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"api_key\": $env.TAVILY_API_KEY,\n  \"query\": $json.searchQueries[0],\n  \"search_depth\": \"advanced\",\n  \"include_answer\": false,\n  \"max_results\": 10\n}"
+      },
+      "id": "tavily-search",
+      "name": "Tavily Search",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [720, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const toHex = (value) => (value >>> 0).toString(16).padStart(8, '0');\nconst makeDeterministicUuid = (input) => {\n  const text = String(input || 'unknown').toLowerCase().trim();\n  let h1 = 2166136261;\n  let h2 = 2166136261;\n  let h3 = 2166136261;\n  let h4 = 2166136261;\n\n  for (let i = 0; i < text.length; i++) {\n    const c = text.charCodeAt(i);\n    h1 = Math.imul(h1 ^ c, 16777619) >>> 0;\n    h2 = Math.imul(h2 ^ (c + 31), 16777619) >>> 0;\n    h3 = Math.imul(h3 ^ (c + 131), 16777619) >>> 0;\n    h4 = Math.imul(h4 ^ (c + 521), 16777619) >>> 0;\n  }\n\n  const hex = `${toHex(h1)}${toHex(h2)}${toHex(h3)}${toHex(h4)}`.slice(0, 32);\n  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20, 32)}`;\n};\n\nconst results = $input.first().json.results || [];\nreturn results.map((result) => {\n  const creatorName = result.title || result.name || result.url;\n  return {\n    json: {\n      creator_id: makeDeterministicUuid(creatorName),\n      creator_name: creatorName,\n      profile_url: result.url,\n      source_query: 'AI automation creators',\n      source_snippet: result.content || result.snippet || '',\n      relevance_score: result.score || 0,\n      platform: 'youtube'\n    }\n  };\n});"
+      },
+      "id": "filter-creators",
+      "name": "Filter Creators",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [960, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://www.googleapis.com/youtube/v3/search",
+        "method": "GET",
+        "sendQuery": true,
+        "queryParametersUi": {
+          "parameter": [
+            {
+              "name": "part",
+              "value": "snippet"
+            },
+            {
+              "name": "type",
+              "value": "video"
+            },
+            {
+              "name": "maxResults",
+              "value": "10"
+            },
+            {
+              "name": "q",
+              "value": "={{$json.creator_name}}"
+            },
+            {
+              "name": "key",
+              "value": "={{$env.YOUTUBE_API_KEY}}"
+            }
+          ]
+        }
+      },
+      "id": "youtube-search",
+      "name": "YouTube Search",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1200, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const toHex = (value) => (value >>> 0).toString(16).padStart(8, '0');\nconst makeDeterministicUuid = (input) => {\n  const text = String(input || 'unknown').toLowerCase().trim();\n  let h1 = 2166136261;\n  let h2 = 2166136261;\n  let h3 = 2166136261;\n  let h4 = 2166136261;\n\n  for (let i = 0; i < text.length; i++) {\n    const c = text.charCodeAt(i);\n    h1 = Math.imul(h1 ^ c, 16777619) >>> 0;\n    h2 = Math.imul(h2 ^ (c + 31), 16777619) >>> 0;\n    h3 = Math.imul(h3 ^ (c + 131), 16777619) >>> 0;\n    h4 = Math.imul(h4 ^ (c + 521), 16777619) >>> 0;\n  }\n\n  const hex = `${toHex(h1)}${toHex(h2)}${toHex(h3)}${toHex(h4)}`.slice(0, 32);\n  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20, 32)}`;\n};\n\nconst creators = $input.all();\nreturn creators.flatMap((item) => {\n  const videos = item.json.items || [];\n  return videos.map((video) => {\n    const viewCount = Number(video.statistics?.viewCount || 0);\n    const likeCount = Number(video.statistics?.likeCount || 0);\n    const commentCount = Number(video.statistics?.commentCount || 0);\n    const engagementRate = viewCount > 0 ? Number(((likeCount + commentCount) / viewCount).toFixed(4)) : 0;\n    const creatorName = item.json.creator_name || video.snippet?.channelTitle || String(video.snippet?.channelId || 'unknown_creator');\n\n    return {\n      json: {\n        creator_id: item.json.creator_id || makeDeterministicUuid(creatorName),\n        creator_name: creatorName,\n        profile_url: item.json.profile_url,\n        platform_video_id: video.id?.videoId || video.id,\n        title: video.snippet?.title || '',\n        description: video.snippet?.description || '',\n        published_at: video.snippet?.publishedAt || null,\n        duration_seconds: Number(video.contentDetails?.durationSeconds || 0) || null,\n        view_count: viewCount,\n        like_count: likeCount,\n        comment_count: commentCount,\n        engagement_rate: engagementRate,\n        thumbnail_url: video.snippet?.thumbnails?.high?.url || video.snippet?.thumbnails?.default?.url || null,\n        raw_payload: video,\n        hashtags: [],\n        format_tags: []\n      }\n    };\n  });\n});"
+      },
+      "id": "normalize-records",
+      "name": "Normalize Records",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1440, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const records = $input.all();\nconst batchId = $env.STAGE3_BATCH_ID || `batch-${new Date().toISOString().replace(/[:.]/g, '-')}`;\nreturn records.map((item) => ({\n  json: {\n    ...item.json,\n    batch_id: batchId,\n    analysis_version: 'stage3-v1',\n    analysis_status: 'pending',\n    analysis_payload: {\n      analysis_version: 'stage3-v1',\n      batch_id: batchId,\n      creator_name: item.json.creator_name,\n      platform: 'youtube',\n      platform_video_id: item.json.platform_video_id,\n      title: item.json.title,\n      description: item.json.description,\n      published_at: item.json.published_at,\n      duration_seconds: item.json.duration_seconds,\n      view_count: item.json.view_count,\n      like_count: item.json.like_count,\n      comment_count: item.json.comment_count,\n      hashtags: item.json.hashtags || [],\n      engagement_rate: item.json.engagement_rate,\n      format_tags: item.json.format_tags || []\n    },\n    topic_category: null,\n    primary_format: null,\n    engagement_tier: null,\n    analysis_confidence: null,\n    pattern_summary: {}\n  }\n}));"
+      },
+      "id": "stage-3-contract-builder",
+      "name": "Stage 3 Contract Builder",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1680, 300]
+    },
+    {
+      "parameters": {
+        "value1": "={{$env.STAGE3_MODEL_PROVIDER || 'claude'}}",
+        "rules": [
+          {
+            "operation": "equal",
+            "value2": "claude"
+          },
+          {
+            "operation": "equal",
+            "value2": "openai"
+          },
+          {
+            "operation": "equal",
+            "value2": "deferred"
+          }
+        ]
+      },
+      "id": "stage-3-provider-switch",
+      "name": "Stage 3 Provider Switch",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 2,
+      "position": [1920, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://api.anthropic.com/v1/messages",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParametersUi": {
+          "parameter": [
+            {
+              "name": "x-api-key",
+              "value": "={{$env.ANTHROPIC_API_KEY}}"
+            },
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": $env.CLAUDE_MODEL || \"claude-sonnet-4-6\",\n  \"max_tokens\": 1200,\n  \"system\": \"Return valid JSON only. Follow references/content-intelligence-stage3-contract.md exactly.\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": [\n        { \"type\": \"text\", \"text\": JSON.stringify($json.analysis_payload) }\n      ]\n    }\n  ]\n}"
+      },
+      "id": "claude-stage-3-analysis",
+      "name": "Claude Stage 3 Analysis",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [2160, 220]
+    },
+    {
+      "parameters": {
+        "url": "https://api.openai.com/v1/responses",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParametersUi": {
+          "parameter": [
+            {
+              "name": "Authorization",
+              "value": "={{'Bearer ' + $env.OPENAI_API_KEY}}"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": $env.OPENAI_MODEL || \"gpt-4o-mini\",\n  \"input\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"Return valid JSON only. Follow references/content-intelligence-stage3-contract.md exactly.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": JSON.stringify($json.analysis_payload)\n    }\n  ]\n}"
+      },
+      "id": "openai-stage-3-analysis",
+      "name": "OpenAI Stage 3 Analysis",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [2160, 380]
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\nconst source = $('Stage 3 Contract Builder').first().json;\nconst text = response.content?.[0]?.text || response.output_text || response.output?.[0]?.content?.[0]?.text || '';\nlet parsed = {};\ntry {\n  parsed = typeof text === 'string' && text.trim() ? JSON.parse(text) : response;\n} catch (error) {\n  parsed = response;\n}\nreturn [{\n  json: {\n    ...source,\n    ...parsed,\n    batch_id: parsed.batch_id || source.batch_id,\n    platform_video_id: parsed.platform_video_id || source.platform_video_id,\n    analysis_status: 'analyzed',\n    analysis_payload: parsed\n  }\n}];"
+      },
+      "id": "stage-3-result-parser",
+      "name": "Stage 3 Result Parser",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2400, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const source = $input.first().json || {};\nreturn [{\n  json: {\n    ...source,\n    analysis_status: 'deferred_session_limit',\n    analysis_payload: {\n      deferred_reason: 'model_access_unavailable',\n      deferred_at: new Date().toISOString(),\n      provider_requested: $env.STAGE3_MODEL_PROVIDER || 'deferred'\n    },\n    topic_category: source.topic_category || null,\n    primary_format: source.primary_format || null,\n    engagement_tier: source.engagement_tier || null,\n    analysis_confidence: source.analysis_confidence || null,\n    pattern_summary: source.pattern_summary || {}\n  }\n}];"
+      },
+      "id": "stage-3-deferred",
+      "name": "Stage 3 Deferred (No Model Access)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2160, 540]
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "schema": "public",
+        "table": "content_intelligence_creators",
+        "columns": "id,creator_name,platform,profile_url,source_query"
+      },
+      "id": "supabase-upsert-creators",
+      "name": "Supabase Upsert Creators",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1680, 220]
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "schema": "public",
+        "table": "content_intelligence_videos",
+        "columns": "batch_id,creator_id,platform_video_id,title,description,published_at,duration_seconds,view_count,like_count,comment_count,thumbnail_url,hashtags,raw_payload,engagement_rate,format_tags,analysis_version,analysis_status,analysis_payload,topic_category,primary_format,engagement_tier,analysis_confidence,pattern_summary"
+      },
+      "id": "supabase-upsert-videos",
+      "name": "Supabase Upsert Videos",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [2640, 380]
+    },
+    {
+      "parameters": {
+        "mode": "passThrough"
+      },
+      "id": "merge-upserts",
+      "name": "Merge Upserts",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [2880, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst first = items[0]?.json || {};\nreturn [{\n  json: {\n    batch_id: first.batch_id || null,\n    status: 'ingested',\n    provider: $env.STAGE3_MODEL_PROVIDER || 'claude',\n    run_finished_at: new Date().toISOString(),\n    video_count: items.length\n  }\n}];"
+      },
+      "id": "mark-batch",
+      "name": "Mark Batch Complete",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3120, 300]
+    }
+  ],
+  "connections": {
+    "Cron Trigger": {
+      "main": [
+        [
+          {
+            "node": "Build Search Queries",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Search Queries": {
+      "main": [
+        [
+          {
+            "node": "Tavily Search",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tavily Search": {
+      "main": [
+        [
+          {
+            "node": "Filter Creators",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Creators": {
+      "main": [
+        [
+          {
+            "node": "Supabase Upsert Creators",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "YouTube Search",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "YouTube Search": {
+      "main": [
+        [
+          {
+            "node": "Normalize Records",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Records": {
+      "main": [
+        [
+          {
+            "node": "Stage 3 Contract Builder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Stage 3 Contract Builder": {
+      "main": [
+        [
+          {
+            "node": "Stage 3 Provider Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Stage 3 Provider Switch": {
+      "main": [
+        [
+          {
+            "node": "Claude Stage 3 Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "OpenAI Stage 3 Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stage 3 Deferred (No Model Access)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude Stage 3 Analysis": {
+      "main": [
+        [
+          {
+            "node": "Stage 3 Result Parser",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Stage 3 Analysis": {
+      "main": [
+        [
+          {
+            "node": "Stage 3 Result Parser",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Stage 3 Deferred (No Model Access)": {
+      "main": [
+        [
+          {
+            "node": "Supabase Upsert Videos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Stage 3 Result Parser": {
+      "main": [
+        [
+          {
+            "node": "Supabase Upsert Videos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Upsert Creators": {
+      "main": [
+        [
+          {
+            "node": "Merge Upserts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Upsert Videos": {
+      "main": [
+        [
+          {
+            "node": "Merge Upserts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Upserts": {
+      "main": [
+        [
+          {
+            "node": "Mark Batch Complete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": ["content", "intelligence", "seanbuilds"],
+  "triggerCount": 0,
+  "versionId": "v1",
+  "active": false
+}

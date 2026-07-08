@@ -6,6 +6,14 @@ Updated whenever Sean switches coding agents mid-task (Claude Code ↔ Codex ↔
 **Switched from:** Codex → Cursor (manual switch)
 **Updated:** 2026-07-01
 
+## Cross-agent reminder (Content Intelligence)
+
+- If resuming Stage 3 in Claude environment, start with references/content-intelligence-return-setup.md.
+- Main pipeline spec: references/content-intelligence-pipeline.md.
+- Stage 3 contract: references/content-intelligence-stage3-contract.md.
+- Workflow scaffold: references/n8n/workflows/content-intelligence-pipeline-v1.json.
+- Schema draft: references/sql/content-intelligence-pipeline.sql.
+
 ## What we're doing
 
 SAM.gov contract scanner hardening + gov lead strategy. Scanner fixes done. USASpending scraper refocused on **small contract reverse-engineering** — individual awards in the $5k–$100k range that a startup could replicate to build past performance (not big-prime awardee lists).

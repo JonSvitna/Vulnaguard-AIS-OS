@@ -630,3 +630,13 @@ Pipeline stages locked to this order: Stage 1 scrape via Apify -> Stage 2 Supaba
 **Why:** The imported JSON had two node chains (YouTube resolution and Stage 3/4/5) sharing the same coordinates at `y=300`, so nodes rendered stacked on top of each other in the center — unusable for a screenshot. Sean wanted it spaced out and annotated so a screenshot is self-explanatory.
 
 **Owner:** Sean (technical/dev only — not mirrored to the vault).
+
+## 2026-07-09 — SeanBuilds SMB outreach separated from Contract Hunter (diagnosis + playbook)
+
+**Decision:** Treat SMB Outreach and Contract Hunter as permanently distinct products in separate repos, and produce a separation playbook (`references/seanbuilds-contract-hunter-separation.md`) for pulling them apart so the SMB site can launch at `officialseanbuilds.com/outreach`. Contract Hunter (`JonSvitna/Contract-Hunter`) stays a **Vulnaguard**-branded gov-contract tool on Railway; SMB Outreach (`JonSvitna/vulnaguard-smb-automation`) is a standalone **SeanBuilds** landing page at `officialseanbuilds.com/outreach`.
+
+**Why:** Sean reported the two were "blending" and it was blocking the SMB site launch (hitting `/outreach` served a broken/wrong SMB page). Cloned and grepped `JonSvitna/Contract-Hunter` end to end — it is clean (zero `smb`/`outreach`/`seanbuilds`/`n8n` hits, branded "Local Contract Hunter AI / Vulnaguard LLC"). So the blend is on the SMB side: Contract-Hunter code got copied into `vulnaguard-smb-automation`. The fix belongs in that repo, which is out of this session's access scope — Sean is executing on his Mac using the playbook.
+
+**Alternatives considered:** Editing Contract-Hunter to remove SMB pieces (rejected — nothing SMB is in it). Doing the extraction from this session (blocked — `vulnaguard-smb-automation` isn't authorized here; `add_repo` couldn't complete its approval non-interactively and the GitHub API is scoped to this repo only).
+
+**Owner:** Sean. Next: run the playbook on the Mac — strip Contract-Hunter files from `vulnaguard-smb-automation`, re-brand to SeanBuilds, wire the `/outreach` path (basePath or rewrite, separate deployment), verify both URLs, then log completion here and mirror to the vault (business-level). Separate cleanup: `local_contract_hunter.db` is force-committed in Contract-Hunter despite `.gitignore` — `git rm --cached` it later.

@@ -1,0 +1,125 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1422" height="264" viewBox="0 0 1422 264" font-family="Inter,Arial,sans-serif">
+<rect width="1422" height="264" fill="#1e1f26"/>
+<rect x="60" y="60" width="179" height="38" rx="6" fill="#b0bec5" opacity="0.16" stroke="#b0bec5" stroke-opacity="0.5"/>
+<text x="66" y="76" fill="#b0bec5" font-size="11" font-weight="700">Content Intelligence Pipeline v1</text>
+<rect x="60" y="105" width="189" height="67" rx="6" fill="#ffe082" opacity="0.16" stroke="#ffe082" stroke-opacity="0.5"/>
+<text x="66" y="121" fill="#ffe082" font-size="11" font-weight="700">1 · Discover &amp; Fetch</text>
+<rect x="252" y="105" width="480" height="67" rx="6" fill="#80cbc4" opacity="0.16" stroke="#80cbc4" stroke-opacity="0.5"/>
+<text x="258" y="121" fill="#80cbc4" font-size="11" font-weight="700">1b · Resolve YouTube channel → recent videos</text>
+<rect x="732" y="105" width="288" height="86" rx="6" fill="#c3e88d" opacity="0.16" stroke="#c3e88d" stroke-opacity="0.5"/>
+<text x="738" y="121" fill="#c3e88d" font-size="11" font-weight="700">2 · Normalize &amp; Store   ·   3 · Analyze</text>
+<rect x="1020" y="105" width="240" height="70" rx="6" fill="#f48fb1" opacity="0.16" stroke="#f48fb1" stroke-opacity="0.5"/>
+<text x="1026" y="121" fill="#f48fb1" font-size="11" font-weight="700">4 · Notion Content Playbook</text>
+<rect x="1260" y="105" width="102" height="67" rx="6" fill="#ffe082" opacity="0.16" stroke="#ffe082" stroke-opacity="0.5"/>
+<text x="1266" y="121" fill="#ffe082" font-size="11" font-weight="700">5 · Feedback loop</text>
+<rect x="255" y="62" width="67" height="13" rx="6" fill="#80cbc4" opacity="0.16" stroke="#80cbc4" stroke-opacity="0.5"/>
+<text x="261" y="78" fill="#80cbc4" font-size="11" font-weight="700">Parallel path ↑</text>
+<rect x="975" y="62" width="99" height="13" rx="6" fill="#c3e88d" opacity="0.16" stroke="#c3e88d" stroke-opacity="0.5"/>
+<text x="981" y="78" fill="#c3e88d" font-size="11" font-weight="700">Batch bookkeeping ↑</text>
+<rect x="834" y="185" width="90" height="19" rx="6" fill="#b0bec5" opacity="0.16" stroke="#b0bec5" stroke-opacity="0.5"/>
+<text x="840" y="201" fill="#b0bec5" font-size="11" font-weight="700">Provider Switch</text>
+<rect x="1074" y="162" width="48" height="15" rx="6" fill="#b0bec5" opacity="0.16" stroke="#b0bec5" stroke-opacity="0.5"/>
+<text x="1080" y="178" fill="#b0bec5" font-size="11" font-weight="700">Eligibility Switch</text>
+<path d="M150,139 C170,139 146,139 166,139" fill="none" stroke="#7c8090" stroke-width="1.3"/>
+<path d="M198,139 C218,139 194,139 214,139" fill="none" stroke="#7c8090" stroke-width="1.3"/>
+<path d="M246,139 C266,139 242,82 262,82" fill="none" stroke="#7c8090" stroke-width="1.3"/>
+<path d="M246,139 C266,139 242,139 262,139" fill="none" stroke="#7c8090" stroke-width="1.3"/>
+<path d="M774,139 C794,139 770,139 790,139" fill="none" stroke="#7c8090" stroke-width="1.3"/>
+<path d="M822,139 C842,139 818,139 838,139" fill="none" stroke="#7c8090" stroke-width="1.3"/>
+<path d="M870,139 C890,139 866,117 886,117" fill="none" stroke="#7c8090" stroke-width="1.3"/>
+<path d="M870,139 C890,139 866,139 886,139" fill="none" stroke="#7c8090" stroke-width="1.3"/>
+<path d="M870,139 C890,139 866,171 886,171" fill="none" stroke="#7c8090" stroke-width="1.3"/>
+<path d="M918,117 C938,117 914,126 934,126" fill="none" stroke="#7c8090" stroke-width="1.3"/>
+<path d="M918,139 C938,139 914,126 934,126" fill="none" stroke="#7c8090" stroke-width="1.3"/>
+<path d="M918,171 C943,171 956,139 982,139" fill="none" stroke="#7c8090" stroke-width="1.3"/>
+<path d="M966,126 C986,126 962,139 982,139" fill="none" stroke="#7c8090" stroke-width="1.3"/>
+<path d="M294,82 C569,82 706,82 982,82" fill="none" stroke="#7c8090" stroke-width="1.3"/>
+<path d="M1014,139 C1034,139 962,82 982,82" fill="none" stroke="#7c8090" stroke-width="1.3"/>
+<path d="M1014,139 C1034,139 1010,139 1030,139" fill="none" stroke="#7c8090" stroke-width="1.3"/>
+<path d="M1062,139 C1082,139 1058,139 1078,139" fill="none" stroke="#7c8090" stroke-width="1.3"/>
+<path d="M1110,139 C1130,139 1106,123 1126,123" fill="none" stroke="#7c8090" stroke-width="1.3"/>
+<path d="M1110,139 C1130,139 1106,152 1126,152" fill="none" stroke="#7c8090" stroke-width="1.3"/>
+<path d="M1158,123 C1178,123 1154,123 1174,123" fill="none" stroke="#7c8090" stroke-width="1.3"/>
+<path d="M1206,123 C1226,123 1202,139 1222,139" fill="none" stroke="#7c8090" stroke-width="1.3"/>
+<path d="M1158,152 C1183,152 1196,139 1222,139" fill="none" stroke="#7c8090" stroke-width="1.3"/>
+<path d="M1254,139 C1274,139 1250,139 1270,139" fill="none" stroke="#7c8090" stroke-width="1.3"/>
+<path d="M1302,139 C1322,139 1298,139 1318,139" fill="none" stroke="#7c8090" stroke-width="1.3"/>
+<path d="M1014,82 C1034,82 1010,82 1030,82" fill="none" stroke="#7c8090" stroke-width="1.3"/>
+<path d="M726,139 C746,139 722,139 742,139" fill="none" stroke="#7c8090" stroke-width="1.3"/>
+<path d="M102,139 C122,139 98,139 118,139" fill="none" stroke="#7c8090" stroke-width="1.3"/>
+<path d="M294,139 C314,139 290,139 310,139" fill="none" stroke="#7c8090" stroke-width="1.3"/>
+<path d="M342,139 C362,139 338,139 358,139" fill="none" stroke="#7c8090" stroke-width="1.3"/>
+<path d="M390,139 C410,139 386,139 406,139" fill="none" stroke="#7c8090" stroke-width="1.3"/>
+<path d="M438,139 C458,139 434,139 454,139" fill="none" stroke="#7c8090" stroke-width="1.3"/>
+<path d="M486,139 C506,139 482,139 502,139" fill="none" stroke="#7c8090" stroke-width="1.3"/>
+<path d="M534,139 C554,139 530,139 550,139" fill="none" stroke="#7c8090" stroke-width="1.3"/>
+<path d="M582,139 C602,139 578,139 598,139" fill="none" stroke="#7c8090" stroke-width="1.3"/>
+<path d="M630,139 C650,139 626,139 646,139" fill="none" stroke="#7c8090" stroke-width="1.3"/>
+<path d="M678,139 C698,139 674,139 694,139" fill="none" stroke="#7c8090" stroke-width="1.3"/>
+<rect x="70" y="134" width="32" height="11" rx="4" fill="#2b2d38" stroke="#565a6e"/>
+<text x="86" y="142" fill="#e6e7ee" font-size="7.5" text-anchor="middle">Schedule Trigger</text>
+<rect x="118" y="134" width="32" height="11" rx="4" fill="#2b2d38" stroke="#565a6e"/>
+<text x="134" y="142" fill="#e6e7ee" font-size="7.5" text-anchor="middle">Build Search Queries</text>
+<rect x="166" y="134" width="32" height="11" rx="4" fill="#2b2d38" stroke="#565a6e"/>
+<text x="182" y="142" fill="#e6e7ee" font-size="7.5" text-anchor="middle">Tavily Search</text>
+<rect x="214" y="134" width="32" height="11" rx="4" fill="#2b2d38" stroke="#565a6e"/>
+<text x="230" y="142" fill="#e6e7ee" font-size="7.5" text-anchor="middle">Filter Creators</text>
+<rect x="262" y="134" width="32" height="11" rx="4" fill="#2b2d38" stroke="#565a6e"/>
+<text x="278" y="142" fill="#e6e7ee" font-size="7.5" text-anchor="middle">YT Parse Creator URL</text>
+<rect x="310" y="134" width="32" height="11" rx="4" fill="#2b2d38" stroke="#565a6e"/>
+<text x="326" y="142" fill="#e6e7ee" font-size="7.5" text-anchor="middle">YT Resolvable Filter</text>
+<rect x="358" y="134" width="32" height="11" rx="4" fill="#2b2d38" stroke="#565a6e"/>
+<text x="374" y="142" fill="#e6e7ee" font-size="7.5" text-anchor="middle">YT Get Channel</text>
+<rect x="406" y="134" width="32" height="11" rx="4" fill="#2b2d38" stroke="#565a6e"/>
+<text x="422" y="142" fill="#e6e7ee" font-size="7.5" text-anchor="middle">YT Extract Playlist Id</text>
+<rect x="454" y="134" width="32" height="11" rx="4" fill="#2b2d38" stroke="#565a6e"/>
+<text x="470" y="142" fill="#e6e7ee" font-size="7.5" text-anchor="middle">YT Has Playlist Filter</text>
+<rect x="502" y="134" width="32" height="11" rx="4" fill="#2b2d38" stroke="#565a6e"/>
+<text x="518" y="142" fill="#e6e7ee" font-size="7.5" text-anchor="middle">YT Get Playlist Items</text>
+<rect x="550" y="134" width="32" height="11" rx="4" fill="#2b2d38" stroke="#565a6e"/>
+<text x="566" y="142" fill="#e6e7ee" font-size="7.5" text-anchor="middle">YT Extract Video Ids</text>
+<rect x="598" y="134" width="32" height="11" rx="4" fill="#2b2d38" stroke="#565a6e"/>
+<text x="614" y="142" fill="#e6e7ee" font-size="7.5" text-anchor="middle">YT Has VideoIds Filter</text>
+<rect x="646" y="134" width="32" height="11" rx="4" fill="#2b2d38" stroke="#565a6e"/>
+<text x="662" y="142" fill="#e6e7ee" font-size="7.5" text-anchor="middle">YT Get Videos</text>
+<rect x="694" y="134" width="32" height="11" rx="4" fill="#2b2d38" stroke="#565a6e"/>
+<text x="710" y="142" fill="#e6e7ee" font-size="7.5" text-anchor="middle">YouTube Metadata Fetch</text>
+<rect x="742" y="134" width="32" height="11" rx="4" fill="#2b2d38" stroke="#565a6e"/>
+<text x="758" y="142" fill="#e6e7ee" font-size="7.5" text-anchor="middle">Normalize Records</text>
+<rect x="790" y="134" width="32" height="11" rx="4" fill="#2b2d38" stroke="#565a6e"/>
+<text x="806" y="142" fill="#e6e7ee" font-size="7.5" text-anchor="middle">Stage 3 Contract Buil…</text>
+<rect x="838" y="134" width="32" height="11" rx="4" fill="#2b2d38" stroke="#565a6e"/>
+<text x="854" y="142" fill="#e6e7ee" font-size="7.5" text-anchor="middle">Stage 3 Provider Swit…</text>
+<rect x="886" y="111" width="32" height="11" rx="4" fill="#2b2d38" stroke="#565a6e"/>
+<text x="902" y="120" fill="#e6e7ee" font-size="7.5" text-anchor="middle">Claude Stage 3 Analys…</text>
+<rect x="886" y="134" width="32" height="11" rx="4" fill="#2b2d38" stroke="#565a6e"/>
+<text x="902" y="142" fill="#e6e7ee" font-size="7.5" text-anchor="middle">OpenAI Stage 3 Analys…</text>
+<rect x="934" y="121" width="32" height="11" rx="4" fill="#2b2d38" stroke="#565a6e"/>
+<text x="950" y="129" fill="#e6e7ee" font-size="7.5" text-anchor="middle">Stage 3 Result Parser</text>
+<rect x="886" y="166" width="32" height="11" rx="4" fill="#2b2d38" stroke="#565a6e"/>
+<text x="902" y="174" fill="#e6e7ee" font-size="7.5" text-anchor="middle">Stage 3 Deferred (No …</text>
+<rect x="262" y="76" width="32" height="11" rx="4" fill="#2b2d38" stroke="#565a6e"/>
+<text x="278" y="85" fill="#e6e7ee" font-size="7.5" text-anchor="middle">Supabase Upsert Creat…</text>
+<rect x="982" y="134" width="32" height="11" rx="4" fill="#2b2d38" stroke="#565a6e"/>
+<text x="998" y="142" fill="#e6e7ee" font-size="7.5" text-anchor="middle">Supabase Upsert Videos</text>
+<rect x="1030" y="134" width="32" height="11" rx="4" fill="#2b2d38" stroke="#565a6e"/>
+<text x="1046" y="142" fill="#e6e7ee" font-size="7.5" text-anchor="middle">Stage 4 Playbook Mapp…</text>
+<rect x="1078" y="134" width="32" height="11" rx="4" fill="#2b2d38" stroke="#565a6e"/>
+<text x="1094" y="142" fill="#e6e7ee" font-size="7.5" text-anchor="middle">Stage 4 Eligibility S…</text>
+<rect x="1126" y="118" width="32" height="11" rx="4" fill="#2b2d38" stroke="#565a6e"/>
+<text x="1142" y="126" fill="#e6e7ee" font-size="7.5" text-anchor="middle">Stage 4 Notion Upsert</text>
+<rect x="1126" y="146" width="32" height="11" rx="4" fill="#2b2d38" stroke="#565a6e"/>
+<text x="1142" y="155" fill="#e6e7ee" font-size="7.5" text-anchor="middle">Stage 4 Skip Notion</text>
+<rect x="1174" y="118" width="32" height="11" rx="4" fill="#2b2d38" stroke="#565a6e"/>
+<text x="1190" y="126" fill="#e6e7ee" font-size="7.5" text-anchor="middle">Stage 4 Parse Notion …</text>
+<rect x="1222" y="134" width="32" height="11" rx="4" fill="#2b2d38" stroke="#565a6e"/>
+<text x="1238" y="142" fill="#e6e7ee" font-size="7.5" text-anchor="middle">Stage 4 Persist Playb…</text>
+<rect x="1270" y="134" width="32" height="11" rx="4" fill="#2b2d38" stroke="#565a6e"/>
+<text x="1286" y="142" fill="#e6e7ee" font-size="7.5" text-anchor="middle">Stage 5 Feedback Scaf…</text>
+<rect x="1318" y="134" width="32" height="11" rx="4" fill="#2b2d38" stroke="#565a6e"/>
+<text x="1334" y="142" fill="#e6e7ee" font-size="7.5" text-anchor="middle">Stage 5 Persist Feedb…</text>
+<rect x="982" y="76" width="32" height="11" rx="4" fill="#2b2d38" stroke="#565a6e"/>
+<text x="998" y="85" fill="#e6e7ee" font-size="7.5" text-anchor="middle">Merge Upserts</text>
+<rect x="1030" y="76" width="32" height="11" rx="4" fill="#2b2d38" stroke="#565a6e"/>
+<text x="1046" y="85" fill="#e6e7ee" font-size="7.5" text-anchor="middle">Mark Batch Complete</text>
+</svg>

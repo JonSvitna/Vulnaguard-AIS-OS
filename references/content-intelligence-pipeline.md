@@ -142,6 +142,16 @@ The importable workflow scaffold lives at `references/n8n/workflows/content-inte
 
 The matching database migration draft lives at `references/sql/content-intelligence-pipeline.sql`.
 
+#### Canvas layout (for screenshots / readability)
+
+The workflow JSON is laid out as one clean left-to-right spine on lane `y=480`, with branches on dedicated lanes so nothing overlaps:
+
+- Top lane (`y=120`) — parallel bookkeeping: `Supabase Upsert Creators` runs alongside the video path and rejoins at `Merge Upserts` → `Mark Batch Complete`.
+- Provider branches (`y=340 / 480 / 680`) — Claude / OpenAI / Deferred fan out from `Stage 3 Provider Switch` and rejoin at `Stage 3 Result Parser`.
+- Stage 4 branches (`y=380 / 560`) — Notion write vs. skip, rejoining at `Stage 4 Persist Playbook Status`.
+
+Sticky notes group the canvas into five labeled bands (1 Discover & Fetch, 1b Resolve YouTube, 2/3 Normalize & Analyze, 4 Notion Playbook, 5 Feedback), plus callouts on the two switch nodes. A rendered preview of the layout lives at `references/n8n/workflows/content-intelligence-pipeline-v1-layout.svg`. If you re-space nodes, keep them on these lanes so the flow stays readable when zoomed to fit.
+
 1. Cron trigger
    - Runs weekly.
    - Inputs: empty.

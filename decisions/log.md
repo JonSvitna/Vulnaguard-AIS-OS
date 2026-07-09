@@ -622,3 +622,11 @@ Pipeline stages locked to this order: Stage 1 scrape via Apify -> Stage 2 Supaba
 **Alternatives considered:** Moving pipeline ownership into `creative-os` (rejected — conflicts with the AIS-OS-as-master model and would split queue/state from business orchestration). Leaving it in `vulnaguard-capture-os` (rejected — outside Capture OS mission and already identified as redundancy).
 
 **Owner:** Sean. Immediate next step is Stage 1 -> Stage 2 implementation and data quality validation before adding model judgment layers.
+
+## 2026-07-09 — Content Intelligence Pipeline n8n canvas re-laid out (readability fix)
+
+**Decision:** Re-spaced every node in `references/n8n/workflows/content-intelligence-pipeline-v1.json` onto a clean left-to-right spine with dedicated branch lanes, and added 10 sticky notes (5 labeled stage bands + a title card + 2 top-lane path explainers + 2 switch callouts). Added a "Canvas layout" subsection to `references/content-intelligence-pipeline.md` and a rendered preview SVG (`...-v1-layout.svg`). Purely a layout/documentation change — no nodes, connections, credentials, or logic touched.
+
+**Why:** The imported JSON had two node chains (YouTube resolution and Stage 3/4/5) sharing the same coordinates at `y=300`, so nodes rendered stacked on top of each other in the center — unusable for a screenshot. Sean wanted it spaced out and annotated so a screenshot is self-explanatory.
+
+**Owner:** Sean (technical/dev only — not mirrored to the vault).

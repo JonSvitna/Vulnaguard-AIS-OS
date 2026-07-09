@@ -156,7 +156,8 @@ The matching database migration draft lives at `references/sql/content-intellige
    - Output: deduped creator list.
 
 4. YouTube metadata fetch
-   - Pull recent videos for each creator through YouTube Data API.
+   - Resolve each creator's channel from `profile_url` (channel ID or @handle parsed directly, no API call), then pull recent uploads via `channels.list` -> `playlistItems.list` -> `videos.list` (~1 unit/call each). Falls back to `search.list` (100 units) only when the URL shape can't be parsed into a handle or ID.
+   - This keeps weekly quota cost near-zero regardless of the reference creator count, instead of the ~100 units/creator/week a name-based `search.list` call would cost.
    - Output fields: title, description, publish time, duration, stats, thumbnail, channel metadata.
 
 5. Normalizer

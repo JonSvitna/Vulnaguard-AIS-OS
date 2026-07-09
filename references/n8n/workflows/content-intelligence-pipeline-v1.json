@@ -16,7 +16,10 @@
       "name": "Cron Trigger",
       "type": "n8n-nodes-base.cron",
       "typeVersion": 1,
-      "position": [240, 300]
+      "position": [
+        240,
+        300
+      ]
     },
     {
       "parameters": {
@@ -26,7 +29,10 @@
       "name": "Build Search Queries",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [480, 300]
+      "position": [
+        480,
+        300
+      ]
     },
     {
       "parameters": {
@@ -40,7 +46,10 @@
       "name": "Tavily Search",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
-      "position": [720, 300]
+      "position": [
+        720,
+        300
+      ]
     },
     {
       "parameters": {
@@ -50,53 +59,36 @@
       "name": "Filter Creators",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [960, 300]
+      "position": [
+        960,
+        300
+      ]
     },
     {
       "parameters": {
-        "url": "https://www.googleapis.com/youtube/v3/search",
-        "method": "GET",
-        "sendQuery": true,
-        "queryParametersUi": {
-          "parameter": [
-            {
-              "name": "part",
-              "value": "snippet"
-            },
-            {
-              "name": "type",
-              "value": "video"
-            },
-            {
-              "name": "maxResults",
-              "value": "10"
-            },
-            {
-              "name": "q",
-              "value": "={{$json.creator_name}}"
-            },
-            {
-              "name": "key",
-              "value": "={{$env.YOUTUBE_API_KEY}}"
-            }
-          ]
-        }
+        "jsCode": "const items = $input.all();\nconst apiKey = $env.YOUTUBE_API_KEY;\nconst results = [];\n\nfor (const item of items) {\n  const url = String(item.json.profile_url || '');\n  let channelId = null;\n  let handle = null;\n\n  const idMatch = url.match(/\\/channel\\/(UC[\\w-]{10,})/i);\n  if (idMatch) channelId = idMatch[1];\n\n  if (!channelId) {\n    const handleMatch = url.match(/\\/@([\\w.\\-]+)/);\n    if (handleMatch) handle = handleMatch[1];\n  }\n\n  if (!channelId && !handle) {\n    const legacyMatch = url.match(/\\/(?:c|user)\\/([\\w.\\-]+)/i);\n    if (legacyMatch) handle = legacyMatch[1];\n  }\n\n  let channelResponse;\n  try {\n    if (channelId) {\n      channelResponse = await this.helpers.httpRequest({\n        method: 'GET',\n        url: 'https://www.googleapis.com/youtube/v3/channels',\n        qs: { part: 'contentDetails,snippet', id: channelId, key: apiKey },\n        json: true\n      });\n    } else if (handle) {\n      channelResponse = await this.helpers.httpRequest({\n        method: 'GET',\n        url: 'https://www.googleapis.com/youtube/v3/channels',\n        qs: { part: 'contentDetails,snippet', forHandle: handle, key: apiKey },\n        json: true\n      });\n    } else {\n      // Rare fallback for URL shapes we can't parse a handle/id out of -\n      // this is the only branch that still pays the 100-unit search.list cost.\n      const searchResponse = await this.helpers.httpRequest({\n        method: 'GET',\n        url: 'https://www.googleapis.com/youtube/v3/search',\n        qs: { part: 'snippet', type: 'channel', maxResults: 1, q: item.json.creator_name, key: apiKey },\n        json: true\n      });\n      channelId = searchResponse.items?.[0]?.snippet?.channelId || searchResponse.items?.[0]?.id?.channelId || null;\n      if (channelId) {\n        channelResponse = await this.helpers.httpRequest({\n          method: 'GET',\n          url: 'https://www.googleapis.com/youtube/v3/channels',\n          qs: { part: 'contentDetails,snippet', id: channelId, key: apiKey },\n          json: true\n        });\n      }\n    }\n  } catch (error) {\n    results.push({ json: { ...item.json, items: [], resolution_error: String(error) } });\n    continue;\n  }\n\n  const channel = channelResponse?.items?.[0];\n  const uploadsPlaylistId = channel?.contentDetails?.relatedPlaylists?.uploads;\n  const resolvedChannelId = channel?.id || channelId;\n\n  if (!uploadsPlaylistId) {\n    results.push({ json: { ...item.json, items: [], resolved_channel_id: resolvedChannelId, resolution_error: 'no_uploads_playlist' } });\n    continue;\n  }\n\n  let videoIds = [];\n  try {\n    const playlistResponse = await this.helpers.httpRequest({\n      method: 'GET',\n      url: 'https://www.googleapis.com/youtube/v3/playlistItems',\n      qs: { part: 'contentDetails', playlistId: uploadsPlaylistId, maxResults: 10, key: apiKey },\n      json: true\n    });\n    videoIds = (playlistResponse.items || []).map((p) => p.contentDetails?.videoId).filter(Boolean);\n  } catch (error) {\n    results.push({ json: { ...item.json, items: [], resolved_channel_id: resolvedChannelId, resolution_error: String(error) } });\n    continue;\n  }\n\n  let videos = [];\n  if (videoIds.length) {\n    try {\n      const videosResponse = await this.helpers.httpRequest({\n        method: 'GET',\n        url: 'https://www.googleapis.com/youtube/v3/videos',\n        qs: { part: 'snippet,statistics,contentDetails', id: videoIds.join(','), key: apiKey },\n        json: true\n      });\n      videos = videosResponse.items || [];\n    } catch (error) {\n      results.push({ json: { ...item.json, items: [], resolved_channel_id: resolvedChannelId, resolution_error: String(error) } });\n      continue;\n    }\n  }\n\n  results.push({\n    json: {\n      ...item.json,\n      resolved_channel_id: resolvedChannelId,\n      uploads_playlist_id: uploadsPlaylistId,\n      items: videos\n    }\n  });\n}\n\nreturn results;"
       },
-      "id": "youtube-search",
-      "name": "YouTube Search",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4,
-      "position": [1200, 300]
+      "id": "youtube-metadata-fetch",
+      "name": "YouTube Metadata Fetch",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        300
+      ]
     },
     {
       "parameters": {
-        "jsCode": "const toHex = (value) => (value >>> 0).toString(16).padStart(8, '0');\nconst makeDeterministicUuid = (input) => {\n  const text = String(input || 'unknown').toLowerCase().trim();\n  let h1 = 2166136261;\n  let h2 = 2166136261;\n  let h3 = 2166136261;\n  let h4 = 2166136261;\n\n  for (let i = 0; i < text.length; i++) {\n    const c = text.charCodeAt(i);\n    h1 = Math.imul(h1 ^ c, 16777619) >>> 0;\n    h2 = Math.imul(h2 ^ (c + 31), 16777619) >>> 0;\n    h3 = Math.imul(h3 ^ (c + 131), 16777619) >>> 0;\n    h4 = Math.imul(h4 ^ (c + 521), 16777619) >>> 0;\n  }\n\n  const hex = `${toHex(h1)}${toHex(h2)}${toHex(h3)}${toHex(h4)}`.slice(0, 32);\n  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20, 32)}`;\n};\n\nconst creators = $input.all();\nreturn creators.flatMap((item) => {\n  const videos = item.json.items || [];\n  return videos.map((video) => {\n    const viewCount = Number(video.statistics?.viewCount || 0);\n    const likeCount = Number(video.statistics?.likeCount || 0);\n    const commentCount = Number(video.statistics?.commentCount || 0);\n    const engagementRate = viewCount > 0 ? Number(((likeCount + commentCount) / viewCount).toFixed(4)) : 0;\n    const creatorName = item.json.creator_name || video.snippet?.channelTitle || String(video.snippet?.channelId || 'unknown_creator');\n\n    return {\n      json: {\n        creator_id: item.json.creator_id || makeDeterministicUuid(creatorName),\n        creator_name: creatorName,\n        profile_url: item.json.profile_url,\n        platform_video_id: video.id?.videoId || video.id,\n        title: video.snippet?.title || '',\n        description: video.snippet?.description || '',\n        published_at: video.snippet?.publishedAt || null,\n        duration_seconds: Number(video.contentDetails?.durationSeconds || 0) || null,\n        view_count: viewCount,\n        like_count: likeCount,\n        comment_count: commentCount,\n        engagement_rate: engagementRate,\n        thumbnail_url: video.snippet?.thumbnails?.high?.url || video.snippet?.thumbnails?.default?.url || null,\n        raw_payload: video,\n        hashtags: [],\n        format_tags: []\n      }\n    };\n  });\n});"
+        "jsCode": "const parseIsoDuration = (iso) => {\n  const match = /^PT(?:(\\d+)H)?(?:(\\d+)M)?(?:(\\d+)S)?$/.exec(iso || '');\n  if (!match) return null;\n  const [, h, m, s] = match;\n  return (Number(h || 0) * 3600) + (Number(m || 0) * 60) + Number(s || 0);\n};\n\nconst toHex = (value) => (value >>> 0).toString(16).padStart(8, '0');\nconst makeDeterministicUuid = (input) => {\n  const text = String(input || 'unknown').toLowerCase().trim();\n  let h1 = 2166136261;\n  let h2 = 2166136261;\n  let h3 = 2166136261;\n  let h4 = 2166136261;\n\n  for (let i = 0; i < text.length; i++) {\n    const c = text.charCodeAt(i);\n    h1 = Math.imul(h1 ^ c, 16777619) >>> 0;\n    h2 = Math.imul(h2 ^ (c + 31), 16777619) >>> 0;\n    h3 = Math.imul(h3 ^ (c + 131), 16777619) >>> 0;\n    h4 = Math.imul(h4 ^ (c + 521), 16777619) >>> 0;\n  }\n\n  const hex = `${toHex(h1)}${toHex(h2)}${toHex(h3)}${toHex(h4)}`.slice(0, 32);\n  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20, 32)}`;\n};\n\nconst creators = $input.all();\nreturn creators.flatMap((item) => {\n  const videos = item.json.items || [];\n  return videos.map((video) => {\n    const viewCount = Number(video.statistics?.viewCount || 0);\n    const likeCount = Number(video.statistics?.likeCount || 0);\n    const commentCount = Number(video.statistics?.commentCount || 0);\n    const engagementRate = viewCount > 0 ? Number(((likeCount + commentCount) / viewCount).toFixed(4)) : 0;\n    const creatorName = item.json.creator_name || video.snippet?.channelTitle || String(video.snippet?.channelId || 'unknown_creator');\n\n    return {\n      json: {\n        creator_id: item.json.creator_id || makeDeterministicUuid(creatorName),\n        creator_name: creatorName,\n        profile_url: item.json.profile_url,\n        platform_video_id: video.id?.videoId || video.id,\n        title: video.snippet?.title || '',\n        description: video.snippet?.description || '',\n        published_at: video.snippet?.publishedAt || null,\n        duration_seconds: parseIsoDuration(video.contentDetails?.duration),\n        view_count: viewCount,\n        like_count: likeCount,\n        comment_count: commentCount,\n        engagement_rate: engagementRate,\n        thumbnail_url: video.snippet?.thumbnails?.high?.url || video.snippet?.thumbnails?.default?.url || null,\n        raw_payload: video,\n        hashtags: [],\n        format_tags: []\n      }\n    };\n  });\n});"
       },
       "id": "normalize-records",
       "name": "Normalize Records",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1440, 300]
+      "position": [
+        1440,
+        300
+      ]
     },
     {
       "parameters": {
@@ -106,7 +98,10 @@
       "name": "Stage 3 Contract Builder",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1680, 300]
+      "position": [
+        1680,
+        300
+      ]
     },
     {
       "parameters": {
@@ -130,7 +125,10 @@
       "name": "Stage 3 Provider Switch",
       "type": "n8n-nodes-base.switch",
       "typeVersion": 2,
-      "position": [1920, 300]
+      "position": [
+        1920,
+        300
+      ]
     },
     {
       "parameters": {
@@ -161,7 +159,10 @@
       "name": "Claude Stage 3 Analysis",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
-      "position": [2160, 220]
+      "position": [
+        2160,
+        220
+      ]
     },
     {
       "parameters": {
@@ -188,7 +189,10 @@
       "name": "OpenAI Stage 3 Analysis",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
-      "position": [2160, 380]
+      "position": [
+        2160,
+        380
+      ]
     },
     {
       "parameters": {
@@ -198,7 +202,10 @@
       "name": "Stage 3 Result Parser",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [2400, 300]
+      "position": [
+        2400,
+        300
+      ]
     },
     {
       "parameters": {
@@ -208,7 +215,10 @@
       "name": "Stage 3 Deferred (No Model Access)",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [2160, 540]
+      "position": [
+        2160,
+        540
+      ]
     },
     {
       "parameters": {
@@ -221,7 +231,10 @@
       "name": "Supabase Upsert Creators",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2,
-      "position": [1680, 220]
+      "position": [
+        1680,
+        220
+      ]
     },
     {
       "parameters": {
@@ -234,7 +247,10 @@
       "name": "Supabase Upsert Videos",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2,
-      "position": [2640, 380]
+      "position": [
+        2640,
+        380
+      ]
     },
     {
       "parameters": {
@@ -244,7 +260,10 @@
       "name": "Stage 4 Playbook Mapper",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [2880, 500]
+      "position": [
+        2880,
+        500
+      ]
     },
     {
       "parameters": {
@@ -264,7 +283,10 @@
       "name": "Stage 4 Eligibility Switch",
       "type": "n8n-nodes-base.switch",
       "typeVersion": 2,
-      "position": [3120, 500]
+      "position": [
+        3120,
+        500
+      ]
     },
     {
       "parameters": {
@@ -295,7 +317,10 @@
       "name": "Stage 4 Notion Upsert",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
-      "position": [3360, 420]
+      "position": [
+        3360,
+        420
+      ]
     },
     {
       "parameters": {
@@ -305,7 +330,10 @@
       "name": "Stage 4 Skip Notion",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [3360, 580]
+      "position": [
+        3360,
+        580
+      ]
     },
     {
       "parameters": {
@@ -315,7 +343,10 @@
       "name": "Stage 4 Parse Notion Result",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [3600, 420]
+      "position": [
+        3600,
+        420
+      ]
     },
     {
       "parameters": {
@@ -328,7 +359,10 @@
       "name": "Stage 4 Persist Playbook Status",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2,
-      "position": [3840, 500]
+      "position": [
+        3840,
+        500
+      ]
     },
     {
       "parameters": {
@@ -338,7 +372,10 @@
       "name": "Stage 5 Feedback Scaffold",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [4080, 500]
+      "position": [
+        4080,
+        500
+      ]
     },
     {
       "parameters": {
@@ -351,7 +388,10 @@
       "name": "Stage 5 Persist Feedback Status",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2,
-      "position": [4320, 500]
+      "position": [
+        4320,
+        500
+      ]
     },
     {
       "parameters": {
@@ -361,7 +401,10 @@
       "name": "Merge Upserts",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 2,
-      "position": [2880, 300]
+      "position": [
+        2880,
+        300
+      ]
     },
     {
       "parameters": {
@@ -371,7 +414,10 @@
       "name": "Mark Batch Complete",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [3120, 300]
+      "position": [
+        3120,
+        300
+      ]
     }
   ],
   "connections": {
@@ -417,18 +463,7 @@
             "index": 0
           },
           {
-            "node": "YouTube Search",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "YouTube Search": {
-      "main": [
-        [
-          {
-            "node": "Normalize Records",
+            "node": "YouTube Metadata Fetch",
             "type": "main",
             "index": 0
           }
@@ -647,6 +682,17 @@
           }
         ]
       ]
+    },
+    "YouTube Metadata Fetch": {
+      "main": [
+        [
+          {
+            "node": "Normalize Records",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "pinData": {},
@@ -654,7 +700,11 @@
     "executionOrder": "v1"
   },
   "staticData": null,
-  "tags": ["content", "intelligence", "seanbuilds"],
+  "tags": [
+    "content",
+    "intelligence",
+    "seanbuilds"
+  ],
   "triggerCount": 0,
   "versionId": "v1",
   "active": false

@@ -28,7 +28,7 @@
     },
     {
       "parameters": {
-        "jsCode": "return [{ json: { searchQueries: [\"AI automation creators\", \"YouTube automation tutorial creators\", \"Instagram AI workflow creators\"], referenceCreators: [\"Nate Zerk\"] } }];"
+        "jsCode": "const queries = [\"AI automation creators\", \"YouTube automation tutorial creators\", \"Instagram AI workflow creators\"];\nconst referenceCreators = [\"Nate Zerk\"];\nreturn queries.map((query) => ({ json: { query, referenceCreators } }));"
       },
       "id": "build-queries",
       "name": "Build Search Queries",
@@ -45,7 +45,7 @@
         "method": "POST",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ { query: $json.searchQueries[0], search_depth: 'advanced', include_answer: false, max_results: 10 } }}",
+        "jsonBody": "={{ { query: $json.query, search_depth: 'advanced', include_answer: false, max_results: 10 } }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth"
       },
@@ -66,7 +66,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const toHex = (value) => (value >>> 0).toString(16).padStart(8, '0');\nconst makeDeterministicUuid = (input) => {\n  const text = String(input || 'unknown').toLowerCase().trim();\n  let h1 = 2166136261;\n  let h2 = 2166136261;\n  let h3 = 2166136261;\n  let h4 = 2166136261;\n\n  for (let i = 0; i < text.length; i++) {\n    const c = text.charCodeAt(i);\n    h1 = Math.imul(h1 ^ c, 16777619) >>> 0;\n    h2 = Math.imul(h2 ^ (c + 31), 16777619) >>> 0;\n    h3 = Math.imul(h3 ^ (c + 131), 16777619) >>> 0;\n    h4 = Math.imul(h4 ^ (c + 521), 16777619) >>> 0;\n  }\n\n  const hex = `${toHex(h1)}${toHex(h2)}${toHex(h3)}${toHex(h4)}`.slice(0, 32);\n  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20, 32)}`;\n};\n\nconst results = $input.first().json.results || [];\nreturn results.map((result) => {\n  const creatorName = result.title || result.name || result.url;\n  return {\n    json: {\n      creator_id: makeDeterministicUuid(creatorName),\n      creator_name: creatorName,\n      profile_url: result.url,\n      source_query: 'AI automation creators',\n      source_snippet: result.content || result.snippet || '',\n      relevance_score: result.score || 0,\n      platform: 'youtube'\n    }\n  };\n});"
+        "jsCode": "const toHex = (value) => (value >>> 0).toString(16).padStart(8, '0');\nconst makeDeterministicUuid = (input) => {\n  const text = String(input || 'unknown').toLowerCase().trim();\n  let h1 = 2166136261;\n  let h2 = 2166136261;\n  let h3 = 2166136261;\n  let h4 = 2166136261;\n\n  for (let i = 0; i < text.length; i++) {\n    const c = text.charCodeAt(i);\n    h1 = Math.imul(h1 ^ c, 16777619) >>> 0;\n    h2 = Math.imul(h2 ^ (c + 31), 16777619) >>> 0;\n    h3 = Math.imul(h3 ^ (c + 131), 16777619) >>> 0;\n    h4 = Math.imul(h4 ^ (c + 521), 16777619) >>> 0;\n  }\n\n  const hex = `${toHex(h1)}${toHex(h2)}${toHex(h3)}${toHex(h4)}`.slice(0, 32);\n  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20, 32)}`;\n};\n\nconst tavilyItems = $input.all();\nconst queryItems = $('Build Search Queries').all();\nconst out = [];\n\ntavilyItems.forEach((item, idx) => {\n  const sourceQuery = (queryItems[idx] && queryItems[idx].json.query) || 'unknown';\n  const results = item.json.results || [];\n  results.forEach((result) => {\n    const creatorName = result.title || result.name || result.url;\n    out.push({\n      json: {\n        creator_id: makeDeterministicUuid(creatorName),\n        creator_name: creatorName,\n        profile_url: result.url,\n        source_query: sourceQuery,\n        source_snippet: result.content || result.snippet || '',\n        relevance_score: result.score || 0,\n        platform: 'youtube'\n      }\n    });\n  });\n});\n\nreturn out;"
       },
       "id": "filter-creators",
       "name": "Filter Creators",

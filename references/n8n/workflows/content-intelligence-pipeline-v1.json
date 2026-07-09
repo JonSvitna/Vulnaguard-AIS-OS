@@ -677,7 +677,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ { parent: { database_id: 'REPLACE_WITH_NOTION_DB_ID' }, properties: { 'Topic type': { select: { name: $json.playbook_payload.topic_type } }, 'Recommended format': { select: { name: $json.playbook_payload.recommended_format } }, 'Reasoning': { rich_text: [ { text: { content: $json.playbook_payload.reasoning || 'No reasoning provided' } } ] }, 'Example reference': { title: [ { text: { content: ($json.playbook_payload.example_reference || 'Untitled example').slice(0, 1800) } } ] }, 'Creator': { rich_text: [ { text: { content: $json.playbook_payload.creator_name || 'unknown' } } ] }, 'Source URL': { url: $json.playbook_payload.source_url || null } } } }}",
+        "jsonBody": "={{ { parent: { database_id: '398b59d3-b3b5-8010-bf18-efb9eb9c6767' }, properties: { 'Topic type': { select: { name: $json.playbook_payload.topic_type } }, 'Recommended format': { select: { name: $json.playbook_payload.recommended_format } }, 'Reasoning': { rich_text: [ { text: { content: $json.playbook_payload.reasoning || 'No reasoning provided' } } ] }, 'Example reference': { title: [ { text: { content: ($json.playbook_payload.example_reference || 'Untitled example').slice(0, 1800) } } ] }, 'Creator': { rich_text: [ { text: { content: $json.playbook_payload.creator_name || 'unknown' } } ] }, 'Source URL': { url: $json.playbook_payload.source_url || null } } } }}",
         "specifyHeaders": "keypair",
         "headerParameters": {
           "parameters": [

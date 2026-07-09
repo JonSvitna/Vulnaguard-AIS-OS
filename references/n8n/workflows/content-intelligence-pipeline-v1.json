@@ -3,19 +3,24 @@
   "nodes": [
     {
       "parameters": {
-        "triggerTimes": [
-          {
-            "mode": "everyWeek",
-            "weekday": "monday",
-            "hour": 9,
-            "minute": 0
-          }
-        ]
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "weeksInterval": 1,
+              "triggerAtDay": [
+                1
+              ],
+              "triggerAtHour": 9,
+              "triggerAtMinute": 0
+            }
+          ]
+        }
       },
       "id": "cron-trigger",
-      "name": "Cron Trigger",
-      "type": "n8n-nodes-base.cron",
-      "typeVersion": 1,
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
       "position": [
         240,
         300
@@ -40,7 +45,9 @@
         "method": "POST",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"api_key\": $env.TAVILY_API_KEY,\n  \"query\": $json.searchQueries[0],\n  \"search_depth\": \"advanced\",\n  \"include_answer\": false,\n  \"max_results\": 10\n}"
+        "jsonBody": "={{ { query: $json.searchQueries[0], search_depth: 'advanced', include_answer: false, max_results: 10 } }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth"
       },
       "id": "tavily-search",
       "name": "Tavily Search",
@@ -49,7 +56,13 @@
       "position": [
         720,
         300
-      ]
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "ygXYRPLTtMFB4Qfy",
+          "name": "Tavily Bearer"
+        }
+      }
     },
     {
       "parameters": {
@@ -65,17 +78,227 @@
       ]
     },
     {
-      "parameters": {
-        "jsCode": "const items = $input.all();\nconst apiKey = $env.YOUTUBE_API_KEY;\nconst results = [];\n\nfor (const item of items) {\n  const url = String(item.json.profile_url || '');\n  let channelId = null;\n  let handle = null;\n\n  const idMatch = url.match(/\\/channel\\/(UC[\\w-]{10,})/i);\n  if (idMatch) channelId = idMatch[1];\n\n  if (!channelId) {\n    const handleMatch = url.match(/\\/@([\\w.\\-]+)/);\n    if (handleMatch) handle = handleMatch[1];\n  }\n\n  if (!channelId && !handle) {\n    const legacyMatch = url.match(/\\/(?:c|user)\\/([\\w.\\-]+)/i);\n    if (legacyMatch) handle = legacyMatch[1];\n  }\n\n  let channelResponse;\n  try {\n    if (channelId) {\n      channelResponse = await this.helpers.httpRequest({\n        method: 'GET',\n        url: 'https://www.googleapis.com/youtube/v3/channels',\n        qs: { part: 'contentDetails,snippet', id: channelId, key: apiKey },\n        json: true\n      });\n    } else if (handle) {\n      channelResponse = await this.helpers.httpRequest({\n        method: 'GET',\n        url: 'https://www.googleapis.com/youtube/v3/channels',\n        qs: { part: 'contentDetails,snippet', forHandle: handle, key: apiKey },\n        json: true\n      });\n    } else {\n      // Rare fallback for URL shapes we can't parse a handle/id out of -\n      // this is the only branch that still pays the 100-unit search.list cost.\n      const searchResponse = await this.helpers.httpRequest({\n        method: 'GET',\n        url: 'https://www.googleapis.com/youtube/v3/search',\n        qs: { part: 'snippet', type: 'channel', maxResults: 1, q: item.json.creator_name, key: apiKey },\n        json: true\n      });\n      channelId = searchResponse.items?.[0]?.snippet?.channelId || searchResponse.items?.[0]?.id?.channelId || null;\n      if (channelId) {\n        channelResponse = await this.helpers.httpRequest({\n          method: 'GET',\n          url: 'https://www.googleapis.com/youtube/v3/channels',\n          qs: { part: 'contentDetails,snippet', id: channelId, key: apiKey },\n          json: true\n        });\n      }\n    }\n  } catch (error) {\n    results.push({ json: { ...item.json, items: [], resolution_error: String(error) } });\n    continue;\n  }\n\n  const channel = channelResponse?.items?.[0];\n  const uploadsPlaylistId = channel?.contentDetails?.relatedPlaylists?.uploads;\n  const resolvedChannelId = channel?.id || channelId;\n\n  if (!uploadsPlaylistId) {\n    results.push({ json: { ...item.json, items: [], resolved_channel_id: resolvedChannelId, resolution_error: 'no_uploads_playlist' } });\n    continue;\n  }\n\n  let videoIds = [];\n  try {\n    const playlistResponse = await this.helpers.httpRequest({\n      method: 'GET',\n      url: 'https://www.googleapis.com/youtube/v3/playlistItems',\n      qs: { part: 'contentDetails', playlistId: uploadsPlaylistId, maxResults: 10, key: apiKey },\n      json: true\n    });\n    videoIds = (playlistResponse.items || []).map((p) => p.contentDetails?.videoId).filter(Boolean);\n  } catch (error) {\n    results.push({ json: { ...item.json, items: [], resolved_channel_id: resolvedChannelId, resolution_error: String(error) } });\n    continue;\n  }\n\n  let videos = [];\n  if (videoIds.length) {\n    try {\n      const videosResponse = await this.helpers.httpRequest({\n        method: 'GET',\n        url: 'https://www.googleapis.com/youtube/v3/videos',\n        qs: { part: 'snippet,statistics,contentDetails', id: videoIds.join(','), key: apiKey },\n        json: true\n      });\n      videos = videosResponse.items || [];\n    } catch (error) {\n      results.push({ json: { ...item.json, items: [], resolved_channel_id: resolvedChannelId, resolution_error: String(error) } });\n      continue;\n    }\n  }\n\n  results.push({\n    json: {\n      ...item.json,\n      resolved_channel_id: resolvedChannelId,\n      uploads_playlist_id: uploadsPlaylistId,\n      items: videos\n    }\n  });\n}\n\nreturn results;"
-      },
-      "id": "youtube-metadata-fetch",
-      "name": "YouTube Metadata Fetch",
+      "id": "yt-parse-creator",
+      "name": "YT Parse Creator URL",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
         1200,
         300
-      ]
+      ],
+      "parameters": {
+        "jsCode": "const items = $input.all();\nreturn items.map((item) => {\n  const url = String(item.json.profile_url || '');\n  let channelId = null;\n  let handle = null;\n  const idMatch = url.match(/\\/channel\\/(UC[\\w-]{10,})/i);\n  if (idMatch) channelId = idMatch[1];\n  if (!channelId) {\n    const handleMatch = url.match(/\\/@([\\w.\\-]+)/);\n    if (handleMatch) handle = handleMatch[1];\n  }\n  if (!channelId && !handle) {\n    const legacyMatch = url.match(/\\/(?:c|user)\\/([\\w.\\-]+)/i);\n    if (legacyMatch) handle = legacyMatch[1];\n  }\n  return { json: { ...item.json, channelId, handle, resolvable: Boolean(channelId || handle) } };\n});"
+      }
+    },
+    {
+      "id": "yt-resolvable-filter",
+      "name": "YT Resolvable Filter",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [
+        1400,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "resolvable-cond",
+              "leftValue": "={{$json.resolvable}}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "yt-get-channel",
+      "name": "YT Get Channel",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1600,
+        300
+      ],
+      "onError": "continueRegularOutput",
+      "parameters": {
+        "url": "https://www.googleapis.com/youtube/v3/channels",
+        "method": "GET",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpQueryAuth",
+        "sendQuery": true,
+        "specifyQuery": "json",
+        "jsonQuery": "={{ $json.channelId ? { part: 'contentDetails,snippet', id: $json.channelId } : { part: 'contentDetails,snippet', forHandle: $json.handle } }}"
+      },
+      "credentials": {
+        "httpQueryAuth": {
+          "id": "uZWEo4tXK9hee6mr",
+          "name": "YouTube Data API Key"
+        }
+      }
+    },
+    {
+      "id": "yt-extract-playlist",
+      "name": "YT Extract Playlist Id",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1800,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst sources = $('YT Resolvable Filter').all();\nreturn items.map((item, i) => {\n  const source = sources[i]?.json || {};\n  const channel = item.json?.items?.[0];\n  const uploadsPlaylistId = channel?.contentDetails?.relatedPlaylists?.uploads || null;\n  return { json: { ...source, resolved_channel_id: channel?.id || source.channelId || null, uploads_playlist_id: uploadsPlaylistId } };\n});"
+      }
+    },
+    {
+      "id": "yt-playlist-filter",
+      "name": "YT Has Playlist Filter",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [
+        2000,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "playlist-cond",
+              "leftValue": "={{$json.uploads_playlist_id}}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "yt-get-playlist-items",
+      "name": "YT Get Playlist Items",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        2200,
+        300
+      ],
+      "onError": "continueRegularOutput",
+      "parameters": {
+        "url": "https://www.googleapis.com/youtube/v3/playlistItems",
+        "method": "GET",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpQueryAuth",
+        "sendQuery": true,
+        "specifyQuery": "json",
+        "jsonQuery": "={{ { part: 'contentDetails', playlistId: $json.uploads_playlist_id, maxResults: 10 } }}"
+      },
+      "credentials": {
+        "httpQueryAuth": {
+          "id": "uZWEo4tXK9hee6mr",
+          "name": "YouTube Data API Key"
+        }
+      }
+    },
+    {
+      "id": "yt-extract-video-ids",
+      "name": "YT Extract Video Ids",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2400,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst sources = $('YT Has Playlist Filter').all();\nreturn items.map((item, i) => {\n  const source = sources[i]?.json || {};\n  const videoIds = (item.json?.items || []).map((p) => p.contentDetails?.videoId).filter(Boolean);\n  return { json: { ...source, video_ids: videoIds.join(',') } };\n});"
+      }
+    },
+    {
+      "id": "yt-videoids-filter",
+      "name": "YT Has VideoIds Filter",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [
+        2600,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "videoids-cond",
+              "leftValue": "={{$json.video_ids}}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "yt-get-videos",
+      "name": "YT Get Videos",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        2800,
+        300
+      ],
+      "onError": "continueRegularOutput",
+      "parameters": {
+        "url": "https://www.googleapis.com/youtube/v3/videos",
+        "method": "GET",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpQueryAuth",
+        "sendQuery": true,
+        "specifyQuery": "json",
+        "jsonQuery": "={{ { part: 'snippet,statistics,contentDetails', id: $json.video_ids } }}"
+      },
+      "credentials": {
+        "httpQueryAuth": {
+          "id": "uZWEo4tXK9hee6mr",
+          "name": "YouTube Data API Key"
+        }
+      }
+    },
+    {
+      "id": "youtube-metadata-fetch",
+      "name": "YouTube Metadata Fetch",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3000,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst sources = $('YT Has VideoIds Filter').all();\nreturn items.map((item, i) => {\n  const source = sources[i]?.json || {};\n  return { json: { ...source, items: item.json?.items || [] } };\n});"
+      }
     },
     {
       "parameters": {
@@ -92,7 +315,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const records = $input.all();\nconst batchId = $env.STAGE3_BATCH_ID || `batch-${new Date().toISOString().replace(/[:.]/g, '-')}`;\nreturn records.map((item) => ({\n  json: {\n    ...item.json,\n    batch_id: batchId,\n    analysis_version: 'stage3-v1',\n    analysis_status: 'pending',\n    analysis_payload: {\n      analysis_version: 'stage3-v1',\n      batch_id: batchId,\n      creator_name: item.json.creator_name,\n      platform: 'youtube',\n      platform_video_id: item.json.platform_video_id,\n      title: item.json.title,\n      description: item.json.description,\n      published_at: item.json.published_at,\n      duration_seconds: item.json.duration_seconds,\n      view_count: item.json.view_count,\n      like_count: item.json.like_count,\n      comment_count: item.json.comment_count,\n      hashtags: item.json.hashtags || [],\n      engagement_rate: item.json.engagement_rate,\n      format_tags: item.json.format_tags || []\n    },\n    topic_category: null,\n    primary_format: null,\n    engagement_tier: null,\n    analysis_confidence: null,\n    pattern_summary: {}\n  }\n}));"
+        "jsCode": "const records = $input.all();\nconst batchId = `batch-${new Date().toISOString().replace(/[:.]/g, '-')}`;\nreturn records.map((item) => ({\n  json: {\n    ...item.json,\n    batch_id: batchId,\n    analysis_version: 'stage3-v1',\n    analysis_status: 'pending',\n    analysis_payload: {\n      analysis_version: 'stage3-v1',\n      batch_id: batchId,\n      creator_name: item.json.creator_name,\n      platform: 'youtube',\n      platform_video_id: item.json.platform_video_id,\n      title: item.json.title,\n      description: item.json.description,\n      published_at: item.json.published_at,\n      duration_seconds: item.json.duration_seconds,\n      view_count: item.json.view_count,\n      like_count: item.json.like_count,\n      comment_count: item.json.comment_count,\n      hashtags: item.json.hashtags || [],\n      engagement_rate: item.json.engagement_rate,\n      format_tags: item.json.format_tags || []\n    },\n    topic_category: null,\n    primary_format: null,\n    engagement_tier: null,\n    analysis_confidence: null,\n    pattern_summary: {}\n  }\n}));"
       },
       "id": "stage-3-contract-builder",
       "name": "Stage 3 Contract Builder",
@@ -105,26 +328,33 @@
     },
     {
       "parameters": {
-        "value1": "={{$env.STAGE3_MODEL_PROVIDER || 'claude'}}",
-        "rules": [
-          {
-            "operation": "equal",
-            "value2": "claude"
-          },
-          {
-            "operation": "equal",
-            "value2": "openai"
-          },
-          {
-            "operation": "equal",
-            "value2": "deferred"
-          }
-        ]
+        "mode": "rules",
+        "dataType": "string",
+        "value1": "={{'claude'}}",
+        "rules": {
+          "rules": [
+            {
+              "operation": "equal",
+              "value2": "claude",
+              "output": 0
+            },
+            {
+              "operation": "equal",
+              "value2": "openai",
+              "output": 1
+            },
+            {
+              "operation": "equal",
+              "value2": "deferred",
+              "output": 2
+            }
+          ]
+        }
       },
       "id": "stage-3-provider-switch",
       "name": "Stage 3 Provider Switch",
       "type": "n8n-nodes-base.switch",
-      "typeVersion": 2,
+      "typeVersion": 1,
       "position": [
         1920,
         300
@@ -135,12 +365,12 @@
         "url": "https://api.anthropic.com/v1/messages",
         "method": "POST",
         "sendHeaders": true,
-        "headerParametersUi": {
-          "parameter": [
-            {
-              "name": "x-api-key",
-              "value": "={{$env.ANTHROPIC_API_KEY}}"
-            },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { model: 'claude-sonnet-4-6', max_tokens: 1200, system: 'Return valid JSON only. Follow references/content-intelligence-stage3-contract.md exactly.', messages: [ { role: 'user', content: [ { type: 'text', text: JSON.stringify($json.analysis_payload) } ] } ] } }}",
+        "specifyHeaders": "keypair",
+        "headerParameters": {
+          "parameters": [
             {
               "name": "anthropic-version",
               "value": "2023-06-01"
@@ -151,9 +381,8 @@
             }
           ]
         },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={\n  \"model\": $env.CLAUDE_MODEL || \"claude-sonnet-4-6\",\n  \"max_tokens\": 1200,\n  \"system\": \"Return valid JSON only. Follow references/content-intelligence-stage3-contract.md exactly.\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": [\n        { \"type\": \"text\", \"text\": JSON.stringify($json.analysis_payload) }\n      ]\n    }\n  ]\n}"
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth"
       },
       "id": "claude-stage-3-analysis",
       "name": "Claude Stage 3 Analysis",
@@ -162,28 +391,33 @@
       "position": [
         2160,
         220
-      ]
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "ND9GXL6ZDpxV4CD6",
+          "name": "Anthropic API Key"
+        }
+      }
     },
     {
       "parameters": {
         "url": "https://api.openai.com/v1/responses",
         "method": "POST",
         "sendHeaders": true,
-        "headerParametersUi": {
-          "parameter": [
-            {
-              "name": "Authorization",
-              "value": "={{'Bearer ' + $env.OPENAI_API_KEY}}"
-            },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { model: 'gpt-4o-mini', input: [ { role: 'system', content: 'Return valid JSON only. Follow references/content-intelligence-stage3-contract.md exactly.' }, { role: 'user', content: JSON.stringify($json.analysis_payload) } ] } }}",
+        "specifyHeaders": "keypair",
+        "headerParameters": {
+          "parameters": [
             {
               "name": "content-type",
               "value": "application/json"
             }
           ]
         },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={\n  \"model\": $env.OPENAI_MODEL || \"gpt-4o-mini\",\n  \"input\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"Return valid JSON only. Follow references/content-intelligence-stage3-contract.md exactly.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": JSON.stringify($json.analysis_payload)\n    }\n  ]\n}"
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth"
       },
       "id": "openai-stage-3-analysis",
       "name": "OpenAI Stage 3 Analysis",
@@ -192,7 +426,13 @@
       "position": [
         2160,
         380
-      ]
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "4Ex9OdoqwlPhuzcx",
+          "name": "OpenAI Bearer"
+        }
+      }
     },
     {
       "parameters": {
@@ -209,7 +449,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const source = $input.first().json || {};\nreturn [{\n  json: {\n    ...source,\n    analysis_status: 'deferred_session_limit',\n    analysis_payload: {\n      deferred_reason: 'model_access_unavailable',\n      deferred_at: new Date().toISOString(),\n      provider_requested: $env.STAGE3_MODEL_PROVIDER || 'deferred'\n    },\n    topic_category: source.topic_category || null,\n    primary_format: source.primary_format || null,\n    engagement_tier: source.engagement_tier || null,\n    analysis_confidence: source.analysis_confidence || null,\n    pattern_summary: source.pattern_summary || {}\n  }\n}];"
+        "jsCode": "const source = $input.first().json || {};\nreturn [{\n  json: {\n    ...source,\n    analysis_status: 'deferred_session_limit',\n    analysis_payload: {\n      deferred_reason: 'model_access_unavailable',\n      deferred_at: new Date().toISOString(),\n      provider_requested: 'deferred'\n    },\n    topic_category: source.topic_category || null,\n    primary_format: source.primary_format || null,\n    engagement_tier: source.engagement_tier || null,\n    analysis_confidence: source.analysis_confidence || null,\n    pattern_summary: source.pattern_summary || {}\n  }\n}];"
       },
       "id": "stage-3-deferred",
       "name": "Stage 3 Deferred (No Model Access)",
@@ -225,7 +465,33 @@
         "operation": "upsert",
         "schema": "public",
         "table": "content_intelligence_creators",
-        "columns": "id,creator_name,platform,profile_url,source_query"
+        "dataMode": "defineBelow",
+        "columnToMatchOn": "id",
+        "valueToMatchOn": "={{$json.creator_id}}",
+        "valuesToSend": {
+          "values": [
+            {
+              "column": "creator_name",
+              "value": "={{$json.creator_name}}"
+            },
+            {
+              "column": "platform",
+              "value": "={{$json.platform}}"
+            },
+            {
+              "column": "profile_url",
+              "value": "={{$json.profile_url}}"
+            },
+            {
+              "column": "source_query",
+              "value": "={{$json.source_query}}"
+            },
+            {
+              "column": "updated_at",
+              "value": "={{$now.toISO()}}"
+            }
+          ]
+        }
       },
       "id": "supabase-upsert-creators",
       "name": "Supabase Upsert Creators",
@@ -234,14 +500,118 @@
       "position": [
         1680,
         220
-      ]
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "ubXgrL18K5l7DRHz",
+          "name": "Supabase Content Intelligence"
+        }
+      }
     },
     {
       "parameters": {
         "operation": "upsert",
         "schema": "public",
         "table": "content_intelligence_videos",
-        "columns": "batch_id,creator_id,platform_video_id,title,description,published_at,duration_seconds,view_count,like_count,comment_count,thumbnail_url,hashtags,raw_payload,engagement_rate,format_tags,analysis_version,analysis_status,analysis_payload,topic_category,primary_format,engagement_tier,analysis_confidence,pattern_summary"
+        "dataMode": "defineBelow",
+        "columnToMatchOn": "platform_video_id",
+        "valueToMatchOn": "={{$json.platform_video_id}}",
+        "valuesToSend": {
+          "values": [
+            {
+              "column": "batch_id",
+              "value": "={{$json.batch_id}}"
+            },
+            {
+              "column": "creator_id",
+              "value": "={{$json.creator_id}}"
+            },
+            {
+              "column": "title",
+              "value": "={{$json.title}}"
+            },
+            {
+              "column": "description",
+              "value": "={{$json.description}}"
+            },
+            {
+              "column": "published_at",
+              "value": "={{$json.published_at}}"
+            },
+            {
+              "column": "duration_seconds",
+              "value": "={{$json.duration_seconds}}"
+            },
+            {
+              "column": "view_count",
+              "value": "={{$json.view_count}}"
+            },
+            {
+              "column": "like_count",
+              "value": "={{$json.like_count}}"
+            },
+            {
+              "column": "comment_count",
+              "value": "={{$json.comment_count}}"
+            },
+            {
+              "column": "thumbnail_url",
+              "value": "={{$json.thumbnail_url}}"
+            },
+            {
+              "column": "hashtags",
+              "value": "={{JSON.stringify($json.hashtags || [])}}"
+            },
+            {
+              "column": "raw_payload",
+              "value": "={{JSON.stringify($json.raw_payload || {})}}"
+            },
+            {
+              "column": "engagement_rate",
+              "value": "={{$json.engagement_rate}}"
+            },
+            {
+              "column": "format_tags",
+              "value": "={{JSON.stringify($json.format_tags || [])}}"
+            },
+            {
+              "column": "analysis_version",
+              "value": "={{$json.analysis_version}}"
+            },
+            {
+              "column": "analysis_status",
+              "value": "={{$json.analysis_status}}"
+            },
+            {
+              "column": "analysis_payload",
+              "value": "={{JSON.stringify($json.analysis_payload || {})}}"
+            },
+            {
+              "column": "topic_category",
+              "value": "={{$json.topic_category}}"
+            },
+            {
+              "column": "primary_format",
+              "value": "={{$json.primary_format}}"
+            },
+            {
+              "column": "engagement_tier",
+              "value": "={{$json.engagement_tier}}"
+            },
+            {
+              "column": "analysis_confidence",
+              "value": "={{$json.analysis_confidence}}"
+            },
+            {
+              "column": "pattern_summary",
+              "value": "={{JSON.stringify($json.pattern_summary || {})}}"
+            },
+            {
+              "column": "updated_at",
+              "value": "={{$now.toISO()}}"
+            }
+          ]
+        }
       },
       "id": "supabase-upsert-videos",
       "name": "Supabase Upsert Videos",
@@ -250,7 +620,13 @@
       "position": [
         2640,
         380
-      ]
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "ubXgrL18K5l7DRHz",
+          "name": "Supabase Content Intelligence"
+        }
+      }
     },
     {
       "parameters": {
@@ -267,22 +643,28 @@
     },
     {
       "parameters": {
+        "mode": "rules",
+        "dataType": "string",
         "value1": "={{$json.analysis_status}}",
-        "rules": [
-          {
-            "operation": "equal",
-            "value2": "analyzed"
-          },
-          {
-            "operation": "notEqual",
-            "value2": "analyzed"
-          }
-        ]
+        "rules": {
+          "rules": [
+            {
+              "operation": "equal",
+              "value2": "analyzed",
+              "output": 0
+            },
+            {
+              "operation": "notEqual",
+              "value2": "analyzed",
+              "output": 1
+            }
+          ]
+        }
       },
       "id": "stage-4-eligibility-switch",
       "name": "Stage 4 Eligibility Switch",
       "type": "n8n-nodes-base.switch",
-      "typeVersion": 2,
+      "typeVersion": 1,
       "position": [
         3120,
         500
@@ -293,12 +675,12 @@
         "url": "https://api.notion.com/v1/pages",
         "method": "POST",
         "sendHeaders": true,
-        "headerParametersUi": {
-          "parameter": [
-            {
-              "name": "Authorization",
-              "value": "={{'Bearer ' + $env.NOTION_API_KEY}}"
-            },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { parent: { database_id: 'REPLACE_WITH_NOTION_DB_ID' }, properties: { 'Topic type': { select: { name: $json.playbook_payload.topic_type } }, 'Recommended format': { select: { name: $json.playbook_payload.recommended_format } }, 'Reasoning': { rich_text: [ { text: { content: $json.playbook_payload.reasoning || 'No reasoning provided' } } ] }, 'Example reference': { title: [ { text: { content: ($json.playbook_payload.example_reference || 'Untitled example').slice(0, 1800) } } ] }, 'Creator': { rich_text: [ { text: { content: $json.playbook_payload.creator_name || 'unknown' } } ] }, 'Source URL': { url: $json.playbook_payload.source_url || null } } } }}",
+        "specifyHeaders": "keypair",
+        "headerParameters": {
+          "parameters": [
             {
               "name": "Notion-Version",
               "value": "2022-06-28"
@@ -309,9 +691,8 @@
             }
           ]
         },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={\n  \"parent\": { \"database_id\": $env.NOTION_CONTENT_PLAYBOOK_DATABASE_ID },\n  \"properties\": {\n    \"Topic type\": { \"select\": { \"name\": $json.playbook_payload.topic_type } },\n    \"Recommended format\": { \"select\": { \"name\": $json.playbook_payload.recommended_format } },\n    \"Reasoning\": { \"rich_text\": [{ \"text\": { \"content\": $json.playbook_payload.reasoning || \"No reasoning provided\" } }] },\n    \"Example reference\": { \"title\": [{ \"text\": { \"content\": ($json.playbook_payload.example_reference || 'Untitled example').slice(0, 1800) } }] },\n    \"Creator\": { \"rich_text\": [{ \"text\": { \"content\": $json.playbook_payload.creator_name || \"unknown\" } }] },\n    \"Source URL\": { \"url\": $json.playbook_payload.source_url || null }\n  }\n}"
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth"
       },
       "id": "stage-4-notion-upsert",
       "name": "Stage 4 Notion Upsert",
@@ -320,7 +701,13 @@
       "position": [
         3360,
         420
-      ]
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "Xv9FwmzQu0V9m65g",
+          "name": "Notion Bearer"
+        }
+      }
     },
     {
       "parameters": {
@@ -353,7 +740,29 @@
         "operation": "upsert",
         "schema": "public",
         "table": "content_intelligence_videos",
-        "columns": "platform_video_id,playbook_status,playbook_page_id,playbook_synced_at,playbook_payload"
+        "dataMode": "defineBelow",
+        "columnToMatchOn": "platform_video_id",
+        "valueToMatchOn": "={{$json.platform_video_id}}",
+        "valuesToSend": {
+          "values": [
+            {
+              "column": "playbook_status",
+              "value": "={{$json.playbook_status}}"
+            },
+            {
+              "column": "playbook_page_id",
+              "value": "={{$json.playbook_page_id}}"
+            },
+            {
+              "column": "playbook_synced_at",
+              "value": "={{$json.playbook_synced_at}}"
+            },
+            {
+              "column": "playbook_payload",
+              "value": "={{JSON.stringify($json.playbook_payload || {})}}"
+            }
+          ]
+        }
       },
       "id": "stage-4-persist-status",
       "name": "Stage 4 Persist Playbook Status",
@@ -362,7 +771,13 @@
       "position": [
         3840,
         500
-      ]
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "ubXgrL18K5l7DRHz",
+          "name": "Supabase Content Intelligence"
+        }
+      }
     },
     {
       "parameters": {
@@ -382,7 +797,25 @@
         "operation": "upsert",
         "schema": "public",
         "table": "content_intelligence_videos",
-        "columns": "platform_video_id,feedback_status,feedback_score,feedback_payload"
+        "dataMode": "defineBelow",
+        "columnToMatchOn": "platform_video_id",
+        "valueToMatchOn": "={{$json.platform_video_id}}",
+        "valuesToSend": {
+          "values": [
+            {
+              "column": "feedback_status",
+              "value": "={{$json.feedback_status}}"
+            },
+            {
+              "column": "feedback_score",
+              "value": "={{$json.feedback_score}}"
+            },
+            {
+              "column": "feedback_payload",
+              "value": "={{JSON.stringify($json.feedback_payload || {})}}"
+            }
+          ]
+        }
       },
       "id": "stage-5-persist-feedback-status",
       "name": "Stage 5 Persist Feedback Status",
@@ -391,11 +824,17 @@
       "position": [
         4320,
         500
-      ]
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "ubXgrL18K5l7DRHz",
+          "name": "Supabase Content Intelligence"
+        }
+      }
     },
     {
       "parameters": {
-        "mode": "passThrough"
+        "mode": "append"
       },
       "id": "merge-upserts",
       "name": "Merge Upserts",
@@ -408,7 +847,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const items = $input.all();\nconst first = items[0]?.json || {};\nreturn [{\n  json: {\n    batch_id: first.batch_id || null,\n    status: 'ingested',\n    provider: $env.STAGE3_MODEL_PROVIDER || 'claude',\n    run_finished_at: new Date().toISOString(),\n    video_count: items.length\n  }\n}];"
+        "jsCode": "const items = $input.all();\nconst first = items[0]?.json || {};\nreturn [{\n  json: {\n    batch_id: first.batch_id || null,\n    status: 'ingested',\n    provider: 'claude',\n    run_finished_at: new Date().toISOString(),\n    video_count: items.length\n  }\n}];"
       },
       "id": "mark-batch",
       "name": "Mark Batch Complete",
@@ -421,17 +860,6 @@
     }
   ],
   "connections": {
-    "Cron Trigger": {
-      "main": [
-        [
-          {
-            "node": "Build Search Queries",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Build Search Queries": {
       "main": [
         [
@@ -463,7 +891,7 @@
             "index": 0
           },
           {
-            "node": "YouTube Metadata Fetch",
+            "node": "YT Parse Creator URL",
             "type": "main",
             "index": 0
           }
@@ -578,7 +1006,7 @@
           {
             "node": "Merge Upserts",
             "type": "main",
-            "index": 0
+            "index": 1
           },
           {
             "node": "Stage 4 Playbook Mapper",
@@ -693,19 +1121,120 @@
           }
         ]
       ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Build Search Queries",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "YT Parse Creator URL": {
+      "main": [
+        [
+          {
+            "node": "YT Resolvable Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "YT Resolvable Filter": {
+      "main": [
+        [
+          {
+            "node": "YT Get Channel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "YT Get Channel": {
+      "main": [
+        [
+          {
+            "node": "YT Extract Playlist Id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "YT Extract Playlist Id": {
+      "main": [
+        [
+          {
+            "node": "YT Has Playlist Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "YT Has Playlist Filter": {
+      "main": [
+        [
+          {
+            "node": "YT Get Playlist Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "YT Get Playlist Items": {
+      "main": [
+        [
+          {
+            "node": "YT Extract Video Ids",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "YT Extract Video Ids": {
+      "main": [
+        [
+          {
+            "node": "YT Has VideoIds Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "YT Has VideoIds Filter": {
+      "main": [
+        [
+          {
+            "node": "YT Get Videos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "YT Get Videos": {
+      "main": [
+        [
+          {
+            "node": "YouTube Metadata Fetch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
-  "pinData": {},
   "settings": {
     "executionOrder": "v1"
   },
-  "staticData": null,
-  "tags": [
-    "content",
-    "intelligence",
-    "seanbuilds"
-  ],
-  "triggerCount": 0,
-  "versionId": "v1",
   "active": false
 }

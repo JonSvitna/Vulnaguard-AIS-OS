@@ -87,7 +87,7 @@
         480
       ],
       "parameters": {
-        "jsCode": "const items = $input.all();\nreturn items.map((item) => {\n  const url = String(item.json.profile_url || '');\n  let channelId = null;\n  let handle = null;\n  const idMatch = url.match(/\\/channel\\/(UC[\\w-]{10,})/i);\n  if (idMatch) channelId = idMatch[1];\n  if (!channelId) {\n    const handleMatch = url.match(/\\/@([\\w.\\-]+)/);\n    if (handleMatch) handle = handleMatch[1];\n  }\n  if (!channelId && !handle) {\n    const legacyMatch = url.match(/\\/(?:c|user)\\/([\\w.\\-]+)/i);\n    if (legacyMatch) handle = legacyMatch[1];\n  }\n  return { json: { ...item.json, channelId, handle, resolvable: Boolean(channelId || handle) } };\n});"
+        "jsCode": "const items = $input.all();\nreturn items.map((item) => {\n  const url = String(item.json.profile_url || '');\n  let channelId = null;\n  let handle = null;\n  let isYouTube = false;\n\n  try {\n    const hostname = new URL(url).hostname.toLowerCase();\n    isYouTube = hostname === 'youtube.com' || hostname.endsWith('.youtube.com') || hostname === 'youtu.be';\n  } catch (e) {\n    isYouTube = false;\n  }\n\n  if (isYouTube) {\n    const idMatch = url.match(/\\/channel\\/(UC[\\w-]{10,})/i);\n    if (idMatch) channelId = idMatch[1];\n    if (!channelId) {\n      const handleMatch = url.match(/\\/@([\\w.\\-]+)/);\n      if (handleMatch) handle = handleMatch[1];\n    }\n    if (!channelId && !handle) {\n      const legacyMatch = url.match(/\\/(?:c|user)\\/([\\w.\\-]+)/i);\n      if (legacyMatch) handle = legacyMatch[1];\n    }\n  }\n\n  return { json: { ...item.json, channelId, handle, resolvable: Boolean(channelId || handle) } };\n});"
       }
     },
     {

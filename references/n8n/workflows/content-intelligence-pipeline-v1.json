@@ -138,7 +138,7 @@
         "genericAuthType": "httpQueryAuth",
         "sendQuery": true,
         "specifyQuery": "json",
-        "jsonQuery": "={{ $json.channelId ? { part: 'contentDetails,snippet', id: $json.channelId } : { part: 'contentDetails,snippet', forHandle: $json.handle } }}"
+        "jsonQuery": "={{ $json.ytChannelQuery }}"
       },
       "credentials": {
         "httpQueryAuth": {
@@ -1017,6 +1017,19 @@
         6560,
         660
       ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().map((item) => {\n  const json = item.json;\n  const ytChannelQuery = json.channelId\n    ? { part: 'contentDetails,snippet', id: json.channelId }\n    : { part: 'contentDetails,snippet', forHandle: json.handle };\n  return { json: { ...json, ytChannelQuery } };\n});"
+      },
+      "id": "yt-build-channel-query",
+      "name": "YT Build Channel Query",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1912,
+        480
+      ]
     }
   ],
   "connections": {
@@ -1308,7 +1321,7 @@
       "main": [
         [
           {
-            "node": "YT Get Channel",
+            "node": "YT Build Channel Query",
             "type": "main",
             "index": 0
           }
@@ -1386,6 +1399,17 @@
         [
           {
             "node": "YouTube Metadata Fetch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "YT Build Channel Query": {
+      "main": [
+        [
+          {
+            "node": "YT Get Channel",
             "type": "main",
             "index": 0
           }

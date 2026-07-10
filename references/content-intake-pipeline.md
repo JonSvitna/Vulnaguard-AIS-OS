@@ -115,6 +115,68 @@ login page instead of erroring loudly. Sean added the scope and reinstalled the 
 both fixes verified together with a real end-to-end test (Slack upload → queue →
 render → Slack reply).
 
+**"Slack AI" content contamination, fixed 2026-07-10:** `Parse Classification` was
+prefixing every `rawInput` with an internal pipeline label (`"[pillar — Slack
+intake] "`) before sending it to the generator — the LLM treated "Slack intake" as a
+real topic phrase Sean had mentioned, so drafts kept referencing "Slack AI" out of
+nowhere. Not a transcription/knowledge gap (Whisper wouldn't have fixed this) — it
+was a direct prompt-construction bug. Fixed by dropping the prefix entirely
+(`rawInput = captionNote`, no label). Verified via a direct generate-API call using
+Sean's real caption text.
+
+### Caption-and-intent ask flow (added 2026-07-10)
+
+Originally, a drop with no caption text fed the generator a generic "no caption
+provided" placeholder. Sean asked for something better: have the bot ask in-thread
+and wait for a reply instead of guessing. Built as a second branch off the same
+5-minute poll:
+
+- **`Has Caption`** (IF) — gates on whether the drop needs a Slack ask before it can
+  be classified. Non-video drops only need the ask if there's no caption text at
+  all. **Video drops always need the ask**, even with a caption, because caption
+  text alone doesn't say what edit Sean wants (see duration-matching below) —
+  `!(($json.file_mimetype||'').startsWith('video/')) && hasCaption` is the skip
+  condition.
+- **`Ask For Caption`** — posts one message per drop, text depends on file type:
+  video drops get a combined caption + edit-intent question ("What's this about,
+  and how do you want it edited — full length repost, a highlight cut, or a
+  specific max length in seconds? Any style notes?"); non-video drops with no
+  caption keep the original topic-only ask.
+- **`Track Awaiting Caption`** — pushes the drop onto `staticData.global.awaitingCaption`
+  (dedup'd on `ts`).
+- **`Load Awaiting Captions` → `Check Thread Replies` → `Extract Caption Reply`** —
+  parallel branch off the same trigger, polls each awaiting thread for the first
+  human reply (filters out the bot's own `bot_id`/user ID), removes it from the
+  queue, and feeds the reply text back into the same `Normalize Message` →
+  `Claude Classify` path as a normal caption.
+- **`Claude Classify`** now also extracts `edit_mode` (`full` | `highlight` |
+  `custom` | `n/a`) and `duration_sec` from the reply text for video drops —
+  "full length"/"repost as-is" → `full`; "highlight"/"short clip"/no explicit
+  length → `highlight`; an explicit number ("under 30 seconds", "about a minute")
+  → `custom` + that many seconds. `Parse Classification` passes these through;
+  `Extract Posting Window` merges them into `video_brief` (`{ ..., edit_mode,
+  duration_sec }`) before the row lands in `content_intake_video_queue` — no schema
+  migration needed since `video_brief` is already `jsonb`.
+
+### Duration-matching fix (2026-07-10)
+
+**Bug:** the render worker (Part C) was producing flat ~10-second clips regardless
+of actual source footage length — `IntakeClip.tsx`'s duration was computed purely
+from `video_brief.points.length * fixed-beat-length`, completely decoupled from the
+real video. A 3-minute drop and a 15-second drop rendered to the same length.
+
+**Fix:** `Root.tsx`'s `calculateMetadata` now probes the source file's real
+duration server-side via `@remotion/renderer`'s `getVideoMetadata` (ffprobe-based,
+works in the Node render process, not the browser), then bounds it by what Sean
+actually asked for in the ask-flow reply above:
+`intakeClipDurationFromSource(sourceDurationInSeconds, videoBrief)` in
+`IntakeClip.tsx` applies a per-`edit_mode` cap (`full` → 180s, `highlight` → 45s,
+`custom` → `min(duration_sec, 90s)`), defaulting to `highlight` if no ask-flow reply
+landed. The component plays the source video for its full bounded length (not just
+an intro slice) — beat cards only cover the first `points.length` beats, then plain
+footage continues to the outro. Falls back to the old beat-count estimate only if
+the source file can't be probed at all.
+
 ## Part B — Trend-relevance sync
 
 Reuses Stage 1 of the Content Intelligence Pipeline (Tavily creator/topic discovery —
@@ -193,6 +255,48 @@ same queue table, decoupled from both n8n and any Claude session:
    Intelligence Pipeline's Stage 1 Tavily query surfacing usable topics; worth
    checking that query's output quality first (see row 18's open note about
    blog/tool-page results instead of real creator URLs).
+
+## Part D — Storyboard, design-concepts library, auto-flagged HyperFrames handoff
+
+**Added 2026-07-10.** `vulnaguard-seo-agent`'s content-pipeline generation now emits a
+`storyboard` (beat-by-beat plan: per-beat timing, content, graphic type, plus a
+`hyperframes_recommended` flag + reason) alongside the existing `video_brief`, in the
+same LLM call. `content_pipeline_records` gained `storyboard jsonb` and
+`voice_skill_slug text` columns; `content_intake_video_queue` gained a matching
+`storyboard jsonb` column and a new allowed `status` value,
+`hyperframes_pending_manual`. Migration:
+`references/sql/storyboard-and-design-concepts.sql` (this repo), run against
+`vulnaguard-seo-agent`'s Postgres — same distinction as Part A's migration (not the
+Supabase project behind this repo's n8n instance).
+
+- The n8n "Content Intake Pipeline" workflow's `Extract Posting Window` code node now
+  also passes through `record.storyboard`, and `Insert Video Queue` inserts it into the
+  new column — same pattern as the existing `video_brief` column.
+- A malformed/missing storyboard from the LLM degrades to `storyboard: null` (validated
+  via zod in `agents/content-pipeline/index.ts`) rather than failing generation — every
+  consumer (render-worker, `IntakeClip.tsx`) treats `null` as "fall back to the original
+  even-spacing beat placement," so this is additive, not a breaking change.
+- **Auto-flagged HyperFrames handoff:** when a queue row's
+  `storyboard.hyperframes_recommended` is true, `creative-os-render-worker` skips the
+  Remotion path, calls the already-existing `POST /api/content-pipeline/hyperframes`
+  (returns a ready-to-paste Claude Code build prompt), posts it to the row's Slack
+  thread, and marks the row `hyperframes_pending_manual` instead of `rendered`. Sean
+  still runs the actual build himself — full unattended HyperFrames automation was
+  explicitly scoped out as a bigger, riskier build. Full details in
+  `creative-os/references/creative-systems.md`.
+- **Design-concepts library:** new `design_concepts` table (same migration file),
+  populated by `creative-os/render-worker/scripts/analyze_video_design.js` — Claude
+  vision analysis of sampled frames from both creative-os's own past renders
+  (automatic, best-effort, fires right after a successful render) and external
+  reference videos Sean drops in (manual CLI invocation for v1). Read back into
+  content-pipeline's generation prompt so storyboards reuse real past design
+  decisions. Requires `ANTHROPIC_API_KEY` on the `creative-os-render-worker` Railway
+  service (added 2026-07-10) and `ffmpeg` in that service's Docker image (added to
+  `render-worker/Dockerfile` — separate from Remotion's own bundled compositor, which
+  doesn't expose a standalone `ffmpeg` binary this script can shell out to).
+- `content_intake_video_queue.status` is read only by `render-worker/index.js` and the
+  manual `content-intake-render` fallback skill in `creative-os` — both updated;
+  nothing else in `vulnaguard-seo-agent`'s dashboard/UI reads that table's status today.
 
 ## Open items
 

@@ -48,8 +48,10 @@ hands off to Sean for manual copy/paste/submit).
    ```
    python3 scripts/buffer_api.py queue --profile-id $BUFFER_PROFILE_ID_<PLATFORM> --text "<approved text>"
    ```
-   Use `--scheduled-at` to spread posts across the week rather than dumping all 5 at once —
-   space them to land on different days to hit the 5/week cadence evenly, not in a burst.
+   If `record.recommended_post_window` is set (populated by the Content Intake
+   Pipeline's playbook lookup — see `references/content-intake-pipeline.md`), use it
+   for `--scheduled-at` instead of even weekly spacing. Otherwise, space posts across
+   the week to land on different days and hit the 5/week cadence evenly, not in a burst.
 5. **Mark each queued platform posted** via `PATCH /api/content-pipeline/<record.id>/posted`
    with `{ "platform": "linkedin" | "facebook" | "instagram", "postedAt": "<ISO timestamp>" }`
    — one call per platform, right after that platform's Buffer queue call succeeds.

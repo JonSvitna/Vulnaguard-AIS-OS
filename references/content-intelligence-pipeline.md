@@ -88,13 +88,28 @@ Output contract:
 
 n8n writes analysis outputs into Notion database: Content Playbook.
 
-Stage 4 scaffold behavior:
+**Verified live 2026-07-10** (corrects the earlier "wired but untested,
+placeholder database ID" status): database id `398b59d3-b3b5-8010-bf18-efb9eb9c6767`
+is real, the workflow (`betgAlgnZ28kw4cY`) is `active: true`, and the database holds
+10+ real analyzed rows (Dan Martell, Anton Daniels, etc.) with populated Topic
+type/Recommended format/Reasoning/Example reference/Creator/Source URL fields.
+
+Stage 4 behavior:
 
 - runs after video upsert so Stage 3 data is already persisted
-- maps each analyzed video into a Notion page payload
-- writes to Notion when `analysis_status=analyzed`
+- maps each analyzed video into a Notion page payload (`Stage 4 Playbook Mapper` node)
+- writes to Notion when `analysis_status=analyzed` (`Stage 4 Notion Upsert`/`Stage 4
+  Notion Update`, keyed on `Stage 4 Page Exists?`)
 - marks non-analyzed rows as `playbook_status=skipped_not_analyzed`
 - stores Notion sync metadata back into Supabase for replay/debug
+
+**Added 2026-07-10** for the Content Intake Pipeline's playbook-lookup step
+(`references/content-intake-pipeline.md`): a `Recommended posting window` rich-text
+property on the Notion database, populated from Stage 3's `pattern_summary.posting_windows`
+(previously computed but dropped before reaching Notion — the mapper only forwarded
+`caption_structures` and `hashtag_clusters` into the Reasoning field). Falls back to
+`null`/"no pattern yet" when a topic has no posting-window pattern established, so
+`social-post-queue` cleanly falls back to even-spacing scheduling in that case.
 
 Fields:
 
@@ -102,8 +117,12 @@ Fields:
 - Recommended format
 - Reasoning
 - Example reference
+- Creator
+- Source URL
+- Recommended posting window
 
-`content-calendar` reads this playbook when deciding format for new ideas.
+`content-calendar` reads this playbook when deciding format for new ideas; the Content
+Intake Pipeline reads `Recommended posting window` to set Buffer scheduling.
 
 ## Stage 5 — Feedback loop (first-party blend scaffold)
 

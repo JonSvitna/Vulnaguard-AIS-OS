@@ -119,6 +119,21 @@ not improvised per post:
    previous month's content (move the old one to the bottom under a `## Archive`
    heading with its date range — don't delete history).
 
+## Trend-match early expansion (out of rotation order)
+
+Rows normally expand in strict day-by-day rotation order. One exception: the daily
+trend-relevance check (`references/content-intake-pipeline.md`, Part B) compares
+what's currently trending in AI/automation against unexpanded calendar rows and
+`hermes-opportunities.md`'s `[unused]` entries. When it finds a real match — e.g. a
+model release blowing up the same day Sean has an unposted idea about that exact
+tool — it pings Sean in Slack with the match and an offer to post today instead of
+waiting for that row's scheduled slot.
+
+If Sean approves, run the "expand an idea" step below immediately on that row, out
+of order, then mark it `[expanded YYYY-MM-DD — trend match]` instead of the default
+tag, so the rotation-order assumption elsewhere in this skill isn't silently broken
+by reordered rows.
+
 ## Expanding an idea into a draft
 
 Triggered by "expand calendar idea N" or "expand today's idea" or as part of the

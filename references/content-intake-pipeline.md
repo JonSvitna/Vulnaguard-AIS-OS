@@ -100,8 +100,20 @@ while actually building it:
     posting window back into the original thread. Verified live.
 11. **Is Video → Insert Video Queue** (parallel branch off Update Record) — if
     `captureMode == 'video'`, inserts into `content_intake_video_queue` with the
-    Slack `url_private` as `asset_url` plus the thread's channel/ts for
-    `content-intake-render` to reply into later.
+    Slack `url_private_download` as `asset_url` plus the thread's channel/ts for
+    the render worker (Part C) to reply into later.
+
+**Bug found and fixed 2026-07-10, after the pipeline was first marked "verified":**
+Slack's `url_private` field on a video file object points at a *thumbnail*, not the
+real file — the actual downloadable asset is `url_private_download`. The workflow's
+`Extract New Messages` node originally stored the wrong field; every video queued
+before this fix would have downloaded a thumbnail instead of real footage. Patched
+directly on the live workflow. Confirmed while fixing: the Slack bot also lacked the
+`files:read` OAuth scope needed to download file content at all (had `files:write`
+but not `files:read`) — every download attempt was silently redirected to a Slack
+login page instead of erroring loudly. Sean added the scope and reinstalled the app;
+both fixes verified together with a real end-to-end test (Slack upload → queue →
+render → Slack reply).
 
 ## Part B — Trend-relevance sync
 
@@ -126,34 +138,57 @@ calendar + hermes-opportunities flow. `content-calendar`'s `SKILL.md` needs a sm
 note that a trend-match can pull a row forward out of rotation order (today it assumes
 strict day-by-day rotation).
 
-## Part C — creative-os handoff
+## Part C — creative-os render worker
 
-`creative-os` has no HTTP API (it's a Claude Code-driven repo), so the video-render
-step stays agent-triggered rather than fully automatic. Skill added:
-`creative-os/.claude/skills/content-intake-render/SKILL.md`:
+**Rebuilt 2026-07-10 as an always-on service**, replacing the original
+agent-triggered design. `creative-os` still has no HTTP API, so this isn't n8n
+calling into creative-os directly — it's a standalone worker that self-polls the
+same queue table, decoupled from both n8n and any Claude session:
 
-1. Reads `pending` rows from `content_intake_video_queue`.
-2. Downloads the asset from its `asset_url` — a Slack `url_private` (bot token auth),
-   not Supabase Storage (see the v1 correction above).
-3. Runs creative-os's existing default Remotion first-pass pipeline (`render/` — no
-   new render logic, just a new trigger into the project already documented in
-   `creative-os/references/creative-systems.md`).
-4. Marks the row `rendered`, posts the rendered clip back into the saved Slack thread.
-
-Invoked on demand ("render the queued intake video") or on a scheduled `/loop` run —
-not wired to auto-fire from the n8n workflow itself in v1.
+- `creative-os/render-worker/` — a small Node service (own `package.json`, ~150
+  lines, `pg` as its one real dependency). Self-polls `content_intake_video_queue`
+  every 2 minutes (`POLL_INTERVAL_MS`), no n8n workflow changes needed — it reads
+  the exact same table the workflow already writes to.
+- `creative-os/render/src/IntakeClip.tsx` — new generic, props-driven Remotion
+  composition (`intake-clip`), registered in `Root.tsx` with `calculateMetadata` for
+  dynamic duration based on beat count. **Deliberately a fixed default template, not
+  a bespoke edit**: `CornerCard` beat cards cycling through `video_brief.points`,
+  brand-specific `Outro` (two presets: `vulnaguard`, `seanbuilds`), no live
+  word-synced captions (would need real transcription — out of scope for v1). Every
+  real video rendered before this only existed because an agent hand-built a
+  one-off composition with actual creative judgment (beat placement, color choices)
+  — an unattended worker can't replicate that, so this trades bespoke art direction
+  for throughput/reliability. A specific clip can still get a hand-built edit later
+  if it earns it.
+- Deployed as its own Railway project/service, **`creative-os-render-worker`**
+  (`https://creative-os-render-worker-production.up.railway.app`), Dockerfile at
+  `creative-os/render-worker/Dockerfile` (build context = repo root via
+  `creative-os/railway.json`'s `dockerfilePath`, since the image needs both
+  `render/` and `render-worker/`). Chromium/ffmpeg system deps followed Remotion's
+  documented Docker recipe — built clean on the first attempt, no iteration needed.
+  Own env vars (`DATABASE_URL`, `SLACK_BOT_TOKEN`, `POLL_INTERVAL_MS`) — not shared
+  automatically from any other service.
+- Verified end to end with a real Slack upload → queue insert → worker poll →
+  Remotion render → Slack upload back into the thread, all live, no mocks.
+- The original `creative-os/.claude/skills/content-intake-render/SKILL.md` Claude
+  skill still exists as a manual/on-demand fallback (e.g. to force a render without
+  waiting for the next poll), but the worker is the primary path now. The local
+  `/loop` job that used to run that skill every 30 minutes was cancelled once the
+  Railway worker went live — it was session-bound (died when the session closed);
+  the worker has no such dependency.
 
 ## Build order
 
 1. ✅ Run `references/sql/content-intake-pipeline.sql` (against `vulnaguard-seo-agent`'s
    Railway Postgres, not the Supabase project — see correction above).
 2. ✅ Create `#content-intake` in Slack, invite the bot, create the
-   `content-intake-assets` storage bucket (currently unused, see above).
+   `content-intake-assets` storage bucket (still unused — video assets are read
+   straight from Slack, see the v1 correction above).
 3. ✅ Build the n8n "Content Intake Pipeline" workflow (`WCw0Mug93fTmPLJR`). Each step
-   smoke-tested individually with real API calls (classify, generate, playbook
-   lookup, Slack reply all confirmed working on live data). Left `active: false` —
-   flip it on once satisfied with a real end-to-end poll cycle.
-4. ✅ Add the `content-intake-render` skill in creative-os (Part C).
+   smoke-tested individually, then activated (`active: true`) 2026-07-10 — polling
+   live.
+4. ✅ Build and deploy the always-on render worker (Part C) — replaces the original
+   agent-triggered plan.
 5. Add the daily trend-check step (Part B) — not yet built. Depends on the Content
    Intelligence Pipeline's Stage 1 Tavily query surfacing usable topics; worth
    checking that query's output quality first (see row 18's open note about
@@ -161,9 +196,6 @@ not wired to auto-fire from the n8n workflow itself in v1.
 
 ## Open items
 
-- **Activate the workflow.** It's built and each step is individually verified, but no
-  full scheduled poll cycle has run yet — turn it on (`active: true`) and watch the
-  first real cycle before relying on it.
 - Pillar → Notion `Topic type` mapping is a rough v1 heuristic (`content-calendar`'s 6
   pillars don't share a vocabulary with the Notion database's existing select options:
   `ai_automation`/`business`/`personal_brand`/`relationships`/`other`/`uncategorized`).

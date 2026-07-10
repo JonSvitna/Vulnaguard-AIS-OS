@@ -37,7 +37,8 @@
       "position": [
         580,
         480
-      ]
+      ],
+      "disabled": true
     },
     {
       "parameters": {
@@ -62,7 +63,8 @@
           "id": "ygXYRPLTtMFB4Qfy",
           "name": "Tavily Bearer"
         }
-      }
+      },
+      "disabled": true
     },
     {
       "parameters": {
@@ -75,7 +77,8 @@
       "position": [
         1180,
         480
-      ]
+      ],
+      "disabled": true
     },
     {
       "id": "yt-parse-creator",
@@ -87,7 +90,7 @@
         480
       ],
       "parameters": {
-        "jsCode": "const items = $input.all();\nreturn items.map((item) => {\n  const url = String(item.json.profile_url || '');\n  let channelId = null;\n  let handle = null;\n  let isYouTube = false;\n\n  try {\n    const hostname = new URL(url).hostname.toLowerCase();\n    isYouTube = hostname === 'youtube.com' || hostname.endsWith('.youtube.com') || hostname === 'youtu.be';\n  } catch (e) {\n    isYouTube = false;\n  }\n\n  if (isYouTube) {\n    const idMatch = url.match(/\\/channel\\/(UC[\\w-]{10,})/i);\n    if (idMatch) channelId = idMatch[1];\n    if (!channelId) {\n      const handleMatch = url.match(/\\/@([\\w.\\-]+)/);\n      if (handleMatch) handle = handleMatch[1];\n    }\n    if (!channelId && !handle) {\n      const legacyMatch = url.match(/\\/(?:c|user)\\/([\\w.\\-]+)/i);\n      if (legacyMatch) handle = legacyMatch[1];\n    }\n  }\n\n  return { json: { ...item.json, channelId, handle, resolvable: Boolean(channelId || handle) } };\n});"
+        "jsCode": "const items = $input.all();\nreturn items.map((item) => {\n  const url = String(item.json.profile_url || '');\n  let channelId = null;\n  let handle = null;\n  let isYouTube = false;\n\n  const hostMatch = url.match(/^https?:\\/\\/([^\\/]+)/i);\n  if (hostMatch) {\n    const hostname = hostMatch[1].toLowerCase();\n    isYouTube = hostname === 'youtube.com' || hostname.endsWith('.youtube.com') || hostname === 'youtu.be';\n  }\n\n  if (isYouTube) {\n    const idMatch = url.match(/\\/channel\\/(UC[\\w-]{10,})/i);\n    if (idMatch) channelId = idMatch[1];\n    if (!channelId) {\n      const handleMatch = url.match(/\\/@([\\w.\\-]+)/);\n      if (handleMatch) handle = handleMatch[1];\n    }\n    if (!channelId && !handle) {\n      const legacyMatch = url.match(/\\/(?:c|user)\\/([\\w.\\-]+)/i);\n      if (legacyMatch) handle = legacyMatch[1];\n    }\n  }\n\n  return { json: { ...item.json, channelId, handle, resolvable: Boolean(channelId || handle) } };\n});"
       }
     },
     {
@@ -130,7 +133,6 @@
         2080,
         480
       ],
-      "onError": "continueRegularOutput",
       "parameters": {
         "url": "https://www.googleapis.com/youtube/v3/channels",
         "method": "GET",
@@ -138,7 +140,7 @@
         "genericAuthType": "httpQueryAuth",
         "sendQuery": true,
         "specifyQuery": "json",
-        "jsonQuery": "={{ $json.ytChannelQuery }}"
+        "jsonQuery": "={{ JSON.stringify($json.ytChannelQuery) }}"
       },
       "credentials": {
         "httpQueryAuth": {
@@ -200,7 +202,6 @@
         2980,
         480
       ],
-      "onError": "continueRegularOutput",
       "parameters": {
         "url": "https://www.googleapis.com/youtube/v3/playlistItems",
         "method": "GET",
@@ -208,7 +209,7 @@
         "genericAuthType": "httpQueryAuth",
         "sendQuery": true,
         "specifyQuery": "json",
-        "jsonQuery": "={{ { part: 'contentDetails', playlistId: $json.uploads_playlist_id, maxResults: 10 } }}"
+        "jsonQuery": "={{ JSON.stringify({ part: 'contentDetails', playlistId: $json.uploads_playlist_id, maxResults: 10 }) }}"
       },
       "credentials": {
         "httpQueryAuth": {
@@ -270,7 +271,6 @@
         3880,
         480
       ],
-      "onError": "continueRegularOutput",
       "parameters": {
         "url": "https://www.googleapis.com/youtube/v3/videos",
         "method": "GET",
@@ -278,7 +278,7 @@
         "genericAuthType": "httpQueryAuth",
         "sendQuery": true,
         "specifyQuery": "json",
-        "jsonQuery": "={{ { part: 'snippet,statistics,contentDetails', id: $json.video_ids } }}"
+        "jsonQuery": "={{ JSON.stringify({ part: 'snippet,statistics,contentDetails', id: $json.video_ids }) }}"
       },
       "credentials": {
         "httpQueryAuth": {
@@ -315,7 +315,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const records = $input.all();\nconst batchId = `batch-${new Date().toISOString().replace(/[:.]/g, '-')}`;\nreturn records.map((item) => ({\n  json: {\n    ...item.json,\n    batch_id: batchId,\n    analysis_version: 'stage3-v1',\n    analysis_status: 'pending',\n    analysis_payload: {\n      analysis_version: 'stage3-v1',\n      batch_id: batchId,\n      creator_name: item.json.creator_name,\n      platform: 'youtube',\n      platform_video_id: item.json.platform_video_id,\n      title: item.json.title,\n      description: item.json.description,\n      published_at: item.json.published_at,\n      duration_seconds: item.json.duration_seconds,\n      view_count: item.json.view_count,\n      like_count: item.json.like_count,\n      comment_count: item.json.comment_count,\n      hashtags: item.json.hashtags || [],\n      engagement_rate: item.json.engagement_rate,\n      format_tags: item.json.format_tags || []\n    },\n    topic_category: null,\n    primary_format: null,\n    engagement_tier: null,\n    analysis_confidence: null,\n    pattern_summary: {}\n  }\n}));"
+        "jsCode": "const records = $input.all();\nconst genUuid = () => {\n  const hex = () => Math.floor(Math.random() * 16).toString(16);\n  const block = (n) => Array.from({ length: n }, hex).join('');\n  return `${block(8)}-${block(4)}-4${block(3)}-${['8','9','a','b'][Math.floor(Math.random()*4)]}${block(3)}-${block(12)}`;\n};\nconst batchId = genUuid();\nreturn records.map((item) => ({\n  json: {\n    ...item.json,\n    batch_id: batchId,\n    analysis_version: 'stage3-v1',\n    analysis_status: 'pending',\n    analysis_payload: {\n      analysis_version: 'stage3-v1',\n      batch_id: batchId,\n      creator_name: item.json.creator_name,\n      platform: 'youtube',\n      platform_video_id: item.json.platform_video_id,\n      title: item.json.title,\n      description: item.json.description,\n      published_at: item.json.published_at,\n      duration_seconds: item.json.duration_seconds,\n      view_count: item.json.view_count,\n      like_count: item.json.like_count,\n      comment_count: item.json.comment_count,\n      hashtags: item.json.hashtags || [],\n      engagement_rate: item.json.engagement_rate,\n      format_tags: item.json.format_tags || []\n    },\n    topic_category: null,\n    primary_format: null,\n    engagement_tier: null,\n    analysis_confidence: null,\n    pattern_summary: {}\n  }\n}));"
       },
       "id": "stage-3-contract-builder",
       "name": "Stage 3 Contract Builder",
@@ -367,7 +367,7 @@
         "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ { model: 'claude-sonnet-4-6', max_tokens: 1200, system: 'Return valid JSON only. Follow references/content-intelligence-stage3-contract.md exactly.', messages: [ { role: 'user', content: [ { type: 'text', text: JSON.stringify($json.analysis_payload) } ] } ] } }}",
+        "jsonBody": "={{ { model: 'claude-sonnet-5', max_tokens: 4096, system: 'Return valid JSON only, no markdown fences, no prose outside the JSON object. Follow this contract exactly:\\n\\n# Content Intelligence Stage 3 Contract\\n\\nStage 3 receives one normalized video record from Stage 2 and returns structured JSON only. No markdown, no prose, no code fences.\\n\\nThis stage is resumable across interruptions. Treat the input/output pair as a continuation-safe unit keyed by `batch_id` + `platform_video_id`.\\n\\n## Input envelope\\n\\nThe model input should carry these fields:\\n\\n- `analysis_version`\\n- `batch_id`\\n- `creator_name`\\n- `platform`\\n- `platform_video_id`\\n- `title`\\n- `description`\\n- `published_at`\\n- `duration_seconds`\\n- `view_count`\\n- `like_count`\\n- `comment_count`\\n- `hashtags`\\n- `engagement_rate`\\n- `format_tags`\\n\\n## Output shape\\n\\nThe model must return a single JSON object with these top-level keys:\\n\\n- `analysis_version`\\n- `batch_id`\\n- `creator_name`\\n- `platform`\\n- `platform_video_id`\\n- `topic_category`\\n- `primary_format`\\n- `engagement_tier`\\n- `analysis_confidence`\\n- `pattern_summary`\\n- `analysis_payload`\\n\\n## Allowed values\\n\\n### `primary_format`\\n\\n- `talking_head`\\n- `animated_explainer`\\n- `demo`\\n- `infographic`\\n- `screen_recording`\\n- `short_form`\\n- `other`\\n\\n### `engagement_tier`\\n\\n- `low`\\n- `medium`\\n- `high`\\n- `outlier`\\n\\n### `topic_category`\\n\\nUse short, stable labels. Keep the vocabulary narrow and reusable. Examples:\\n\\n- `ai_automation`\\n- `workflow`\\n- `tutorial`\\n- `business`\\n- `personal_brand`\\n- `tooling`\\n- `other`\\n\\n## `pattern_summary` object\\n\\nThe `pattern_summary` object must contain these keys:\\n\\n- `best_format_by_topic`\\n- `posting_windows`\\n- `caption_structures`\\n- `hashtag_clusters`\\n- `evidence`\\n\\nEach key should be an array of small JSON objects, not prose.\\n\\n## `analysis_payload` object\\n\\nUse `analysis_payload` to capture the full per-video reasoning bundle in machine-readable form. Keep it compact and deterministic.\\n\\nRecommended fields:\\n\\n- `format_signals`\\n- `topic_signals`\\n- `engagement_signals`\\n- `reusable_mechanics`\\n- `risk_notes`\\n\\n## Non-negotiables\\n\\n- Output valid JSON only.\\n- Do not add markdown fences.\\n- Do not add explanatory prose outside the JSON object.\\n- Do not invent metrics that are not present in the input envelope.\\n- If confidence is low, set `analysis_confidence` lower instead of padding with guesses.\\n\\nAlso include a top-level `reasoning` field: 1-3 concise sentences explaining why this format/topic/tier was chosen, for a human reading a content playbook.', messages: [ { role: 'user', content: [ { type: 'text', text: JSON.stringify($json.analysis_payload) } ] } ] } }}",
         "specifyHeaders": "keypair",
         "headerParameters": {
           "parameters": [
@@ -436,7 +436,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const response = $input.first().json;\nconst source = $('Stage 3 Contract Builder').first().json;\nconst text = response.content?.[0]?.text || response.output_text || response.output?.[0]?.content?.[0]?.text || '';\nlet parsed = {};\ntry {\n  parsed = typeof text === 'string' && text.trim() ? JSON.parse(text) : response;\n} catch (error) {\n  parsed = response;\n}\nreturn [{\n  json: {\n    ...source,\n    ...parsed,\n    batch_id: parsed.batch_id || source.batch_id,\n    platform_video_id: parsed.platform_video_id || source.platform_video_id,\n    analysis_status: 'analyzed',\n    analysis_payload: parsed\n  }\n}];"
+        "jsCode": "const extractJsonObject = (str) => {\n  const start = str.indexOf('{');\n  if (start === -1) return null;\n  let depth = 0;\n  for (let i = start; i < str.length; i++) {\n    if (str[i] === '{') depth++;\n    else if (str[i] === '}') {\n      depth--;\n      if (depth === 0) return str.slice(start, i + 1);\n    }\n  }\n  return null;\n};\n\nconst responses = $input.all();\nreturn responses.map((item, i) => {\n  const response = item.json;\n  const source = $('Stage 3 Contract Builder').itemMatching(i)?.json || {};\n  const textBlock = Array.isArray(response.content) ? response.content.find((c) => c.type === 'text') : null;\n  let text = textBlock?.text || response.output_text || response.output?.[0]?.content?.[0]?.text || '';\n  text = text.replace(/^```(?:json)?\\s*/i, '').replace(/```\\s*$/i, '').trim();\n  const jsonSlice = extractJsonObject(text);\n  let parsed = {};\n  let parseFailed = false;\n  let parseError = null;\n  try {\n    if (!jsonSlice) {\n      parseFailed = true;\n      parseError = 'no_json_object_found';\n    } else {\n      parsed = JSON.parse(jsonSlice);\n    }\n  } catch (error) {\n    parseFailed = true;\n    parseError = error.message;\n    parsed = {};\n  }\n  return {\n    json: {\n      ...source,\n      ...parsed,\n      batch_id: parsed.batch_id || source.batch_id,\n      platform_video_id: parsed.platform_video_id || source.platform_video_id,\n      analysis_status: parseFailed ? 'parse_failed' : 'analyzed',\n      analysis_payload: parseFailed\n        ? { parse_error: parseError, raw_response_text: text, stop_reason: response.stop_reason || null }\n        : parsed\n    }\n  };\n});"
       },
       "id": "stage-3-result-parser",
       "name": "Stage 3 Result Parser",
@@ -449,7 +449,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const source = $input.first().json || {};\nreturn [{\n  json: {\n    ...source,\n    analysis_status: 'deferred_session_limit',\n    analysis_payload: {\n      deferred_reason: 'model_access_unavailable',\n      deferred_at: new Date().toISOString(),\n      provider_requested: 'deferred'\n    },\n    topic_category: source.topic_category || null,\n    primary_format: source.primary_format || null,\n    engagement_tier: source.engagement_tier || null,\n    analysis_confidence: source.analysis_confidence || null,\n    pattern_summary: source.pattern_summary || {}\n  }\n}];"
+        "jsCode": "const items = $input.all();\nreturn items.map((item) => {\n  const source = item.json || {};\n  return {\n    json: {\n      ...source,\n      analysis_status: 'deferred_session_limit',\n      analysis_payload: {\n        deferred_reason: 'model_access_unavailable',\n        deferred_at: new Date().toISOString(),\n        provider_requested: 'deferred'\n      },\n      topic_category: source.topic_category || null,\n      primary_format: source.primary_format || null,\n      engagement_tier: source.engagement_tier || null,\n      analysis_confidence: source.analysis_confidence || null,\n      pattern_summary: source.pattern_summary || {}\n    }\n  };\n});"
       },
       "id": "stage-3-deferred",
       "name": "Stage 3 Deferred (No Model Access)",
@@ -630,7 +630,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const source = $input.first().json || {};\nconst analysis = source.analysis_payload || {};\nconst summary = source.pattern_summary || {};\nconst confidence = typeof source.analysis_confidence === 'number' ? source.analysis_confidence : null;\nconst reasoningParts = [\n  analysis.reasoning || analysis.why_this_format || '',\n  summary.caption_structure || '',\n  summary.hashtag_cluster || ''\n].filter(Boolean);\n\nreturn [{\n  json: {\n    ...source,\n    playbook_status: 'pending',\n    playbook_page_id: null,\n    playbook_synced_at: null,\n    playbook_payload: {\n      batch_id: source.batch_id || null,\n      platform_video_id: source.platform_video_id || null,\n      creator_name: source.creator_name || analysis.creator_name || null,\n      topic_type: source.topic_category || analysis.topic_category || 'uncategorized',\n      recommended_format: source.primary_format || analysis.primary_format || 'unknown',\n      engagement_tier: source.engagement_tier || analysis.engagement_tier || 'unknown',\n      confidence,\n      reasoning: reasoningParts.join(' | ').slice(0, 1800),\n      example_reference: source.title || analysis.title || null,\n      source_url: source.profile_url || null,\n      published_at: source.published_at || null,\n      evidence: analysis.evidence || summary || {}\n    }\n  }\n}];"
+        "jsCode": "const items = $input.all();\nreturn items.map((item) => {\n  const source = item.json || {};\n  const analysis = source.analysis_payload || {};\n  const summary = source.pattern_summary || {};\n  const confidence = typeof source.analysis_confidence === 'number' ? source.analysis_confidence : null;\n\n  const toText = (v) => Array.isArray(v)\n    ? v.map((x) => (typeof x === 'string' ? x : JSON.stringify(x))).join('; ')\n    : (v || '');\n\n  const reasoningParts = [\n    source.reasoning || analysis.reasoning || analysis.why_this_format || '',\n    toText(summary.caption_structures),\n    toText(summary.hashtag_clusters)\n  ].filter(Boolean);\n\n  return {\n    json: {\n      ...source,\n      playbook_status: 'pending',\n      playbook_page_id: source.playbook_page_id || null,\n      playbook_synced_at: null,\n      playbook_payload: {\n        batch_id: source.batch_id || null,\n        platform_video_id: source.platform_video_id || null,\n        creator_name: source.creator_name || analysis.creator_name || null,\n        topic_type: source.topic_category || analysis.topic_category || 'uncategorized',\n        recommended_format: source.primary_format || analysis.primary_format || 'unknown',\n        engagement_tier: source.engagement_tier || analysis.engagement_tier || 'unknown',\n        confidence,\n        reasoning: reasoningParts.join(' | ').slice(0, 1800),\n        example_reference: source.title || analysis.title || null,\n        source_url: source.profile_url || null,\n        published_at: source.published_at || null,\n        evidence: analysis.evidence || summary || {}\n      }\n    }\n  };\n});"
       },
       "id": "stage-4-playbook-mapper",
       "name": "Stage 4 Playbook Mapper",
@@ -711,7 +711,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const source = $input.first().json || {};\nreturn [{\n  json: {\n    ...source,\n    playbook_status: 'skipped_not_analyzed',\n    playbook_page_id: null,\n    playbook_synced_at: null,\n    playbook_payload: {\n      ...(source.playbook_payload || {}),\n      skip_reason: `analysis_status_${source.analysis_status || 'unknown'}`\n    }\n  }\n}];"
+        "jsCode": "const items = $input.all();\nreturn items.map((item) => {\n  const source = item.json || {};\n  return {\n    json: {\n      ...source,\n      playbook_status: 'skipped_not_analyzed',\n      playbook_page_id: null,\n      playbook_synced_at: null,\n      playbook_payload: {\n        ...(source.playbook_payload || {}),\n        skip_reason: `analysis_status_${source.analysis_status || 'unknown'}`\n      }\n    }\n  };\n});"
       },
       "id": "stage-4-skip",
       "name": "Stage 4 Skip Notion",
@@ -724,7 +724,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const source = $('Stage 4 Playbook Mapper').first().json || {};\nconst response = $input.first().json || {};\nreturn [{\n  json: {\n    ...source,\n    playbook_status: 'synced',\n    playbook_page_id: response.id || null,\n    playbook_synced_at: new Date().toISOString(),\n    playbook_payload: {\n      ...(source.playbook_payload || {}),\n      notion_response_id: response.id || null,\n      notion_url: response.url || null\n    }\n  }\n}];"
+        "jsCode": "const responses = $input.all();\nreturn responses.map((item, i) => {\n  const source = $('Stage 4 Playbook Mapper').itemMatching(i)?.json || {};\n  const response = item.json || {};\n  return {\n    json: {\n      ...source,\n      playbook_status: 'synced',\n      playbook_page_id: response.id || null,\n      playbook_synced_at: new Date().toISOString(),\n      playbook_payload: {\n        ...(source.playbook_payload || {}),\n        notion_response_id: response.id || null,\n        notion_url: response.url || null\n      }\n    }\n  };\n});"
       },
       "id": "stage-4-parse-notion-result",
       "name": "Stage 4 Parse Notion Result",
@@ -745,6 +745,22 @@
         "valueToMatchOn": "={{$json.platform_video_id}}",
         "valuesToSend": {
           "values": [
+            {
+              "column": "raw_payload",
+              "value": "={{JSON.stringify($json.raw_payload || {})}}"
+            },
+            {
+              "column": "creator_id",
+              "value": "={{$json.creator_id}}"
+            },
+            {
+              "column": "title",
+              "value": "={{$json.title}}"
+            },
+            {
+              "column": "published_at",
+              "value": "={{$json.published_at}}"
+            },
             {
               "column": "playbook_status",
               "value": "={{$json.playbook_status}}"
@@ -781,7 +797,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const source = $input.first().json || {};\nconst eligible = source.analysis_status === 'analyzed' && source.playbook_status === 'synced';\nconst score = eligible && typeof source.analysis_confidence === 'number'\n  ? Number(source.analysis_confidence.toFixed(4))\n  : null;\n\nreturn [{\n  json: {\n    ...source,\n    feedback_status: 'pending_first_party_data',\n    feedback_score: score,\n    feedback_payload: {\n      batch_id: source.batch_id || null,\n      platform_video_id: source.platform_video_id || null,\n      stage4_status: source.playbook_status || 'unknown',\n      analysis_status: source.analysis_status || 'unknown',\n      scaffold_mode: 'deferred_until_first_party_metrics',\n      eligible_for_blend: Boolean(eligible),\n      next_action: 'ingest_first_party_posts'\n    }\n  }\n}];"
+        "jsCode": "const items = $input.all();\nreturn items.map((item) => {\n  const source = item.json || {};\n  const eligible = source.analysis_status === 'analyzed' && source.playbook_status === 'synced';\n  const score = eligible && typeof source.analysis_confidence === 'number'\n    ? Number(source.analysis_confidence.toFixed(4))\n    : null;\n\n  return {\n    json: {\n      ...source,\n      feedback_status: 'pending_first_party_data',\n      feedback_score: score,\n      feedback_payload: {\n        batch_id: source.batch_id || null,\n        platform_video_id: source.platform_video_id || null,\n        stage4_status: source.playbook_status || 'unknown',\n        analysis_status: source.analysis_status || 'unknown',\n        scaffold_mode: 'deferred_until_first_party_metrics',\n        eligible_for_blend: Boolean(eligible),\n        next_action: 'ingest_first_party_posts'\n      }\n    }\n  };\n});"
       },
       "id": "stage-5-feedback-scaffold",
       "name": "Stage 5 Feedback Scaffold",
@@ -802,6 +818,22 @@
         "valueToMatchOn": "={{$json.platform_video_id}}",
         "valuesToSend": {
           "values": [
+            {
+              "column": "raw_payload",
+              "value": "={{JSON.stringify($json.raw_payload || {})}}"
+            },
+            {
+              "column": "creator_id",
+              "value": "={{$json.creator_id}}"
+            },
+            {
+              "column": "title",
+              "value": "={{$json.title}}"
+            },
+            {
+              "column": "published_at",
+              "value": "={{$json.published_at}}"
+            },
             {
               "column": "feedback_status",
               "value": "={{$json.feedback_status}}"
@@ -1030,6 +1062,144 @@
         1912,
         480
       ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const toHex = (value) => (value >>> 0).toString(16).padStart(8, '0');\nconst makeDeterministicUuid = (input) => {\n  const text = String(input || 'unknown').toLowerCase().trim();\n  let h1 = 2166136261;\n  let h2 = 2166136261;\n  let h3 = 2166136261;\n  let h4 = 2166136261;\n\n  for (let i = 0; i < text.length; i++) {\n    const c = text.charCodeAt(i);\n    h1 = Math.imul(h1 ^ c, 16777619) >>> 0;\n    h2 = Math.imul(h2 ^ (c + 31), 16777619) >>> 0;\n    h3 = Math.imul(h3 ^ (c + 131), 16777619) >>> 0;\n    h4 = Math.imul(h4 ^ (c + 521), 16777619) >>> 0;\n  }\n\n  const hex = `${toHex(h1)}${toHex(h2)}${toHex(h3)}${toHex(h4)}`.slice(0, 32);\n  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20, 32)}`;\n};\n\nconst seedCreators = [\n  { creator_name: 'Nate Herk', profile_url: 'https://www.youtube.com/@nateherk' },\n  { creator_name: 'Anton Daniels', profile_url: 'https://www.youtube.com/@AntonDaniels' },\n  { creator_name: 'Jack', profile_url: 'https://www.youtube.com/@Itssssss_Jack' },\n  { creator_name: 'AI Foundations', profile_url: 'https://www.youtube.com/@ai-foundations' },\n  { creator_name: 'Dan Martell', profile_url: 'https://www.youtube.com/@danmartell' }\n];\n\nreturn seedCreators.map((c) => ({\n  json: {\n    creator_id: makeDeterministicUuid(c.creator_name),\n    creator_name: c.creator_name,\n    profile_url: c.profile_url,\n    source_query: 'seeded_reference_list',\n    source_snippet: '',\n    relevance_score: 1,\n    platform: 'youtube'\n  }\n}));"
+      },
+      "name": "Seed Reference Creators",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        580,
+        480
+      ],
+      "id": "seed-reference-creators-node"
+    },
+    {
+      "parameters": {},
+      "id": "manual-trigger-debug",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        280,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "schema": "public",
+        "table": "content_intelligence_batches",
+        "dataMode": "defineBelow",
+        "columnToMatchOn": "id",
+        "valueToMatchOn": "={{$json.batch_id}}",
+        "valuesToSend": {
+          "values": [
+            {
+              "column": "id",
+              "value": "={{$json.batch_id}}"
+            },
+            {
+              "column": "status",
+              "value": "running"
+            },
+            {
+              "column": "provider",
+              "value": "claude"
+            },
+            {
+              "column": "creator_count",
+              "value": "={{$json.creator_count || 0}}"
+            }
+          ]
+        }
+      },
+      "id": "supabase-upsert-batch",
+      "name": "Supabase Upsert Batch",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [
+        2680,
+        200
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "ubXgrL18K5l7DRHz",
+          "name": "Supabase Content Intelligence"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "page-exists-cond",
+              "leftValue": "={{$json.playbook_page_id}}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "stage-4-page-exists-filter",
+      "name": "Stage 4 Page Exists?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        6580,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ 'https://api.notion.com/v1/pages/' + $json.playbook_page_id }}",
+        "method": "PATCH",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { properties: { 'Topic type': { select: { name: $json.playbook_payload.topic_type } }, 'Recommended format': { select: { name: $json.playbook_payload.recommended_format } }, 'Reasoning': { rich_text: [ { text: { content: $json.playbook_payload.reasoning || 'No reasoning provided' } } ] }, 'Example reference': { title: [ { text: { content: ($json.playbook_payload.example_reference || 'Untitled example').slice(0, 1800) } } ] }, 'Creator': { rich_text: [ { text: { content: $json.playbook_payload.creator_name || 'unknown' } } ] }, 'Source URL': { url: $json.playbook_payload.source_url || null } } } }}",
+        "specifyHeaders": "keypair",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Notion-Version",
+              "value": "2022-06-28"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth"
+      },
+      "id": "stage-4-notion-update",
+      "name": "Stage 4 Notion Update",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        6880,
+        200
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "Xv9FwmzQu0V9m65g",
+          "name": "Notion Bearer"
+        }
+      }
     }
   ],
   "connections": {
@@ -1087,6 +1257,11 @@
         [
           {
             "node": "Stage 3 Provider Switch",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Supabase Upsert Batch",
             "type": "main",
             "index": 0
           }
@@ -1204,7 +1379,7 @@
       "main": [
         [
           {
-            "node": "Stage 4 Notion Upsert",
+            "node": "Stage 4 Page Exists?",
             "type": "main",
             "index": 0
           }
@@ -1299,7 +1474,7 @@
       "main": [
         [
           {
-            "node": "Build Search Queries",
+            "node": "Seed Reference Creators",
             "type": "main",
             "index": 0
           }
@@ -1410,6 +1585,62 @@
         [
           {
             "node": "YT Get Channel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Seed Reference Creators": {
+      "main": [
+        [
+          {
+            "node": "Supabase Upsert Creators",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "YT Parse Creator URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Seed Reference Creators",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Stage 4 Page Exists?": {
+      "main": [
+        [
+          {
+            "node": "Stage 4 Notion Update",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stage 4 Notion Upsert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Stage 4 Notion Update": {
+      "main": [
+        [
+          {
+            "node": "Stage 4 Parse Notion Result",
             "type": "main",
             "index": 0
           }

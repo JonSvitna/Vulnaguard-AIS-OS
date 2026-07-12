@@ -36,6 +36,16 @@ This quarter (see `context/priorities.md` for detail): ship Sentinel CMMC certif
 
 Match the register in `references/voice.md`. Casual but professional. Short sentences. No em dashes. Bullet points over paragraphs. Don't fake my voice on external content (LinkedIn, email to clients) without showing me a draft first.
 
+## Drafting router — never burn personal API keys on routine work
+
+Every repeatable drafting job already has a home I'm paying for. Route there, not to a personal Claude/ChatGPT tab (that's double-paying and the main token bleed I'm cutting). Default entry points:
+
+- **Cold outreach email** → `vulnaguard-seo-agent` copywriter → Resend pipeline (`connections.md` row 2). Not a personal tab.
+- **Social / video content** → `content-pipeline` `POST /api/content-pipeline/generate` (rows 18/19, multi-brand voice built in).
+- **Brand copy, posts, client email, any "write me X"** → the voice skills in this AIOS (`seanbuilds-voice`, `seans-voice-vulnaguard`). Runs on the AIOS, not personal keys.
+
+Rule: if a drafting task is repeatable, it belongs in a skill or a pipeline. Personal API keys are reserved for genuinely one-off exploration — nothing that recurs. If you catch me opening a personal tab for routine drafting, flag it.
+
 ## Connections
 
 Microsoft 365 (Outlook + shared mailboxes) for business comms; Slack for internal/team; Resend API for outbound email; cold email + LinkedIn for outreach (no traction yet — actively improving this). GitHub, Codex/OpenAI, and Claude as dev/build tools. Revenue plan: Stripe (primary, not yet configured), Mercury Bank (invoicing fallback). No task-tracking tool yet. See `connections.md` for the full registry and `/audit` for freshness.

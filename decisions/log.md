@@ -22,6 +22,19 @@ Started NIST SP 800-171 Gap Assessment engagement for AfterSwing. Primary contac
 
 Keep it terse. Future-you will thank present-you for capturing the *why*, not just the *what*.
 
+## 2026-07-12 — Token discipline: drafting router + single video spine
+
+**Decision:** Two housekeeping cuts to stop burning personal API keys / re-building things I already have.
+(1) **Drafting router** — added a `CLAUDE.md` section making the default for any repeatable "write me X" the seo-agent copywriter pipeline, the content-pipeline generate API, or the AIOS voice skills. Personal Claude/ChatGPT keys are reserved for one-off exploration only. That double-pay (personal sub + human loop time) was the main token bleed.
+(2) **Video** — no new system. Three overlapping video paths exist (creative-os Remotion, `video-website-agent` HyperFrames `template-composer`, seo-agent `captureMode:"video"`). creative-os is the single spine; the other two get retired/frozen (follow-up, touches other repos). The lever for "better video without hand-building each one" is the already-shipped storyboard + `design_concepts` feedback loop — feed it reference videos, don't build new machinery.
+(3) **URL intake** — designed Flow B (see `references/content-intake-pipeline.md` Part E + `references/sql/content-intake-url-asset.sql`): let a video dropped as an external URL route to the render worker, not just a Slack file upload. yt-dlp is already in the deployed worker (2026-07-11), so it's a ~5-change bridge, not a rebuild. Flow A (reference-video analysis via URL) already works as a manual CLI call.
+
+**Why:** Sean flagged unnecessary token burn. The fix in both cases was consolidation onto infrastructure already built and paid for, not new spend. Would change if a pipeline can't match the quality of a hand-draft/hand-edit for a specific high-stakes piece — those stay manual by exception.
+
+**Alternatives considered:** keep drafting ad-hoc in personal tabs (rejected — the bleed); build a fresh URL-video ingestion system (rejected — yt-dlp already deployed, only a queue discriminator + worker branch missing).
+
+**Owner:** Sean. Execution of Flow B + the two video-path retirements pending (needs `.env` / creative-os, not reachable from a scoped session).
+
 ## 2026-06-26 — Connected YouTube Data API for OfficialSeanBuilds channel branding
 
 **Decision:** Built `scripts/youtube_api.py` (stdlib OAuth, no third-party deps) to read/update channel title and description via the YouTube Data API. Used a dedicated Google Cloud project (`youtube-channel-manager-500617`) in OAuth Testing mode rather than Sean's existing shared Production project, so the restricted `youtube` scope doesn't trigger Google's app verification review.

@@ -89,3 +89,21 @@ Under 200 words for outreach, under 100 for follow-ups. Sign off: Sean Murrill /
 ## Why three Projects instead of one
 
 Mixing lists in one thread means every draft inherits context from unrelated conversations (a sales prospect's details bleeding into a partnership note) and you lose the ability to tell at a glance which pipeline a draft belongs to. Three Projects = three clean histories, each pre-loaded with the right voice rules, no re-explaining per chat, no API token spend.
+
+---
+
+## Sending the draft — `scripts/send_manual_email.py`
+
+Drafting in claude.ai is free (flat Pro rate). Actually sending still needs a real transport — use `scripts/send_manual_email.py`, which fires the draft through Resend from the same verified `vulnaguard.com` domain the automated `vulnaguard-seo-agent` pipeline uses, instead of pasting into Outlook from a different sending identity.
+
+**One-time setup:** add `RESEND_API_KEY` to `.env` (slot already added — same key used by `vulnaguard-seo-agent`/`Sentinel-CMMC`, see `references/resend-api.md`).
+
+**Usage:**
+```
+python3 scripts/send_manual_email.py \
+    --to lead@example.com \
+    --subject "Marcus — CMMC referral partnership" \
+    --body-file /tmp/draft.txt \
+    --list partnership
+```
+`--list` is `partnership` / `sales` / `general` — printed in the confirmation for your own tracking, not sent to Resend. It does not auto-log to `references/outreach-log.md` (that log tracks reply status by hand); add the row yourself after sending.

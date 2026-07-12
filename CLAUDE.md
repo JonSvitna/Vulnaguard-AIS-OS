@@ -43,8 +43,9 @@ Every repeatable drafting job already has a home I'm paying for. Route there, no
 - **Cold outreach email** → `vulnaguard-seo-agent` copywriter → Resend pipeline (`connections.md` row 2). Not a personal tab.
 - **Social / video content** → `content-pipeline` `POST /api/content-pipeline/generate` (rows 18/19, multi-brand voice built in).
 - **Brand copy, posts, client email, any "write me X"** → the voice skills in this AIOS (`seanbuilds-voice`, `seans-voice-vulnaguard`). Runs on the AIOS, not personal keys.
+- **One-off BD email that doesn't fit an automated pipeline** (a specific partnership contact, a manually-sourced sales prospect, a general RFI/follow-up) → Claude Pro Projects, not the API. Three dedicated Projects (Partnership / Sales / General BD), each pre-loaded with the right voice rules — see `references/claude-projects-drafting.md`. Runs on the Pro subscription flat rate, not per-token.
 
-Rule: if a drafting task is repeatable, it belongs in a skill or a pipeline. Personal API keys are reserved for genuinely one-off exploration — nothing that recurs. If you catch me opening a personal tab for routine drafting, flag it.
+Rule: if a drafting task is repeatable, it belongs in a skill or a pipeline. If it's one-off, it belongs in a Claude Pro Project, not a personal API call. Personal API keys are reserved for genuinely one-off exploration — nothing that recurs, and nothing that's routine drafting. If you catch me opening a personal API tab for routine drafting, flag it.
 
 ## Connections
 

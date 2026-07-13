@@ -68,7 +68,7 @@ while actually building it:
 - n8n credentials added: `Slack Bot Bearer` (httpHeaderAuth) and `SEO-Agent Postgres`
   (postgres), alongside the existing Anthropic/Notion credentials this workflow reuses.
 
-### n8n workflow: "Content Intake Pipeline" (`WCw0Mug93fTmPLJR`, same instance as row 18, currently `active: false`)
+### n8n workflow: "Content Intake Pipeline" (`WCw0Mug93fTmPLJR`, same instance as row 18, `active: true`)
 
 1. **Schedule Trigger** — every 5 minutes.
 2. **Slack History** — `GET conversations.history` on `#content-intake`, `oldest`
@@ -298,7 +298,7 @@ Supabase project behind this repo's n8n instance).
   manual `content-intake-render` fallback skill in `creative-os` — both updated;
   nothing else in `vulnaguard-seo-agent`'s dashboard/UI reads that table's status today.
 
-## Part E — URL-based intake (designed 2026-07-12, not yet built)
+## Part E — URL-based intake (built 2026-07-12)
 
 **Trigger:** Sean's source footage often isn't a file he holds — it lives at a URL
 (his own YouTube/Drive, or someone else's video he wants to work from). Today the
@@ -314,36 +314,27 @@ and the render worker never sees it. Two distinct URL flows, different states:
   row is inserted, temp file cleaned up (creative-os commit `552a39c`, 2026-07-11,
   verified live). This is the path to raise the automated template's floor — point it
   at videos worth imitating. It is NOT triggered by dropping a URL in `#content-intake`.
-- **Flow B — Sean's own footage at a URL** (cut into a post): **not wired.** The bridge
-  below. The hard dependency is already solved: `yt-dlp` is baked into the deployed
-  `creative-os-render-worker` Dockerfile (2026-07-11), so this is the missing ~10%, not
-  a new system.
+- **Flow B — Sean's own footage at a URL** (cut into a post): **built 2026-07-12.**
+  Paste a YouTube/Drive/etc. URL into `#content-intake` (no file upload). Pipeline
+  treats it as video, asks for caption + edit intent, queues with
+  `asset_kind='external_url'`, and the render worker yt-dlp-fetches before Remotion.
 
-### Flow B build (five changes)
+### Flow B build (five changes) — done
 
-1. **SQL** — `references/sql/content-intake-url-asset.sql` adds
-   `asset_kind text not null default 'slack_file'` (check: `slack_file` | `external_url`)
-   to `content_intake_video_queue`, so the worker knows whether to yt-dlp-fetch or
-   Slack-download. Additive, backward compatible. Run against `vulnaguard-seo-agent`'s
-   Railway Postgres (same target as Part A's migration, not the Supabase project).
-2. **n8n `Extract New Messages` / `Normalize Message`** — detect a video URL in message
-   text when no Slack file object is present. Match `youtube.com` / `youtu.be` plus a
-   generic URL fallback (yt-dlp resolves many hosts). On match: `captureMode='video'`,
-   `asset_url=<the URL>`, `asset_kind='external_url'`.
-3. **n8n ask-flow (`Has Caption` gate)** — the edit-intent ask (`edit_mode` /
-   `duration_sec`) already fires for video drops; extend the "always ask for video" gate
-   to also cover URL-video, not just file-video. One condition change.
-4. **n8n `Insert Video Queue`** — write `asset_kind` alongside the existing `asset_url`
-   (same pattern as the `video_brief` / `storyboard` passthroughs).
-5. **`creative-os-render-worker/index.js`** — branch on `asset_kind`: `external_url` →
-   yt-dlp fetch (binary already in the image), `slack_file` → existing
-   `url_private_download` path. The render path after fetch is identical.
+1. ✅ **SQL** — `references/sql/content-intake-url-asset.sql` applied to
+   `vulnaguard-seo-agent` Railway Postgres (`asset_kind` + check constraint).
+2. ✅ **n8n `Extract New Messages`** — detects Slack-mrkdwn + plain URLs when no file
+   object is present; sets `asset_kind='external_url'`, synthetic `file_mimetype=
+   'video/url'`, and stores the URL in `file_url_private` for downstream reuse.
+3. ✅ **n8n ask-flow (`Has Caption` / `Ask For Caption`)** — URL-video always asks for
+   edit intent (same as file-video). `Track Awaiting Caption` /
+   `Extract Caption Reply` preserve `asset_kind` across the reply round-trip.
+4. ✅ **n8n `Insert Video Queue`** — writes `asset_kind` alongside `asset_url`.
+5. ✅ **`creative-os/render-worker/index.js`** — `downloadAsset()` branches:
+   `external_url` → yt-dlp (720p, merge to mp4), `slack_file` → Slack download.
+   **Needs push + Railway redeploy** before live URL drops render.
 
-**Execution note:** this repo (`Vulnaguard-AIS-OS`) is the system of record for the
-design; the actual edits land in the live n8n instance (via `N8N_API_KEY` in `.env`) and
-the `creative-os` repo — neither reachable from a fresh scoped session with no `.env`.
-Run steps 1-4 where `.env` lives (droplet/local); step 5 in the `creative-os` repo, then
-redeploy the worker. Decision logged 2026-07-12.
+Decision logged 2026-07-12 (design) / implemented same day.
 
 ## Open items
 

@@ -663,11 +663,3 @@ Pipeline stages locked to this order: Stage 1 scrape via Apify -> Stage 2 Supaba
 **Owner:** Sean. Next: review/merge PR #2 in `seanbuilds`, verify `officialseanbuilds.com/outreach` serves the `vulnaguard-smb-automation` page after redeploy. Separate, non-blocking cleanup for later: remove the SMB outreach page code from `vulnaguard-capture-os/apps/web` (it doesn't belong in the gov-contracting product) and rename the Vercel project so `contract-hunter` isn't a misleading label for a Capture OS deployment.
 
 **Resolved 2026-07-09:** PR merged. Verified live — `officialseanbuilds.com/outreach` now serves the `vulnaguard-smb-automation` OutreachOS landing page (title "SMB Outreach Dashboard", h1 "Your outreach pipeline, on autopilot"), no Contract Hunter Railway `apiBase` present. Separation unblocked; Sean can proceed with the IndieHackers/outreach launch. Non-blocking cleanup (SMB code still living in `vulnaguard-capture-os/apps/web`, misleading `contract-hunter` project name) remains open for a future session.
-
-## 2026-07-12 — Claude Pro Projects added as third drafting-router tier
-
-**Decision:** Added a third tier to the drafting router (`CLAUDE.md`): one-off BD emails that don't fit the automated `vulnaguard-seo-agent` pipeline route to three dedicated Claude Pro Projects (Partnership / Sales / General BD) instead of a personal API call. Full setup — Project names, custom instructions, which voice-guide file to load into each — is in `references/claude-projects-drafting.md`.
-
-**Why:** Sean hit his personal API token limit hand-crafting BD emails. The drafting router (2fadbba, same day) already covered *repeatable* drafting, but had no answer for genuinely one-off emails (a specific partnership contact, a manually-sourced sales lead) that don't belong in the automated pipeline either. Claude Pro is a flat-rate subscription already paid for — using Projects for this closes the gap without adding a new automated system for work that's inherently one-off.
-
-**Owner:** Sean. Next: create the three Projects in claude.ai, paste in the custom instructions from `references/claude-projects-drafting.md`, attach the referenced voice-guide files as Project knowledge. Nothing to build — this is manual setup in the claude.ai UI, not code.

@@ -2,6 +2,16 @@
 
 Append-only record of meaningful decisions and why they were made. `/level-up` Phase 2 (Method interview) writes scoped automation specs here. You can also append manually whenever you decide something worth remembering.
 
+## 2026-07-15 — AIS OS manages Prism OS; Prism stays a separate system
+
+**Decision:** Register `Prism-OS` as a managed product connection in this AIOS. Vulnaguard AIS OS may prioritize, hand off, and document Prism, but must not implement Prism product/engineering changes in this repository. Prism keeps its own Builder AIOS, rules, plans, and Git history.
+
+**Why:** Sean needs one head agent for life/business orchestration without collapsing product boundaries. Folding Prism into AIS OS would mix customer-compliance engineering with general operator work and blur Sentinel/Prism isolation.
+
+**Alternatives considered:** Fold Prism into AIS OS as a subtree (rejected — different job, credential and customer-data boundaries). Treat Prism as disconnected manual repo with no registry entry (rejected — AIS couldn't manage priorities reliably).
+
+**Owner:** Sean.
+
 ## 2026-06-30 — New Engagement: AfterSwing (NIST-171)
 
 Started NIST SP 800-171 Gap Assessment engagement for AfterSwing. Primary contact: Don Weston. Engagement ID: 2026-07_AfterSwing_NIST-171. Period: 2026-07-01 – 2026-11-01. Folder: playbook/engagements/2026-07_AfterSwing_NIST-171/. Client contact email: seanmurrill@gmail.com.

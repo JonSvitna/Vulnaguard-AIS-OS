@@ -28,7 +28,11 @@ See `EXPANSIONS.md` for what to add as you grow.
 
 ## Knowledge base
 
-Solo developer/entrepreneur who builds and ships software/websites — SaaS products are the primary craft, agents/automation are tools reached for to offload work. Three active lines: **Sentinel CMMC** (the flagship, "my BABY" — compliance tool for CMMC certification), the **SEO agent** (outreach + traffic engine, planned video features), and client **website dev**. No clients yet.
+Solo developer/entrepreneur who builds and ships software/websites — SaaS products are the primary craft, agents/automation are tools reached for to offload work. Active lines: **Prism OS** (multi-framework compliance OS — managed here, built only in `~/Documents/GitHub/Prism-OS`; see `references/prism-os.md`), **Sentinel CMMC** (CMMC compliance product, separate repo), the **SEO agent** (outreach + traffic engine, planned video features), and client **website dev**. First client: AfterSwing.
+
+## Managed products — do not implement here
+
+Prism OS is a separate system with its own Builder AIOS. This AIOS is the head agent: track it, prioritize it, hand work off to it. Never edit Prism application code, catalogs, migrations, or Prism `CLAUDE.md` from this repo. Open the Prism repo for product/engineering work.
 
 This quarter (see `context/priorities.md` for detail): ship Sentinel CMMC certification, land up to 10 clients via the SEO platform's outreach, and drive consistent website traffic via the SEO agent. See `context/about-me.md` and `context/about-business.md` for fuller background.
 

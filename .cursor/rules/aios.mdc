@@ -37,13 +37,27 @@ See `EXPANSIONS.md` for what to add as you grow.
 
 ## Knowledge base
 
-Solo developer/entrepreneur who builds and ships software/websites — SaaS products are the primary craft, agents/automation are tools reached for to offload work. Three active lines: **Sentinel CMMC** (the flagship, "my BABY" — compliance tool for CMMC certification), the **SEO agent** (outreach + traffic engine, planned video features), and client **website dev**. No clients yet.
+Solo developer/entrepreneur who builds and ships software/websites — SaaS products are the primary craft, agents/automation are tools reached for to offload work. Active lines: **Prism OS** (multi-framework compliance OS — managed here, built only in `~/Documents/GitHub/Prism-OS`; see `references/prism-os.md`), **Sentinel CMMC** (CMMC compliance product, separate repo), the **SEO agent** (outreach + traffic engine, planned video features), and client **website dev**. First client: AfterSwing.
+
+## Managed products — do not implement here
+
+Prism OS is a separate system with its own Builder AIOS. This AIOS is the head agent: track it, prioritize it, hand work off to it. Never edit Prism application code, catalogs, migrations, or Prism `CLAUDE.md` from this repo. Open the Prism repo for product/engineering work.
 
 This quarter (see `context/priorities.md` for detail): ship Sentinel CMMC certification, land up to 10 clients via the SEO platform's outreach, and drive consistent website traffic via the SEO agent. See `context/about-me.md` and `context/about-business.md` for fuller background.
 
 ## Voice
 
 Match the register in `references/voice.md`. Casual but professional. Short sentences. No em dashes. Bullet points over paragraphs. Don't fake my voice on external content (LinkedIn, email to clients) without showing me a draft first.
+
+## Drafting router — never burn personal API keys on routine work
+
+Every repeatable drafting job already has a home I'm paying for. Route there, not to a personal Claude/ChatGPT tab (that's double-paying and the main token bleed I'm cutting). Default entry points:
+
+- **Cold outreach email** → `vulnaguard-seo-agent` copywriter → Resend pipeline (`connections.md` row 2). Not a personal tab.
+- **Social / video content** → `content-pipeline` `POST /api/content-pipeline/generate` (rows 18/19, multi-brand voice built in).
+- **Brand copy, posts, client email, any "write me X"** → the voice skills in this AIOS (`seanbuilds-voice`, `seans-voice-vulnaguard`). Runs on the AIOS, not personal keys.
+
+Rule: if a drafting task is repeatable, it belongs in a skill or a pipeline. Personal API keys are reserved for genuinely one-off exploration — nothing that recurs. If you catch me opening a personal tab for routine drafting, flag it.
 
 ## Connections
 
@@ -66,3 +80,4 @@ Path: `~/Documents/Obsidian Vault`. This is Sean's business brain — domain-fir
 - When I make a decision, suggest logging it via the decisions log.
 - When you spot a manual task I'm doing 3+ times, surface it next time `/level-up` runs.
 - Default Shift: when I bring a new task, ask "to what extent could AI be leveraged here?" before assuming I'll do it the old way.
+- Documentation is mandatory. Nothing is "done" until it's documented — treat "and document it" as the implicit final step of every task. See `references/documentation-standard.md` for what gets recorded where. Definition of Done includes the write-up.

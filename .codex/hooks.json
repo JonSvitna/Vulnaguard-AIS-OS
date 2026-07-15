@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 scripts/daily_brief_hook.py",
+            "timeout": 30,
+            "statusMessage": "Pulling M365 daily brief..."
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -673,3 +673,23 @@ Pipeline stages locked to this order: Stage 1 scrape via Apify -> Stage 2 Supaba
 **Owner:** Sean. Next: review/merge PR #2 in `seanbuilds`, verify `officialseanbuilds.com/outreach` serves the `vulnaguard-smb-automation` page after redeploy. Separate, non-blocking cleanup for later: remove the SMB outreach page code from `vulnaguard-capture-os/apps/web` (it doesn't belong in the gov-contracting product) and rename the Vercel project so `contract-hunter` isn't a misleading label for a Capture OS deployment.
 
 **Resolved 2026-07-09:** PR merged. Verified live — `officialseanbuilds.com/outreach` now serves the `vulnaguard-smb-automation` OutreachOS landing page (title "SMB Outreach Dashboard", h1 "Your outreach pipeline, on autopilot"), no Contract Hunter Railway `apiBase` present. Separation unblocked; Sean can proceed with the IndieHackers/outreach launch. Non-blocking cleanup (SMB code still living in `vulnaguard-capture-os/apps/web`, misleading `contract-hunter` project name) remains open for a future session.
+
+## 2026-07-19 — Retired website-design-lead-finder agent
+
+**Decision:** Archived the `website-design-lead-finder` agent (`.claude/agents/` and `.codex/agents/` copies moved to `archives/website-design-lead-finder/`, not deleted) at Sean's request. It's no longer an active trigger, so it won't be suggested or run as a standing task.
+
+**Why:** Sean judged the website-dev lead line wasn't earning its keep relative to the effort/spend, and asked to shut it down as part of a broader pass to cut automation that's draining resources without pulling its weight. Note: this agent was never actually scheduled anywhere (no cron, no CronCreate/scheduled-tasks entry, no Railway service) — it only ran on manual trigger — so archiving it removes the trigger/suggestion surface, not a running cost.
+
+**Alternatives considered:** Deleting the file outright (rejected — repo convention is archive, not delete, per `CLAUDE.md`). Leaving it in place but telling myself not to suggest it (rejected — Sean asked for it off, and a file that still exists as an active agent will keep surfacing in "what should I automate" contexts like `/level-up`).
+
+**Owner:** Sean. `leads/website-design-inbox.md` (existing staged prospects) left untouched — it's just data, not automation; revisit manually if the line ever gets picked back up.
+
+## 2026-07-19 — Paused n8n content workflows; found creative-os-render-worker already gone
+
+**Decision:** Deactivated both live n8n workflows via the n8n API (`POST /api/v1/workflows/{id}/deactivate`): `Content Intake Pipeline v1` (`WCw0Mug93fTmPLJR`) and `Content Intelligence Pipeline v1` (`betgAlgnZ28kw4cY`). Both confirmed `active: false`. This stops the 5-min Schedule Trigger polling and the Claude/Slack calls it was making. The n8n server itself (Railway project `n8n-content-pipeline`) is left running, only the workflows are off.
+
+Went to also stop `creative-os-render-worker` (per [[references/content-intake-pipeline.md]] in `creative-os`, documented as a live Railway project since 2026-07-10) and found it isn't there: not in `railway list` output for this account (checked all 11 projects/services), and its documented URL (`creative-os-render-worker-production.up.railway.app`) now returns Railway's edge fallback 404 (`x-railway-fallback: true`) — no deployment currently bound to that domain. Nothing to stop; it already isn't running.
+
+**Why:** Sean asked to stop Creative OS and n8n automation "for now" as part of a resource-drain cleanup pass (follows [[archives/website-design-lead-finder]] retirement same session).
+
+**Owner:** Sean. Two follow-ups: (1) `creative-os-render-worker` being gone means any video dropped in `#content-intake` since whenever it died has been queuing in `content_intake_video_queue` with nothing consuming it — worth checking that table for a backlog before deciding whether to redeploy or fully retire the row-2 connection in `creative-os/connections.md`. (2) n8n workflows are deactivated, not deleted — reactivate via the same API (`/activate`) or the n8n UI whenever the content pipeline is wanted back.

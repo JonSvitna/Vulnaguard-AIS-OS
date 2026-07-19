@@ -27,4 +27,13 @@
 
 ---
 
-*Check ran: 2026-07-18 AM. Next check: 2026-07-18 PM.*
+---
+
+## Re-check — 2026-07-18 AM (second pass)
+
+**Commit reviewed:** `f35de5b` (hermes-cron scan run, 1 new entry)
+**Finding:** Only new item is a technical bug fix — Resend settings page showed "unset" even when actually configured on Railway. Fixed with a live server check (`/api/marketing/config`). Technical only; not business-relevant. Not staged for Obsidian.
+
+**No new vault-worthy items since the first AM pass.**
+
+*Re-check ran: 2026-07-18 AM. Next check: 2026-07-18 PM.*

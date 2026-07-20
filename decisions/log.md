@@ -693,3 +693,33 @@ Went to also stop `creative-os-render-worker` (per [[references/content-intake-p
 **Why:** Sean asked to stop Creative OS and n8n automation "for now" as part of a resource-drain cleanup pass (follows [[archives/website-design-lead-finder]] retirement same session).
 
 **Owner:** Sean. Two follow-ups: (1) `creative-os-render-worker` being gone means any video dropped in `#content-intake` since whenever it died has been queuing in `content_intake_video_queue` with nothing consuming it — worth checking that table for a backlog before deciding whether to redeploy or fully retire the row-2 connection in `creative-os/connections.md`. (2) n8n workflows are deactivated, not deleted — reactivate via the same API (`/activate`) or the n8n UI whenever the content pipeline is wanted back.
+
+## 2026-07-19 — Clay feeds the existing SEO-agent pipeline through n8n
+
+**Decision:** Use Clay for lead discovery and enrichment, then send verified-email rows through an active n8n webhook into `vulnaguard-seo-agent`'s existing duplicate-safe import and CMMC qualification route. Clay does not become a second outreach system and does not bypass the SEO agent's review/approval gate. The live workflow is `Clay Lead Intake to SEO Agent` (`A6kOqisezATjjT2Q`); its version-controlled source and operating guide are `infra/n8n/clay-lead-intake.workflow.json` and `references/clay-lead-intake.md`.
+
+**Why:** Clay's non-Enterprise integration model is table/workflow based rather than a general synchronous API. Its supported HTTP action/webhook pattern fits the existing AIS-OS orchestration boundary. Reusing the SEO agent's import route preserves company deduplication, cross-system contacted checks, qualification, and approval controls while making the trial credits useful for better data rather than building a parallel lead database.
+
+**Alternatives considered:** Sending Clay directly to the public single-lead create route (rejected because it does not deduplicate or authenticate); using Clay as the outreach sender (rejected because it would duplicate the established Resend/SEO-agent pipeline and its controls); CSV-only exports (kept as a fallback, but rejected as the primary path because they add manual handling and make recurring intake harder).
+
+**Owner:** Sean. The n8n side is active and duplicate-safe verified. Sean must finish the Clay table and HTTP-action mapping in his authenticated Clay session, starting with a 25-row quality test before scaling.
+
+## 2026-07-19 — Clay ICP narrowed to startup-sized, owner-led buyers
+
+**Decision:** Use a 1-20 employee ceiling for Vulnaguard's commercial sourcing, with a strict `2-10 employees` Clay bucket for the first CMMC lane. Prioritize small federal contractors, subcontractors, defense suppliers, manufacturers, and engineering firms with explicit DoD/CAGE/SAM/CMMC/NIST signals. Keep systems/automation and website/design as separate owner-led microbusiness lanes. Exclude hospitals, Fortune 500/public companies, government and education, large nonprofits, franchises, enterprise infrastructure, and direct service competitors. The daily target is 200-300 raw sourced records across the three lanes, but no more than the best 50 should be enriched/exported each day initially.
+
+**Why:** The capability statement positions Vulnaguard around bounded $2,500-$20,000 cybersecurity and compliance engagements for government contractors. The earlier broad Clay search surfaced ExxonMobil, universities, nonprofits, job boards, and other organizations a new startup cannot support. A narrow source produced 12 credible 2-10 employee federal-supply-chain companies with no paid enrichment, proving quality improves when federal signals and delivery capacity are hard gates.
+
+**Alternatives considered:** Keeping broad industries and company sizes to hit 200-300 rows from one search (rejected because volume concealed poor fit and enterprise delivery risk); enriching the broad 100-row sample (rejected after the first 10-row test exposed low quality); treating 10,000 trial actions as 10,000 enriched leads (rejected because actions and data credits are separate allowances).
+
+**Owner:** Sean. Keep the strict CMMC source as the benchmark. Build and quality-test the systems/automation and website/design sources separately before scheduling. Mirror this business-level ICP decision into the Obsidian vault when that workspace is available.
+
+## 2026-07-19 — Correction: Clay market stays broad; delivery capacity is the constraint
+
+**Decision:** Supersedes the market restriction in the preceding Clay ICP entry. Vulnaguard will source private U.S. SMBs across industries for cybersecurity, compliance, automation, systems/software, and website/design work. Government contractors are one service lane, not the primary admission requirement. Prioritize 2-50 employee owner-led businesses, while permitting 51-200 employee companies only for clearly bounded projects. Exclude enterprise and institutional targets that exceed startup delivery capacity rather than narrowing the market by industry.
+
+**Why:** Sean clarified that the capability statement was provided to show the full range of services Vulnaguard can perform, not to limit sourcing to CMMC or federal suppliers. As a startup, Vulnaguard needs a wide top-of-funnel and can compensate for limited operating history with disciplined volume. A broad source can produce 200-300 raw prospects per day while downstream scoring and selective enrichment control quality and spend.
+
+**Alternatives considered:** Keeping CMMC as the dominant lane (rejected because it misreads the capability statement and unnecessarily shrinks the addressable market); accepting enterprise companies for volume (rejected because their infrastructure and support expectations exceed current capacity); enriching all broad-source rows (rejected because sourcing volume should not equal credit spend or sending volume).
+
+**Owner:** Sean. Broad Clay workbook `wb_0tig3j6w3hc4rmRuHmm` is the general-market source; focused workbook `wb_0tig3ciNVGjGucRT29T` remains useful as a CMMC sub-lane. Mirror this business-level correction into the Obsidian vault when that workspace is available.

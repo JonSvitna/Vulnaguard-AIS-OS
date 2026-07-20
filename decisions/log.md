@@ -2,6 +2,18 @@
 
 Append-only record of meaningful decisions and why they were made. `/level-up` Phase 2 (Method interview) writes scoped automation specs here. You can also append manually whenever you decide something worth remembering.
 
+## 2026-07-20 — Cut all cloud Routines to daily, kept them alive instead of retiring
+
+**Decision:** Sean found 4 claude.ai cloud Routines running well above intended cadence and reset all of them to 1x/day: `commercial-lead-sourcing` (was every 4 hours, 6x/day) → 6:00 AM daily; `commercial-lead-outreach-bridge` (was 6x/day at fixed clock times) → 6:00 AM daily; `Overnight Lead Triage` (was already 6:00 AM but paused) → unpaused, 6:00 AM daily; `Vulnaguard AIOS — AM Vault Sync Check` → confirmed/kept at 7:00 AM daily (unchanged, per [[project_vault_sync_cloud_routines]]).
+
+I'd flagged that `commercial-lead-sourcing` and `commercial-lead-outreach-bridge` looked superseded by the Clay + n8n pipeline shipped the same week (`references/clay-lead-intake.md`, workflow `Clay Lead Intake to SEO Agent`, which now does sourcing + duplicate-safe import into the SEO agent without spending Claude usage at all) and suggested retiring those two rather than just retiming them. Sean chose to keep them alive at low frequency instead.
+
+**Why:** Sean's own reasoning: lead volume is low right now, so the routines were burning credits for little output regardless of source — but he wants to keep a low-frequency safety net rather than fully cut the Claude-side routines while Clay/n8n coverage is still new and unproven. "Low barrier to keep credit users low" — optionality over full retirement.
+
+**Alternatives considered:** Retiring `commercial-lead-sourcing` and `commercial-lead-outreach-bridge` outright since Clay/n8n now covers that ground — Sean declined for now; revisit once Clay/n8n has a longer track record. Leaving all four at their original elevated cadence — rejected, that's the exact usage drain (~20% before a session even starts) that triggered this cleanup.
+
+**Owner:** Sean. These 4 routines live only in claude.ai's Routines UI — not visible or editable from any tool in a Claude Code session (same limitation as vault-sync, see [[project_vault_sync_cloud_routines]]). Any future change has to happen there directly. Revisit retiring the two commercial routines once Clay/n8n lead volume is consistently flowing.
+
 ## 2026-07-15 — AIS OS manages Prism OS; Prism stays a separate system
 
 **Decision:** Register `Prism-OS` as a managed product connection in this AIOS. Vulnaguard AIS OS may prioritize, hand off, and document Prism, but must not implement Prism product/engineering changes in this repository. Prism keeps its own Builder AIOS, rules, plans, and Git history.

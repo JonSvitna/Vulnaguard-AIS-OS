@@ -1,0 +1,66 @@
+{
+  "name": "Clay Lead Intake to SEO Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "clay-leads-7f3d8e1c-52a9-4b67-91d0-6c4a2e8f5b13",
+        "options": {}
+      },
+      "id": "clay-webhook",
+      "name": "Clay Lead Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [260, 300],
+      "webhookId": "7f3d8e1c-52a9-4b67-91d0-6c4a2e8f5b13"
+    },
+    {
+      "parameters": {
+        "jsCode": "const payload = $json.body ?? $json;\nconst clean = (value) => value === undefined || value === null ? '' : String(value).trim();\nconst companyName = clean(payload.company_name || payload.company || payload.Company || payload['Company Name']);\nconst contactEmail = clean(payload.contact_email || payload.email || payload.Email || payload['Work Email']).toLowerCase();\nif (!companyName) throw new Error('Clay row rejected: company_name is required');\nif (!contactEmail || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(contactEmail)) throw new Error('Clay row rejected: a valid contact_email is required');\nconst firstName = clean(payload.first_name || payload['First Name']);\nconst lastName = clean(payload.last_name || payload['Last Name']);\nconst contactName = clean(payload.contact_name || payload.name || payload['Full Name']) || [firstName, lastName].filter(Boolean).join(' ');\nconst row = {\n  company_name: companyName,\n  website: clean(payload.website || payload.domain || payload['Company Domain']),\n  location: clean(payload.location || payload.city || payload['Company Location']),\n  org_type: clean(payload.org_type || payload.industry || payload.Industry),\n  cmmc_level_sought: clean(payload.cmmc_level_sought),\n  employee_count: clean(payload.employee_count || payload['Employee Count']),\n  contact_name: contactName,\n  contact_title: clean(payload.contact_title || payload.title || payload['Job Title']),\n  contact_email: contactEmail,\n  contact_linkedin: clean(payload.contact_linkedin || payload.linkedin_url || payload['LinkedIn URL'])\n};\nreturn [{ json: { mapping: Object.fromEntries(Object.keys(row).map((key) => [key, key])), all_rows: [row], category: clean(payload.category) || 'sales', business_line: clean(payload.business_line) || 'cmmc', persona_slug: payload.persona_slug || null } }];"
+      },
+      "id": "normalize-clay-lead",
+      "name": "Validate and Normalize Clay Lead",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://vulnaguard-seo-agent-production.up.railway.app/api/marketing/leads/import-confirm",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 240000
+        }
+      },
+      "id": "import-seo-agent",
+      "name": "Import into SEO Agent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [760, 300]
+    }
+  ],
+  "connections": {
+    "Clay Lead Webhook": {
+      "main": [[{"node": "Validate and Normalize Clay Lead", "type": "main", "index": 0}]]
+    },
+    "Validate and Normalize Clay Lead": {
+      "main": [[{"node": "Import into SEO Agent", "type": "main", "index": 0}]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

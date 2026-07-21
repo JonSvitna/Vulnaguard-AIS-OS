@@ -2,6 +2,32 @@
 
 Append-only record of meaningful decisions and why they were made. `/level-up` Phase 2 (Method interview) writes scoped automation specs here. You can also append manually whenever you decide something worth remembering.
 
+## 2026-07-21 — Overnight Lead Triage run failed: MS365 auth not configured
+
+Lead triage routine could not pull mail — `MS365_USER_UPN` env var is missing (same root cause as `MS365_TENANT_ID` gap flagged at session start). No new leads added. Fix: set `MS365_USER_UPN`, `MS365_TENANT_ID`, and associated auth env vars in the session/environment config before next run.
+
+## 2026-07-20 — Cut all cloud Routines to daily, kept them alive instead of retiring
+
+**Decision:** Sean found 4 claude.ai cloud Routines running well above intended cadence and reset all of them to 1x/day: `commercial-lead-sourcing` (was every 4 hours, 6x/day) → 6:00 AM daily; `commercial-lead-outreach-bridge` (was 6x/day at fixed clock times) → 6:00 AM daily; `Overnight Lead Triage` (was already 6:00 AM but paused) → unpaused, 6:00 AM daily; `Vulnaguard AIOS — AM Vault Sync Check` → confirmed/kept at 7:00 AM daily (unchanged, per [[project_vault_sync_cloud_routines]]).
+
+I'd flagged that `commercial-lead-sourcing` and `commercial-lead-outreach-bridge` looked superseded by the Clay + n8n pipeline shipped the same week (`references/clay-lead-intake.md`, workflow `Clay Lead Intake to SEO Agent`, which now does sourcing + duplicate-safe import into the SEO agent without spending Claude usage at all) and suggested retiring those two rather than just retiming them. Sean chose to keep them alive at low frequency instead.
+
+**Why:** Sean's own reasoning: lead volume is low right now, so the routines were burning credits for little output regardless of source — but he wants to keep a low-frequency safety net rather than fully cut the Claude-side routines while Clay/n8n coverage is still new and unproven. "Low barrier to keep credit users low" — optionality over full retirement.
+
+**Alternatives considered:** Retiring `commercial-lead-sourcing` and `commercial-lead-outreach-bridge` outright since Clay/n8n now covers that ground — Sean declined for now; revisit once Clay/n8n has a longer track record. Leaving all four at their original elevated cadence — rejected, that's the exact usage drain (~20% before a session even starts) that triggered this cleanup.
+
+**Owner:** Sean. These 4 routines live only in claude.ai's Routines UI — not visible or editable from any tool in a Claude Code session (same limitation as vault-sync, see [[project_vault_sync_cloud_routines]]). Any future change has to happen there directly. Revisit retiring the two commercial routines once Clay/n8n lead volume is consistently flowing.
+
+## 2026-07-15 — AIS OS manages Prism OS; Prism stays a separate system
+
+**Decision:** Register `Prism-OS` as a managed product connection in this AIOS. Vulnaguard AIS OS may prioritize, hand off, and document Prism, but must not implement Prism product/engineering changes in this repository. Prism keeps its own Builder AIOS, rules, plans, and Git history.
+
+**Why:** Sean needs one head agent for life/business orchestration without collapsing product boundaries. Folding Prism into AIS OS would mix customer-compliance engineering with general operator work and blur Sentinel/Prism isolation.
+
+**Alternatives considered:** Fold Prism into AIS OS as a subtree (rejected — different job, credential and customer-data boundaries). Treat Prism as disconnected manual repo with no registry entry (rejected — AIS couldn't manage priorities reliably).
+
+**Owner:** Sean.
+
 ## 2026-06-30 — New Engagement: AfterSwing (NIST-171)
 
 Started NIST SP 800-171 Gap Assessment engagement for AfterSwing. Primary contact: Don Weston. Engagement ID: 2026-07_AfterSwing_NIST-171. Period: 2026-07-01 – 2026-11-01. Folder: playbook/engagements/2026-07_AfterSwing_NIST-171/. Client contact email: seanmurrill@gmail.com.
@@ -677,10 +703,56 @@ Pipeline stages locked to this order: Stage 1 scrape via Apify -> Stage 2 Supaba
 
 **Resolved 2026-07-09:** PR merged. Verified live — `officialseanbuilds.com/outreach` now serves the `vulnaguard-smb-automation` OutreachOS landing page (title "SMB Outreach Dashboard", h1 "Your outreach pipeline, on autopilot"), no Contract Hunter Railway `apiBase` present. Separation unblocked; Sean can proceed with the IndieHackers/outreach launch. Non-blocking cleanup (SMB code still living in `vulnaguard-capture-os/apps/web`, misleading `contract-hunter` project name) remains open for a future session.
 
-## 2026-07-12 — Claude Pro Projects added as third drafting-router tier
+## 2026-07-19 — Retired website-design-lead-finder agent
 
-**Decision:** Added a third tier to the drafting router (`CLAUDE.md`): one-off BD emails that don't fit the automated `vulnaguard-seo-agent` pipeline route to three dedicated Claude Pro Projects (Partnership / Sales / General BD) instead of a personal API call. Full setup — Project names, custom instructions, which voice-guide file to load into each — is in `references/claude-projects-drafting.md`.
+**Decision:** Archived the `website-design-lead-finder` agent (`.claude/agents/` and `.codex/agents/` copies moved to `archives/website-design-lead-finder/`, not deleted) at Sean's request. It's no longer an active trigger, so it won't be suggested or run as a standing task.
 
-**Why:** Sean hit his personal API token limit hand-crafting BD emails. The drafting router (2fadbba, same day) already covered *repeatable* drafting, but had no answer for genuinely one-off emails (a specific partnership contact, a manually-sourced sales lead) that don't belong in the automated pipeline either. Claude Pro is a flat-rate subscription already paid for — using Projects for this closes the gap without adding a new automated system for work that's inherently one-off.
+**Why:** Sean judged the website-dev lead line wasn't earning its keep relative to the effort/spend, and asked to shut it down as part of a broader pass to cut automation that's draining resources without pulling its weight. Note: this agent was never actually scheduled anywhere (no cron, no CronCreate/scheduled-tasks entry, no Railway service) — it only ran on manual trigger — so archiving it removes the trigger/suggestion surface, not a running cost.
 
-**Owner:** Sean. Next: create the three Projects in claude.ai, paste in the custom instructions from `references/claude-projects-drafting.md`, attach the referenced voice-guide files as Project knowledge. Nothing to build — this is manual setup in the claude.ai UI, not code.
+**Alternatives considered:** Deleting the file outright (rejected — repo convention is archive, not delete, per `CLAUDE.md`). Leaving it in place but telling myself not to suggest it (rejected — Sean asked for it off, and a file that still exists as an active agent will keep surfacing in "what should I automate" contexts like `/level-up`).
+
+**Owner:** Sean. `leads/website-design-inbox.md` (existing staged prospects) left untouched — it's just data, not automation; revisit manually if the line ever gets picked back up.
+
+## 2026-07-19 — Paused n8n content workflows; found creative-os-render-worker already gone
+
+**Decision:** Deactivated both live n8n workflows via the n8n API (`POST /api/v1/workflows/{id}/deactivate`): `Content Intake Pipeline v1` (`WCw0Mug93fTmPLJR`) and `Content Intelligence Pipeline v1` (`betgAlgnZ28kw4cY`). Both confirmed `active: false`. This stops the 5-min Schedule Trigger polling and the Claude/Slack calls it was making. The n8n server itself (Railway project `n8n-content-pipeline`) is left running, only the workflows are off.
+
+Went to also stop `creative-os-render-worker` (per [[references/content-intake-pipeline.md]] in `creative-os`, documented as a live Railway project since 2026-07-10) and found it isn't there: not in `railway list` output for this account (checked all 11 projects/services), and its documented URL (`creative-os-render-worker-production.up.railway.app`) now returns Railway's edge fallback 404 (`x-railway-fallback: true`) — no deployment currently bound to that domain. Nothing to stop; it already isn't running.
+
+**Why:** Sean asked to stop Creative OS and n8n automation "for now" as part of a resource-drain cleanup pass (follows [[archives/website-design-lead-finder]] retirement same session).
+
+**Owner:** Sean. Two follow-ups: (1) `creative-os-render-worker` being gone means any video dropped in `#content-intake` since whenever it died has been queuing in `content_intake_video_queue` with nothing consuming it — worth checking that table for a backlog before deciding whether to redeploy or fully retire the row-2 connection in `creative-os/connections.md`. (2) n8n workflows are deactivated, not deleted — reactivate via the same API (`/activate`) or the n8n UI whenever the content pipeline is wanted back.
+
+## 2026-07-19 — Clay feeds the existing SEO-agent pipeline through n8n
+
+**Decision:** Use Clay for lead discovery and enrichment, then send verified-email rows through an active n8n webhook into `vulnaguard-seo-agent`'s existing duplicate-safe import and CMMC qualification route. Clay does not become a second outreach system and does not bypass the SEO agent's review/approval gate. The live workflow is `Clay Lead Intake to SEO Agent` (`A6kOqisezATjjT2Q`); its version-controlled source and operating guide are `infra/n8n/clay-lead-intake.workflow.json` and `references/clay-lead-intake.md`.
+
+**Why:** Clay's non-Enterprise integration model is table/workflow based rather than a general synchronous API. Its supported HTTP action/webhook pattern fits the existing AIS-OS orchestration boundary. Reusing the SEO agent's import route preserves company deduplication, cross-system contacted checks, qualification, and approval controls while making the trial credits useful for better data rather than building a parallel lead database.
+
+**Alternatives considered:** Sending Clay directly to the public single-lead create route (rejected because it does not deduplicate or authenticate); using Clay as the outreach sender (rejected because it would duplicate the established Resend/SEO-agent pipeline and its controls); CSV-only exports (kept as a fallback, but rejected as the primary path because they add manual handling and make recurring intake harder).
+
+**Owner:** Sean. The n8n side is active and duplicate-safe verified. Sean must finish the Clay table and HTTP-action mapping in his authenticated Clay session, starting with a 25-row quality test before scaling.
+
+## 2026-07-19 — Clay ICP narrowed to startup-sized, owner-led buyers
+
+**Decision:** Use a 1-20 employee ceiling for Vulnaguard's commercial sourcing, with a strict `2-10 employees` Clay bucket for the first CMMC lane. Prioritize small federal contractors, subcontractors, defense suppliers, manufacturers, and engineering firms with explicit DoD/CAGE/SAM/CMMC/NIST signals. Keep systems/automation and website/design as separate owner-led microbusiness lanes. Exclude hospitals, Fortune 500/public companies, government and education, large nonprofits, franchises, enterprise infrastructure, and direct service competitors. The daily target is 200-300 raw sourced records across the three lanes, but no more than the best 50 should be enriched/exported each day initially.
+
+**Why:** The capability statement positions Vulnaguard around bounded $2,500-$20,000 cybersecurity and compliance engagements for government contractors. The earlier broad Clay search surfaced ExxonMobil, universities, nonprofits, job boards, and other organizations a new startup cannot support. A narrow source produced 12 credible 2-10 employee federal-supply-chain companies with no paid enrichment, proving quality improves when federal signals and delivery capacity are hard gates.
+
+**Alternatives considered:** Keeping broad industries and company sizes to hit 200-300 rows from one search (rejected because volume concealed poor fit and enterprise delivery risk); enriching the broad 100-row sample (rejected after the first 10-row test exposed low quality); treating 10,000 trial actions as 10,000 enriched leads (rejected because actions and data credits are separate allowances).
+
+**Owner:** Sean. Keep the strict CMMC source as the benchmark. Build and quality-test the systems/automation and website/design sources separately before scheduling. Mirror this business-level ICP decision into the Obsidian vault when that workspace is available.
+
+## 2026-07-19 — Correction: Clay market stays broad; delivery capacity is the constraint
+
+**Decision:** Supersedes the market restriction in the preceding Clay ICP entry. Vulnaguard will source private U.S. SMBs across industries for cybersecurity, compliance, automation, systems/software, and website/design work. Government contractors are one service lane, not the primary admission requirement. Prioritize 2-50 employee owner-led businesses, while permitting 51-200 employee companies only for clearly bounded projects. Exclude enterprise and institutional targets that exceed startup delivery capacity rather than narrowing the market by industry.
+
+**Why:** Sean clarified that the capability statement was provided to show the full range of services Vulnaguard can perform, not to limit sourcing to CMMC or federal suppliers. As a startup, Vulnaguard needs a wide top-of-funnel and can compensate for limited operating history with disciplined volume. A broad source can produce 200-300 raw prospects per day while downstream scoring and selective enrichment control quality and spend.
+
+**Alternatives considered:** Keeping CMMC as the dominant lane (rejected because it misreads the capability statement and unnecessarily shrinks the addressable market); accepting enterprise companies for volume (rejected because their infrastructure and support expectations exceed current capacity); enriching all broad-source rows (rejected because sourcing volume should not equal credit spend or sending volume).
+
+**Owner:** Sean. Broad Clay workbook `wb_0tig3j6w3hc4rmRuHmm` is the general-market source; focused workbook `wb_0tig3ciNVGjGucRT29T` remains useful as a CMMC sub-lane. Mirror this business-level correction into the Obsidian vault when that workspace is available.
+
+## 2026-07-20 — Lead triage run failed: MS365 env vars not set in remote session
+
+Automated lead-triage run failed — `scripts/microsoft365_api.py` exited with `KeyError: 'MS365_USER_UPN'`; `MS365_TENANT_ID` also absent. No new leads added. Fix: ensure `MS365_TENANT_ID`, `MS365_CLIENT_ID`, `MS365_CLIENT_SECRET`, and `MS365_USER_UPN` are set as environment variables in the remote session environment before the next scheduled run.

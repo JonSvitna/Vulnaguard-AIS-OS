@@ -2,6 +2,10 @@
 
 Append-only record of meaningful decisions and why they were made. `/level-up` Phase 2 (Method interview) writes scoped automation specs here. You can also append manually whenever you decide something worth remembering.
 
+## 2026-07-21 — Overnight Lead Triage run failed: MS365 auth not configured
+
+Lead triage routine could not pull mail — `MS365_USER_UPN` env var is missing (same root cause as `MS365_TENANT_ID` gap flagged at session start). No new leads added. Fix: set `MS365_USER_UPN`, `MS365_TENANT_ID`, and associated auth env vars in the session/environment config before next run.
+
 ## 2026-07-20 — Cut all cloud Routines to daily, kept them alive instead of retiring
 
 **Decision:** Sean found 4 claude.ai cloud Routines running well above intended cadence and reset all of them to 1x/day: `commercial-lead-sourcing` (was every 4 hours, 6x/day) → 6:00 AM daily; `commercial-lead-outreach-bridge` (was 6x/day at fixed clock times) → 6:00 AM daily; `Overnight Lead Triage` (was already 6:00 AM but paused) → unpaused, 6:00 AM daily; `Vulnaguard AIOS — AM Vault Sync Check` → confirmed/kept at 7:00 AM daily (unchanged, per [[project_vault_sync_cloud_routines]]).

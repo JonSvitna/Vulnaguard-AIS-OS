@@ -22,6 +22,19 @@ Started NIST SP 800-171 Gap Assessment engagement for AfterSwing. Primary contac
 
 Keep it terse. Future-you will thank present-you for capturing the *why*, not just the *what*.
 
+## 2026-07-21 — SEO agent outreach engine: env-only secrets + N8N lead intake webhook
+
+**Decision:** Fixed the seo-agent so it works as a real send/draft platform, three changes:
+(1) **Secrets stay env-only.** `RESEND_API_KEY` is read from the server environment (not DB, not browser) — that was already the design; the gap was it was never documented. Documented it in `CONFIGURATION.md` (key + verified-domain step + Test Resend), and corrected stale docs that called Resend sending "reserved for future" (it's live).
+(2) **In-tool human send now tracks delivery.** The per-email "Send via Resend" route (`app/api/marketing/emails/[id]/send/route.ts`) was dropping Resend's `message_id`, so delivery/bounce sync had nothing to look up. Now persists it (the batch path already did). Keeps the draft-in-app / human-clicks-send model.
+(3) **N8N pushes leads IN via a new secured webhook.** New `POST /api/webhooks/n8n/leads` — validates `N8N_WEBHOOK_SECRET` (timing-safe), upserts with email-then-company dedup, tags `source='n8n'`. Previously no inbound endpoint existed, which is why "leads weren't pulling through from N8N."
+
+**Why:** Sean reported the seo-agent didn't function for sending/drafting, was "continuously prompted RESEND_API key isn't set," and N8N leads weren't arriving. Root causes were undocumented env var + a dropped message id + a missing endpoint — not a rebuild. Kept scope to functionality (visuals deferred) and secrets env-only per Sean's call. Would revisit env-only if a multi-tenant/multi-brand setup needs per-workspace keys.
+
+**Alternatives considered:** DB-backed settings UI for the Resend key (rejected — a server secret shouldn't live in the DB/browser; the UI already just shows set/not-found status). App-polls-N8N or bidirectional sync (rejected — inbound push is simplest and matches how the N8N flow already works). Full structural + visual rework as originally framed (rejected after audit — plumbing was ~90% present).
+
+**Owner:** Sean. Code changes done + verified clean by editor diagnostics. Pending: Sean sets `RESEND_API_KEY` + `N8N_WEBHOOK_SECRET` (local + Railway), points the N8N HTTP node at the endpoint, and runs `npm install && npm run build` before deploy (couldn't build here — no node on PATH).
+
 ## 2026-07-12 — Token discipline: drafting router + single video spine
 
 **Decision:** Two housekeeping cuts to stop burning personal API keys / re-building things I already have.

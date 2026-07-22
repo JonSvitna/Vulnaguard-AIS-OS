@@ -763,6 +763,10 @@ Went to also stop `creative-os-render-worker` (per [[references/content-intake-p
 
 **Owner:** Sean. Broad Clay workbook `wb_0tig3j6w3hc4rmRuHmm` is the general-market source; focused workbook `wb_0tig3ciNVGjGucRT29T` remains useful as a CMMC sub-lane. Mirror this business-level correction into the Obsidian vault when that workspace is available.
 
+## 2026-07-22 — Lead triage run failed: MS365 env vars still not set
+
+Automated lead-triage run failed — `scripts/microsoft365_api.py` exited with `KeyError: 'MS365_USER_UPN'`; same as 2026-07-20 run. No new leads added. M365 env vars (`MS365_TENANT_ID`, `MS365_CLIENT_ID`, `MS365_CLIENT_SECRET`, `MS365_USER_UPN`) still absent from remote session — this is now two missed runs. Fix needed in session environment config before next scheduled run.
+
 ## 2026-07-20 — Lead triage run failed: MS365 env vars not set in remote session
 
 Automated lead-triage run failed — `scripts/microsoft365_api.py` exited with `KeyError: 'MS365_USER_UPN'`; `MS365_TENANT_ID` also absent. No new leads added. Fix: ensure `MS365_TENANT_ID`, `MS365_CLIENT_ID`, `MS365_CLIENT_SECRET`, and `MS365_USER_UPN` are set as environment variables in the remote session environment before the next scheduled run.

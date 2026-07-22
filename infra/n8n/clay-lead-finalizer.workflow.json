@@ -1,0 +1,189 @@
+{
+  "name": "Clay Lead Finalizer Slack Notice",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 7 * * *"
+            }
+          ]
+        }
+      },
+      "id": "finalizer-schedule",
+      "name": "Daily 7am Eastern",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [200, 300],
+      "notes": "Timezone set on workflow settings to America/New_York"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Derive today's Eastern batch_id: clay-YYYY-MM-DD\nconst fmt = new Intl.DateTimeFormat('en-CA', {\n  timeZone: 'America/New_York',\n  year: 'numeric',\n  month: '2-digit',\n  day: '2-digit',\n});\nconst batch_id = `clay-${fmt.format(new Date())}`;\nreturn [{ json: { batch_id } }];"
+      },
+      "id": "derive-batch-id",
+      "name": "Derive clay-YYYY-MM-DD",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [420, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{$env.SEO_AGENT_BASE_URL}}/api/marketing/clay-batches/{{$json.batch_id}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{$env.MARKETING_AUTOMATION_SECRET}}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "get-batch-summary",
+      "name": "GET Clay Batch Summary",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [640, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{$json.draft_count}}",
+              "operation": "equal",
+              "value2": 0
+            }
+          ]
+        }
+      },
+      "id": "if-empty-drafts",
+      "name": "draft_count Equals 0",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [860, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const s = $json;\nconst text = `Clay batch ${s.batch_id}: no qualified drafts today (draft_count=0, lead_count=${s.lead_count ?? 0}).`;\nreturn [{\n  json: {\n    text,\n    blocks: [\n      {\n        type: 'section',\n        text: { type: 'mrkdwn', text: `*Clay batch \\`${s.batch_id}\\`* — no qualified leads to review today.` },\n      },\n    ],\n    _note: 'Status-only post; no approve/reject buttons when draft_count=0. Finalizer never emails or changes sequences.',\n  },\n}];"
+      },
+      "id": "build-empty-status",
+      "name": "Build Empty Status Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1080, 180]
+    },
+    {
+      "parameters": {
+        "jsCode": "const s = $json;\nconst msg = s.slack_message;\nif (!msg || !Array.isArray(msg.blocks)) {\n  throw new Error('SEO Agent response missing slack_message.blocks');\n}\nreturn [{\n  json: {\n    text: msg.text || `Clay batch ${s.batch_id}: ${s.draft_count} drafts ready`,\n    blocks: msg.blocks,\n    batch_id: s.batch_id,\n    draft_count: s.draft_count,\n    _note: 'Posts SEO Agent slack_message.blocks only. Finalizer never emails or changes sequences.',\n  },\n}];"
+      },
+      "id": "build-review-message",
+      "name": "Use SEO Agent slack_message.blocks",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1080, 420]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://slack.com/api/chat.postMessage",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{$env.SLACK_BOT_TOKEN}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ channel: $env.SLACK_CLAY_LEADS_CHANNEL_ID, text: $json.text, blocks: $json.blocks }) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "slack-post-empty",
+      "name": "Post Empty Status to Slack",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1300, 180]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://slack.com/api/chat.postMessage",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{$env.SLACK_BOT_TOKEN}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ channel: $env.SLACK_CLAY_LEADS_CHANNEL_ID, text: $json.text, blocks: $json.blocks }) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "slack-post-review",
+      "name": "Post Review Blocks to Slack",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1300, 420],
+      "notes": "Keep Slack message ts in n8n execution output for diagnosis only. Finalizer never emails or changes sequences."
+    }
+  ],
+  "connections": {
+    "Daily 7am Eastern": {
+      "main": [[{"node": "Derive clay-YYYY-MM-DD", "type": "main", "index": 0}]]
+    },
+    "Derive clay-YYYY-MM-DD": {
+      "main": [[{"node": "GET Clay Batch Summary", "type": "main", "index": 0}]]
+    },
+    "GET Clay Batch Summary": {
+      "main": [[{"node": "draft_count Equals 0", "type": "main", "index": 0}]]
+    },
+    "draft_count Equals 0": {
+      "main": [
+        [{"node": "Build Empty Status Message", "type": "main", "index": 0}],
+        [{"node": "Use SEO Agent slack_message.blocks", "type": "main", "index": 0}]
+      ]
+    },
+    "Build Empty Status Message": {
+      "main": [[{"node": "Post Empty Status to Slack", "type": "main", "index": 0}]]
+    },
+    "Use SEO Agent slack_message.blocks": {
+      "main": [[{"node": "Post Review Blocks to Slack", "type": "main", "index": 0}]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/New_York"
+  },
+  "meta": {
+    "notes": "Env: SEO_AGENT_BASE_URL, MARKETING_AUTOMATION_SECRET, SLACK_BOT_TOKEN, SLACK_CLAY_LEADS_CHANNEL_ID. Does not send email or mutate sequences."
+  }
+}

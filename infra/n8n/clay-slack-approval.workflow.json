@@ -1,0 +1,208 @@
+{
+  "name": "Clay Slack Batch Approval",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "clay-slack-interactions",
+        "responseMode": "responseNode",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "id": "slack-interaction-webhook",
+      "name": "Slack Interaction Webhook (rawBody)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [200, 320],
+      "webhookId": "clay-slack-interactions",
+      "notes": "Retain raw body for Slack HMAC. Point Slack Interactivity Request URL here."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Requires NODE_FUNCTION_ALLOW_BUILTIN=crypto on the n8n host.\nconst crypto = require('crypto');\n\nconst headers = $json.headers || {};\nconst getHeader = (name) => {\n  const key = Object.keys(headers).find((k) => k.toLowerCase() === name.toLowerCase());\n  return key ? String(headers[key]) : '';\n};\n\nconst timestamp = getHeader('x-slack-request-timestamp');\nconst slackSig = getHeader('x-slack-signature');\nif (!timestamp || !slackSig) {\n  throw new Error('Missing X-Slack-Request-Timestamp or X-Slack-Signature');\n}\n\nconst ageMs = Math.abs(Date.now() - Number(timestamp) * 1000);\nif (!Number.isFinite(ageMs) || ageMs > 5 * 60 * 1000) {\n  throw new Error('Slack timestamp older than five minutes (or invalid)');\n}\n\nconst rawBody =\n  $json.rawBody ??\n  $json.body?.rawBody ??\n  (typeof $json.body === 'string' ? $json.body : null) ??\n  ($binary?.data ? Buffer.from($binary.data.data ?? $binary.data, 'base64').toString('utf8') : null);\n\nif (typeof rawBody !== 'string' || !rawBody.length) {\n  throw new Error('Raw body missing — enable webhook rawBody retention');\n}\n\nconst signingSecret = $env.SLACK_SIGNING_SECRET;\nif (!signingSecret) throw new Error('SLACK_SIGNING_SECRET not set');\n\nconst base = `v0:${timestamp}:${rawBody}`;\nconst digest = crypto.createHmac('sha256', signingSecret).update(base, 'utf8').digest('hex');\nconst computed = `v0=${digest}`;\n\nconst a = Buffer.from(computed);\nconst b = Buffer.from(slackSig);\nif (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {\n  throw new Error('Slack signature verification failed');\n}\n\n// Parse payload only AFTER HMAC + timestamp checks.\nlet form = {};\ntry {\n  form = Object.fromEntries(new URLSearchParams(rawBody));\n} catch {\n  form = {};\n}\nconst payloadRaw = form.payload || (typeof $json.body?.payload === 'string' ? $json.body.payload : null);\nif (!payloadRaw) throw new Error('Slack payload missing after verify');\nconst payload = typeof payloadRaw === 'string' ? JSON.parse(payloadRaw) : payloadRaw;\n\nconst channelId = payload.channel?.id || payload.container?.channel_id;\nconst userId = payload.user?.id;\nconst allowedChannel = $env.SLACK_CLAY_LEADS_CHANNEL_ID;\nconst approvers = String($env.SLACK_CLAY_APPROVER_USER_IDS || '')\n  .split(/[,\\s]+/)\n  .map((s) => s.trim())\n  .filter(Boolean);\n\nif (!channelId || channelId !== allowedChannel) {\n  throw new Error('Interaction channel.id must equal SLACK_CLAY_LEADS_CHANNEL_ID');\n}\nif (!userId || !approvers.includes(userId)) {\n  throw new Error('user.id not in SLACK_CLAY_APPROVER_USER_IDS');\n}\n\nconst action = (payload.actions && payload.actions[0]) || null;\nif (!action) throw new Error('No interactive action');\nconst actionId = action.action_id;\nif (actionId !== 'clay_batch_approve' && actionId !== 'clay_batch_reject') {\n  throw new Error(`Unsupported action_id: ${actionId}`);\n}\n\nlet value = {};\ntry {\n  value = typeof action.value === 'string' ? JSON.parse(action.value) : action.value || {};\n} catch {\n  value = {};\n}\nconst batch_id = value.batch_id || payload.message?.metadata?.event_payload?.batch_id;\nif (!batch_id) throw new Error('batch_id missing from action value');\n\nreturn [{\n  json: {\n    ok: true,\n    action_id: actionId,\n    batch_id,\n    user_id: userId,\n    user_name: payload.user?.name || payload.user?.username || userId,\n    channel_id: channelId,\n    message_ts: payload.message?.ts || payload.container?.message_ts,\n    original_blocks: payload.message?.blocks || [],\n    response_url: payload.response_url,\n    dashboard_link: (payload.message?.blocks || [])\n      .map((b) => b?.text?.text || '')\n      .find((t) => /Dashboard|Open Approval/i.test(t)) || null,\n  },\n}];"
+      },
+      "id": "verify-slack-hmac",
+      "name": "Verify HMAC Timestamp Channel User",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 320],
+      "notes": "NODE_FUNCTION_ALLOW_BUILTIN=crypto required for createHmac + timingSafeEqual"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: true }) }}",
+        "options": {}
+      },
+      "id": "acknowledge-slack",
+      "name": "Acknowledge Slack Promptly",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [700, 320]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$json.action_id}}",
+              "operation": "equals",
+              "value2": "clay_batch_approve"
+            }
+          ]
+        }
+      },
+      "id": "if-approve",
+      "name": "Is clay_batch_approve",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [920, 320]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.SEO_AGENT_BASE_URL}}/api/marketing/approval/approve",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{$env.MARKETING_AUTOMATION_SECRET}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ batch_id: $('Verify HMAC Timestamp Channel User').item.json.batch_id }) }}",
+        "options": {
+          "timeout": 120000,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "post-approve",
+      "name": "POST Batch Approve",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1160, 200],
+      "notes": "batch_id only — never sequence_ids from Slack"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.SEO_AGENT_BASE_URL}}/api/marketing/approval/reject",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{$env.MARKETING_AUTOMATION_SECRET}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ batch_id: $('Verify HMAC Timestamp Channel User').item.json.batch_id }) }}",
+        "options": {
+          "timeout": 120000,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "post-reject",
+      "name": "POST Batch Reject",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1160, 440],
+      "notes": "batch_id only — never sequence_ids from Slack"
+    },
+    {
+      "parameters": {
+        "jsCode": "const verified = $('Verify HMAC Timestamp Channel User').item.json;\nconst api = $json;\nconst statusCode = api.statusCode ?? api.status ?? null;\nconst ok = api.ok === true || (statusCode >= 200 && statusCode < 300 && api.error == null);\nconst statusLabel = verified.action_id === 'clay_batch_approve' ? 'approved' : 'rejected';\nconst actor = verified.user_name || verified.user_id;\n\nconst reviewLink =\n  verified.dashboard_link ||\n  `Dashboard: /dashboard/marketing-agents?category=clay_leads&batch_id=${verified.batch_id}`;\n\nlet blocks;\nif (ok) {\n  blocks = [\n    {\n      type: 'section',\n      text: {\n        type: 'mrkdwn',\n        text: `*Clay batch \\`${verified.batch_id}\\` ${statusLabel}* by <@${verified.user_id}> (${actor}).`,\n      },\n    },\n    {\n      type: 'section',\n      text: { type: 'mrkdwn', text: reviewLink },\n    },\n  ];\n} else {\n  const errText = api.error || api.message || JSON.stringify(api).slice(0, 280);\n  blocks = [\n    {\n      type: 'section',\n      text: {\n        type: 'mrkdwn',\n        text: `*Clay batch \\`${verified.batch_id}\\` — retryable error* (actor <@${verified.user_id}> tried ${statusLabel}).\\n\\`${errText}\\``,\n      },\n    },\n    {\n      type: 'section',\n      text: { type: 'mrkdwn', text: `Keep review link and retry:\\n${reviewLink}` },\n    },\n  ];\n}\n\nreturn [{\n  json: {\n    channel: verified.channel_id,\n    ts: verified.message_ts,\n    text: ok\n      ? `Clay batch ${verified.batch_id} ${statusLabel} by ${actor}`\n      : `Clay batch ${verified.batch_id} retryable error`,\n    blocks,\n    ok,\n  },\n}];"
+      },
+      "id": "build-update",
+      "name": "Build Slack Update Actor Status",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1400, 320]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://slack.com/api/chat.update",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{$env.SLACK_BOT_TOKEN}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ channel: $json.channel, ts: $json.ts, text: $json.text, blocks: $json.blocks }) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "slack-update",
+      "name": "Update Original Slack Message",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1640, 320],
+      "notes": "On error path blocks keep review link + retryable error. Do not send email or mutate sequences here."
+    }
+  ],
+  "connections": {
+    "Slack Interaction Webhook (rawBody)": {
+      "main": [[{"node": "Verify HMAC Timestamp Channel User", "type": "main", "index": 0}]]
+    },
+    "Verify HMAC Timestamp Channel User": {
+      "main": [[{"node": "Acknowledge Slack Promptly", "type": "main", "index": 0}]]
+    },
+    "Acknowledge Slack Promptly": {
+      "main": [[{"node": "Is clay_batch_approve", "type": "main", "index": 0}]]
+    },
+    "Is clay_batch_approve": {
+      "main": [
+        [{"node": "POST Batch Approve", "type": "main", "index": 0}],
+        [{"node": "POST Batch Reject", "type": "main", "index": 0}]
+      ]
+    },
+    "POST Batch Approve": {
+      "main": [[{"node": "Build Slack Update Actor Status", "type": "main", "index": 0}]]
+    },
+    "POST Batch Reject": {
+      "main": [[{"node": "Build Slack Update Actor Status", "type": "main", "index": 0}]]
+    },
+    "Build Slack Update Actor Status": {
+      "main": [[{"node": "Update Original Slack Message", "type": "main", "index": 0}]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "notes": "Env: SEO_AGENT_BASE_URL, MARKETING_AUTOMATION_SECRET, SLACK_BOT_TOKEN, SLACK_SIGNING_SECRET, SLACK_CLAY_LEADS_CHANNEL_ID, SLACK_CLAY_APPROVER_USER_IDS. Set NODE_FUNCTION_ALLOW_BUILTIN=crypto. Only batch approve/reject — never email or sequence_ids."
+  }
+}

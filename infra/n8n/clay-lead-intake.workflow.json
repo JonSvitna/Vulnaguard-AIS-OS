@@ -11,12 +11,12 @@
       "name": "Clay Lead Webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
-      "position": [260, 300],
+      "position": [240, 300],
       "webhookId": "7f3d8e1c-52a9-4b67-91d0-6c4a2e8f5b13"
     },
     {
       "parameters": {
-        "jsCode": "const payload = $json.body ?? $json;\nconst clean = (value) => value === undefined || value === null ? '' : String(value).trim();\nconst companyName = clean(payload.company_name || payload.company || payload.Company || payload['Company Name']);\nconst contactEmail = clean(payload.contact_email || payload.email || payload.Email || payload['Work Email']).toLowerCase();\nif (!companyName) throw new Error('Clay row rejected: company_name is required');\nif (!contactEmail || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(contactEmail)) throw new Error('Clay row rejected: a valid contact_email is required');\nconst firstName = clean(payload.first_name || payload['First Name']);\nconst lastName = clean(payload.last_name || payload['Last Name']);\nconst contactName = clean(payload.contact_name || payload.name || payload['Full Name']) || [firstName, lastName].filter(Boolean).join(' ');\nconst row = {\n  company_name: companyName,\n  website: clean(payload.website || payload.domain || payload['Company Domain']),\n  location: clean(payload.location || payload.city || payload['Company Location']),\n  org_type: clean(payload.org_type || payload.industry || payload.Industry),\n  cmmc_level_sought: clean(payload.cmmc_level_sought),\n  employee_count: clean(payload.employee_count || payload['Employee Count']),\n  contact_name: contactName,\n  contact_title: clean(payload.contact_title || payload.title || payload['Job Title']),\n  contact_email: contactEmail,\n  contact_linkedin: clean(payload.contact_linkedin || payload.linkedin_url || payload['LinkedIn URL'])\n};\nreturn [{ json: { mapping: Object.fromEntries(Object.keys(row).map((key) => [key, key])), all_rows: [row], category: clean(payload.category) || 'sales', business_line: clean(payload.business_line) || 'cmmc', persona_slug: payload.persona_slug || null } }];"
+        "jsCode": "// Normalize Clay payload to Task 4 allow-listed contract only.\nconst payload = $json.body ?? $json;\nconst clean = (value) => (value === undefined || value === null ? '' : String(value).trim());\n\nconst firstName = clean(payload.first_name || payload['First Name']);\nconst lastName = clean(payload.last_name || payload['Last Name']);\nconst contactName =\n  clean(payload.contact_name || payload.name || payload['Full Name']) ||\n  [firstName, lastName].filter(Boolean).join(' ');\n\nconst email = clean(\n  payload.email || payload.contact_email || payload.Email || payload['Work Email'],\n).toLowerCase();\n\nconst fitRaw = payload.fit_score ?? payload['Fit Score'];\nconst fitScore = typeof fitRaw === 'number' ? fitRaw : Number.parseInt(String(fitRaw ?? ''), 10);\n\nconst batchId =\n  clean(payload.batch_id) ||\n  (() => {\n    const fmt = new Intl.DateTimeFormat('en-CA', {\n      timeZone: 'America/New_York',\n      year: 'numeric',\n      month: '2-digit',\n      day: '2-digit',\n    });\n    return `clay-${fmt.format(new Date())}`;\n  })();\n\nconst row = {\n  clay_row_id: clean(payload.clay_row_id || payload.row_id || payload.id),\n  batch_id: batchId,\n  company_name: clean(payload.company_name || payload.company || payload.Company || payload['Company Name']),\n  website: clean(payload.website || payload.domain || payload['Company Domain']),\n  contact_name: contactName,\n  title: clean(payload.title || payload.contact_title || payload['Job Title']),\n  email,\n  location: clean(payload.location || payload.city || payload['Company Location']),\n  fit_score: Number.isFinite(fitScore) ? fitScore : fitRaw,\n  fit_reason: clean(payload.fit_reason || payload['Fit Reason']),\n  recommended_service: clean(payload.recommended_service || payload['Recommended Service']),\n};\n\nif (!row.clay_row_id) throw new Error('Clay row rejected: clay_row_id is required');\nif (!row.company_name) throw new Error('Clay row rejected: company_name is required');\nif (!row.website) throw new Error('Clay row rejected: website is required');\nif (!row.email || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(row.email)) {\n  throw new Error('Clay row rejected: a valid email is required');\n}\nif (!row.fit_reason) throw new Error('Clay row rejected: fit_reason is required');\nif (!row.recommended_service) throw new Error('Clay row rejected: recommended_service is required');\n\nreturn [{ json: row }];"
       },
       "id": "normalize-clay-lead",
       "name": "Validate and Normalize Clay Lead",
@@ -27,29 +27,33 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://vulnaguard-seo-agent-production.up.railway.app/api/marketing/leads/import-confirm",
+        "url": "={{$env.SEO_AGENT_BASE_URL}}/api/marketing/leads/clay-batch",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
               "name": "Content-Type",
               "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{$env.MARKETING_AUTOMATION_SECRET}}"
             }
           ]
         },
         "sendBody": true,
-        "contentType": "raw",
-        "rawContentType": "application/json",
-        "body": "={{ JSON.stringify($json) }}",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
         "options": {
           "timeout": 240000
         }
       },
-      "id": "import-seo-agent",
-      "name": "Import into SEO Agent",
+      "id": "post-clay-batch",
+      "name": "POST Clay Batch Lead",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [760, 300]
+      "position": [760, 300],
+      "notes": "Env placeholders: SEO_AGENT_BASE_URL, MARKETING_AUTOMATION_SECRET. If this Railway n8n blocks $env in nodes (N8N_BLOCK_ENV_ACCESS_IN_NODE), swap to n8n credential store values instead — never inline secrets."
     }
   ],
   "connections": {
@@ -57,10 +61,14 @@
       "main": [[{"node": "Validate and Normalize Clay Lead", "type": "main", "index": 0}]]
     },
     "Validate and Normalize Clay Lead": {
-      "main": [[{"node": "Import into SEO Agent", "type": "main", "index": 0}]]
+      "main": [[{"node": "POST Clay Batch Lead", "type": "main", "index": 0}]]
     }
   },
   "settings": {
     "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "notes": "Destination MUST be /api/marketing/leads/clay-batch. Secrets via $env only."
   }
 }

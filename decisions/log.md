@@ -2,6 +2,16 @@
 
 Append-only record of meaningful decisions and why they were made. `/level-up` Phase 2 (Method interview) writes scoped automation specs here. You can also append manually whenever you decide something worth remembering.
 
+## 2026-07-21 — Clay cutover: SEO Agent is the only outreach source of truth
+
+**Decision:** Finish the Clay → n8n → `vulnaguard-seo-agent` cutover. Clay sources and fit-scores U.S. SMB leads; n8n orchestrates intake/finalization/Slack buttons; the SEO Agent remains the only lead, draft, approval, and Resend send database. Live intake now posts to authenticated `/api/marketing/leads/clay-batch` (not the old CMMC `/import-confirm` path). Nothing sends before human approval.
+
+**Why:** The old import path scored commercial Clay rows with the CMMC qualifier and never drafted, so the pipeline looked "broken" even when the webhook was up. The approved Clay batch design already existed mid-Task-4; completing it restores one coherent flow and retires the half-cutover.
+
+**Alternatives considered:** Keep patching `/import-confirm` for Clay (rejected — wrong rubric, no draft, no batch metadata). Build a second Slack-owned lead DB (rejected — duplicates the SEO Agent). Auto-send without approval (rejected — deliverability and brand risk).
+
+**Owner:** Sean. Ops runbook: `references/clay-lead-automation.md`. Remaining manual: create `#clay-leads`, wire Slack signing secret + interactivity URL, activate finalizer/approval workflows, finish Clay HTTP column mapping + 6am schedule.
+
 ## 2026-07-21 — Overnight Lead Triage run failed: MS365 auth not configured
 
 Lead triage routine could not pull mail — `MS365_USER_UPN` env var is missing (same root cause as `MS365_TENANT_ID` gap flagged at session start). No new leads added. Fix: set `MS365_USER_UPN`, `MS365_TENANT_ID`, and associated auth env vars in the session/environment config before next run.

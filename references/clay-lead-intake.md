@@ -1,22 +1,24 @@
 # Clay Lead Intake
 
-Updated: 2026-07-19
+Updated: 2026-07-21
 
 ## Purpose
 
-Use Clay to source small-business prospects for Vulnaguard's CMMC, security,
-systems/automation, and website/design services, then send only usable,
-email-bearing leads into the existing `vulnaguard-seo-agent` qualification and
-outreach pipeline. CMMC is the first and highest-confidence lane.
+Use Clay to source small-business prospects for Vulnaguard's cybersecurity,
+compliance/CMMC, systems/automation, and website/design services, then send
+only fit-scored (70+), email-bearing rows into the existing
+`vulnaguard-seo-agent` Clay batch pipeline. Human approval in Slack
+`#clay-leads` or the marketing dashboard is required before any send.
 
 Clay does not provide a general synchronous API on non-Enterprise plans. The
 supported API-like pattern is:
 
-1. Find and enrich leads in a Clay table.
-2. Use Clay's **HTTP API** enrichment to POST each completed row to an external
-   webhook.
-3. Let n8n validate and normalize the row.
-4. Import through the SEO agent's existing duplicate-safe import route.
+1. Find, score, and enrich leads in a Clay table (enrich contacts only when
+   `fit_score >= 70`).
+2. Use Clay's **HTTP API** enrichment to POST each completed row to n8n.
+3. Let n8n validate and normalize to the allow-listed Clay contract.
+4. Import via SEO Agent `POST /api/marketing/leads/clay-batch` (not the legacy
+   CSV import route).
 
 Official references:
 
@@ -24,18 +26,65 @@ Official references:
 - https://university.clay.com/docs/webhook-integration-guide
 - https://university.clay.com/docs/http-api-integration-overview
 
-## Live connection
+## Live connection (cutover 2026-07-21)
 
-- n8n workflow: `Clay Lead Intake to SEO Agent`
-- Workflow ID: `A6kOqisezATjjT2Q`
-- Status: active
-- Method: `POST`
-- Endpoint: `https://n8n-production-a4ee.up.railway.app/webhook/clay-leads-7f3d8e1c-52a9-4b67-91d0-6c4a2e8f5b13`
-- Version-controlled workflow: `infra/n8n/clay-lead-intake.workflow.json`
-- Destination: `POST https://vulnaguard-seo-agent-production.up.railway.app/api/marketing/leads/import-confirm`
+| Piece | Detail |
+|---|---|
+| Intake workflow | `Clay Lead Intake to SEO Agent` — `infra/n8n/clay-lead-intake.workflow.json` |
+| Finalizer workflow | `Clay Lead Finalizer Slack Notice` — `infra/n8n/clay-lead-finalizer.workflow.json` (cron `0 7 * * *`, `America/New_York`) |
+| Slack approval workflow | `Clay Slack Batch Approval` — `infra/n8n/clay-slack-approval.workflow.json` |
+| Clay → n8n webhook | `POST https://n8n-production-a4ee.up.railway.app/webhook/clay-leads-7f3d8e1c-52a9-4b67-91d0-6c4a2e8f5b13` |
+| SEO Agent intake | `POST {{SEO_AGENT_BASE_URL}}/api/marketing/leads/clay-batch` with `Authorization: Bearer {{MARKETING_AUTOMATION_SECRET}}` |
+| Batch summary | `GET {{SEO_AGENT_BASE_URL}}/api/marketing/clay-batches/clay-YYYY-MM-DD` |
+| Approve / reject | `POST …/api/marketing/approval/approve` or `/reject` with `{ "batch_id": "clay-YYYY-MM-DD" }` |
+| Slack channel | `#clay-leads` (`SLACK_CLAY_LEADS_CHANNEL_ID`) |
+| Validator | `node infra/n8n/tests/validate_clay_workflows.mjs` |
 
-The webhook acknowledges the request immediately. n8n continues the import in
-the background, so Clay does not have to wait for AI qualification to finish.
+Registry: `connections.md` row 21. Full ops runbook lands in Task 10 as
+`references/clay-lead-automation.md`.
+
+### n8n env / credentials
+
+Prefer `$env` placeholders in the exported JSON. This Railway n8n instance often
+blocks node-level `$env` (`N8N_BLOCK_ENV_ACCESS_IN_NODE`); if so, map the same
+names into the n8n credential store — never inline secrets.
+
+Required:
+
+- `SEO_AGENT_BASE_URL` (e.g. `https://vulnaguard-seo-agent-production.up.railway.app`)
+- `MARKETING_AUTOMATION_SECRET` (must match SEO Agent)
+- `SLACK_BOT_TOKEN`
+- `SLACK_SIGNING_SECRET`
+- `SLACK_CLAY_LEADS_CHANNEL_ID`
+- `SLACK_CLAY_APPROVER_USER_IDS` (comma-separated Slack user IDs)
+- `NODE_FUNCTION_ALLOW_BUILTIN=crypto` (HMAC + `timingSafeEqual` in the
+  approval Code node)
+
+## Allow-listed Clay → SEO Agent body
+
+n8n normalizes each row to exactly these fields (Task 4 contract):
+
+```json
+{
+  "clay_row_id": "row_123",
+  "batch_id": "clay-2026-07-21",
+  "company_name": "Acme Plumbing",
+  "website": "https://acme.example",
+  "contact_name": "Alex Smith",
+  "title": "Owner",
+  "email": "alex@acme.example",
+  "location": "Baltimore, MD",
+  "fit_score": 84,
+  "fit_reason": "Small local company with an outdated website.",
+  "recommended_service": "website_design"
+}
+```
+
+`recommended_service` must be one of: `cybersecurity`, `compliance_cmmc`,
+`website_design`, `systems_automation`.
+
+If Clay omits `batch_id`, intake derives `clay-YYYY-MM-DD` in
+`America/New_York`.
 
 ## Ideal customer profile
 
@@ -44,43 +93,23 @@ it does **not** restrict the market to government contractors. This corrected
 profile is saved in Clay under **Settings > AI context**.
 
 - Search the full United States across legitimate commercial industries.
-- Prioritize privately held, owner-led companies with 2-50 employees. This is a
-  delivery-capacity filter, not an industry filter.
-- A 51-200 employee company may qualify only when the need is a bounded project
-  with a relevant department owner. Do not target it for enterprise operations.
-- Any company may qualify when it has a clear need for a cybersecurity or risk
-  assessment, compliance/policy work, workflow automation, software/systems
-  support, or website/digital design.
+- Prioritize privately held, owner-led companies with ~1-20 employees when size
+  data exists (delivery-capacity filter).
 - Government contractors remain one valuable lane for CMMC/NIST services, but
   government-contract status is never required for general sourcing.
-- Useful signals include an outdated or missing website, weak security posture,
-  compliance pressure, recent growth, manual workflows, operational
-  bottlenecks, and lack of senior technical staff.
 
 ### Service lanes
 
-- **General cybersecurity:** small businesses needing a vulnerability/risk
-  assessment, remediation plan, policy development, or executive reporting.
-- **Compliance/CMMC:** government contractors and regulated SMBs with CMMC,
-  NIST SP 800-171, GRC, evidence, or continuous-monitoring needs.
-- **Systems/automation:** owner-led businesses with a visible manual workflow,
-  reporting, intake, integration, or software problem.
-- **Website/design:** owner-led businesses with no website or a clearly
-  outdated/poor-performing site.
+- **General cybersecurity:** vulnerability/risk assessment, remediation, policy.
+- **Compliance/CMMC:** CMMC, NIST SP 800-171, GRC, evidence, monitoring.
+- **Systems/automation:** manual workflow / integration problems.
+- **Website/design:** no site or clearly outdated/poor-performing site.
 
 ### Exclusions
 
-- Fortune 500 and major public companies, massive hospitals/health systems,
-  universities and large school systems, government agencies, national
-  franchise parents, conglomerates, and companies above 500 employees.
-- Any opportunity requiring enterprise-scale or 24/7 managed infrastructure.
-- Staffing firms, job boards, junior contacts, and generic directory/community
-  pages.
-- Cybersecurity, CMMC, MSSP, web, marketing, and automation agencies that
-  compete directly with the offered service.
-
-Do not exclude an otherwise suitable local business merely because it is not a
-government contractor or does not appear in the capability statement.
+- Fortune 500, major health systems, national enterprises, centralized
+  franchises, government-only targeting, companies outside delivery capacity.
+- Direct competitors (cyber, CMMC/MSSP, web, marketing, automation agencies).
 
 ## Live Clay sources
 
@@ -90,153 +119,58 @@ government contractor or does not appear in the capability statement.
 - Workbook ID: `wb_0tig3j6w3hc4rmRuHmm`
 - Table ID: `t_0tig3j6r9TbnpFZvxim`
 - View ID: `gv_0tig3j8HAw5f6vkfTud`
-- Search chat: `cc_0tig3gs8GmUWK95w72P`
-- Configured limit: 300 source-only companies.
-- Filters: United States; privately held; 2-10 and 11-50 company-size buckets;
-  estimated employees 2-50; broad commercial industries; enterprise,
-  institutional, staffing, and direct-competitor exclusions.
-- No enrichment or paid action was run.
-
-### Contact-enrichment test
-
-- People table: `Owner Founder, Small US Companies`
-- Table ID: `t_0tig4fzDHn3UW4r7FkZ`
-- View ID: `gv_0tig4g0gQPkS5sW8YhR`
-- Search chat: `cc_0tig4eaZfUtNGMEAzWh`
-- Run date: 2026-07-19
-- Scope: 10 owner/founder/president contacts, one contact per company.
-- Enrichments: person profile plus validated work-email waterfall.
-- Projected cost shown before run: approximately 1.6 data credits and 2
-  actions per row, or about 16 credits and 20 actions for the batch.
-- Result: 9 work emails returned; one discovered email failed validation and
-  the final waterfall output remained blank for that row.
-- No contacts were posted to n8n or the SEO agent during this test.
 
 ### Focused CMMC source
 
 - Workbook: `Defense Manufacturing, Engineering, US`
 - Workbook ID: `wb_0tig3ciNVGjGucRT29T`
 - Table ID: `t_0tig3cjNBuBdAB3vkFB`
-- View ID: `gv_0tig3cjrTYuQFMTHFvv`
-- Search chat: `cc_0tig38m5BY8zs5ba3Se`
-- Created 2026-07-19 with 12 source-only companies.
-- Filters: U.S.; privately held; company size 2-10; estimated employees 1-20;
-  defense/manufacturing/engineering sectors; explicit federal-contracting
-  signals; competitor and enterprise exclusions.
-- No enrichment columns were added and no paid action was run on this table.
 
-The earlier workbook `wb_0tig31gNrEaVfSZnptP` is a rejected exploration, not an
-approved source. It lacked the corrected SMB ceiling and produced enterprise
-and off-ICP results. Do not run or schedule it.
+The earlier workbook `wb_0tig31gNrEaVfSZnptP` is a rejected exploration. Do not
+run or schedule it.
 
-## Required Clay table columns
-
-Keep these output names exactly as shown. The workflow accepts several common
-Clay aliases, but canonical names make troubleshooting much easier.
-
-| Column | Required | Notes |
-|---|---:|---|
-| `company_name` | yes | Reject the row if blank |
-| `contact_email` | yes | Must be a syntactically valid email |
-| `contact_name` | recommended | Or provide `first_name` + `last_name` |
-| `contact_title` | recommended | Decision-maker targeting |
-| `website` | recommended | Company domain or URL |
-| `contact_linkedin` | recommended | Person LinkedIn URL |
-| `location` | optional | City/state/country |
-| `org_type` | optional | Industry or organization type |
-| `employee_count` | optional | Company size |
-| `category` | optional | Defaults to `sales` |
-| `business_line` | optional | Defaults to `cmmc` |
-| `persona_slug` | optional | Defaults to the SEO agent's normal voice behavior |
-
-## Clay-side setup
-
-1. Create a workbook/table using **Find Companies** or **Find People**. Start
-   with a small sample, not the full trial allowance.
-2. Add the enrichments needed to produce a verified work email and the fields
-   above.
-3. Add an enrichment and select **HTTP API**.
-4. Set method to `POST` and use the live endpoint above.
-5. Set header `Content-Type` to `application/json`.
-6. Use this body, mapping each value to the matching Clay column:
+## Clay-side HTTP body (map columns 1:1)
 
 ```json
 {
+  "clay_row_id": "{{clay_row_id}}",
+  "batch_id": "{{batch_id}}",
   "company_name": "{{company_name}}",
   "website": "{{website}}",
-  "location": "{{location}}",
-  "org_type": "{{org_type}}",
-  "employee_count": "{{employee_count}}",
   "contact_name": "{{contact_name}}",
-  "contact_title": "{{contact_title}}",
-  "contact_email": "{{contact_email}}",
-  "contact_linkedin": "{{contact_linkedin}}",
-  "category": "sales",
-  "business_line": "cmmc"
+  "title": "{{title}}",
+  "email": "{{email}}",
+  "location": "{{location}}",
+  "fit_score": "{{fit_score}}",
+  "fit_reason": "{{fit_reason}}",
+  "recommended_service": "{{recommended_service}}"
 }
 ```
 
-7. Set **Only run if** to require both `company_name` and a successful verified
-   `contact_email`. If the email provider exposes a status, require its
-   deliverable/valid value too.
-8. Test one row. Confirm HTTP `200`, then confirm the company appears once in
-   the SEO agent. Only then enable auto-update or run the selected batch.
+Only run when `fit_score >= 70` and email is present/valid.
 
-Do not send rows with missing/invalid emails. The current outreach pipeline
-deliberately parks no-email leads, so enriching and exporting them wastes trial
-credits and creates unusable backlog.
+## Daily timing
 
-## Validation and duplicate behavior
+- **~6:00 AM Eastern** — Clay source/enrichment (Task 9).
+- **Through the morning** — Clay HTTP posts → n8n intake → SEO Agent drafts.
+- **7:00 AM Eastern** — Finalizer GETs `clay-YYYY-MM-DD`, posts `#clay-leads`
+  (status-only if `draft_count=0`; otherwise SEO Agent `slack_message.blocks`
+  with Approve/Reject).
+- **Approve/Reject** — Slack buttons or dashboard; both call the same SEO Agent
+  batch approval APIs. n8n never sends email or changes sequence status itself.
 
-n8n rejects missing company names and invalid emails. The SEO agent then:
+## Validation
 
-- deduplicates case-insensitively by company name;
-- checks the other marketing system's sent-email history;
-- imports the row with `source='csv_import'`, `category='sales'`, and
-  `business_line='cmmc'`;
-- runs the existing CMMC qualifier for new leads only.
+```bash
+node infra/n8n/tests/validate_clay_workflows.mjs
+```
 
-Verified 2026-07-19 with existing lead `Veritech LLC`: n8n execution `2503`
-completed successfully, reached `Import into SEO Agent`, and returned
-`imported: 0`, `skipped_duplicates: 1`. No test lead was added and no qualifier
-credit was spent.
+Expected: `PASS`.
 
 ## Trial-credit guardrails
 
-- The live account showed 2,000 data credits and 10,000 actions per two weeks
-  on 2026-07-19. Treat those as separate allowances, not 10,000 fully enriched
-  leads. Different enrichments consume different data-credit amounts.
-- Begin with 25 rows, inspect quality, then scale to 100 before any larger run.
-- The first 10-contact test returned 9 work emails. Review service fit as well
-  as deliverability before using that success rate to justify a larger batch.
-- Filter for the actual ICP before paid enrichments: US-based defense
-  contractors, suitable company size, relevant decision-maker title, and an
-  active company domain.
-- Send only verified email-bearing rows to the webhook.
-- Keep outreach review/approval in the SEO agent. Clay supplies lead data; it
-  does not bypass the existing approval gate.
-
-### Daily volume design
-
-The 200-300/day goal is a **raw sourcing** target, not an enrichment or sending
-target. Keep the source net broad, then segment, deduplicate, and score without
-paid data. Enrich/export only the best 50 combined prospects per day initially.
-This preserves the trial allowance while building the larger top-of-funnel Sean
-wants.
-
-Recommended daily mix after each lane passes a small quality test:
-
-| Lane | Raw source target | Enrich/export target |
-|---|---:|---:|
-| Broad U.S. SMB discovery | 150-200 | 20-30 |
-| CMMC/federal supply chain | 25-50 | 10-15 |
-| High-signal website/automation | 25-50 | 10-15 |
-| **Total** | **200-300** | **up to 50** |
-
-## Operations
-
-- View runs in n8n under `Clay Lead Intake to SEO Agent`.
-- A successful new row returns `imported: 1` in the final HTTP node execution.
-- A duplicate returns `skipped_duplicates: 1`.
-- Deactivate the workflow from n8n or with the n8n public API when the Clay
-  trial ends if no continuing intake is wanted.
+- Start at 25–50 qualified/enriched leads/day. Ramp toward 200–300 only after
+  quality, approval, reply, bounce, and unsubscribe metrics support it.
+- Enrich contacts only for rows scoring 70+.
+- Keep outreach review/approval in SEO Agent + `#clay-leads`. Clay supplies
+  data; it does not bypass the approval gate.

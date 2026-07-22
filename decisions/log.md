@@ -2,6 +2,16 @@
 
 Append-only record of meaningful decisions and why they were made. `/level-up` Phase 2 (Method interview) writes scoped automation specs here. You can also append manually whenever you decide something worth remembering.
 
+## 2026-07-21 — Clay cutover: SEO Agent is the only outreach source of truth
+
+**Decision:** Finish the Clay → n8n → `vulnaguard-seo-agent` cutover. Clay sources and fit-scores U.S. SMB leads; n8n orchestrates intake/finalization/Slack buttons; the SEO Agent remains the only lead, draft, approval, and Resend send database. Live intake now posts to authenticated `/api/marketing/leads/clay-batch` (not the old CMMC `/import-confirm` path). Nothing sends before human approval.
+
+**Why:** The old import path scored commercial Clay rows with the CMMC qualifier and never drafted, so the pipeline looked "broken" even when the webhook was up. The approved Clay batch design already existed mid-Task-4; completing it restores one coherent flow and retires the half-cutover.
+
+**Alternatives considered:** Keep patching `/import-confirm` for Clay (rejected — wrong rubric, no draft, no batch metadata). Build a second Slack-owned lead DB (rejected — duplicates the SEO Agent). Auto-send without approval (rejected — deliverability and brand risk).
+
+**Owner:** Sean. Ops runbook: `references/clay-lead-automation.md`. Remaining manual: create `#clay-leads`, wire Slack signing secret + interactivity URL, activate finalizer/approval workflows, finish Clay HTTP column mapping + 6am schedule.
+
 ## 2026-07-20 — Cut all cloud Routines to daily, kept them alive instead of retiring
 
 **Decision:** Sean found 4 claude.ai cloud Routines running well above intended cadence and reset all of them to 1x/day: `commercial-lead-sourcing` (was every 4 hours, 6x/day) → 6:00 AM daily; `commercial-lead-outreach-bridge` (was 6x/day at fixed clock times) → 6:00 AM daily; `Overnight Lead Triage` (was already 6:00 AM but paused) → unpaused, 6:00 AM daily; `Vulnaguard AIOS — AM Vault Sync Check` → confirmed/kept at 7:00 AM daily (unchanged, per [[project_vault_sync_cloud_routines]]).

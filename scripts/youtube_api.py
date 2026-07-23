@@ -203,7 +203,11 @@ def cmd_upload(args):
     snippet = {"title": args.title, "description": args.description or "", "categoryId": args.category_id}
     if args.tags:
         snippet["tags"] = [t.strip() for t in args.tags.split(",") if t.strip()]
-    body = {"snippet": snippet, "status": {"privacyStatus": args.privacy}}
+    status = {"privacyStatus": args.privacy}
+    if args.publish_at:
+        status["privacyStatus"] = "private"
+        status["publishAt"] = args.publish_at
+    body = {"snippet": snippet, "status": status}
 
     init_url = ("https://www.googleapis.com/upload/youtube/v3/videos"
                 "?uploadType=resumable&part=snippet,status")
@@ -274,6 +278,7 @@ def main():
     p_upload.add_argument("--category-id", default="28")  # Science & Technology
     p_upload.add_argument("--tags")
     p_upload.add_argument("--thumbnail")
+    p_upload.add_argument("--publish-at", help="ISO 8601 UTC timestamp; schedules the video (forces privacyStatus to private until then)")
 
     args = parser.parse_args()
 

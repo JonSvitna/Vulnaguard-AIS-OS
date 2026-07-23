@@ -788,6 +788,10 @@ Went to also stop `creative-os-render-worker` (per [[references/content-intake-p
 
 Automated lead-triage run failed — `scripts/microsoft365_api.py` exited with `KeyError: 'MS365_USER_UPN'`; same as 2026-07-20 run. No new leads added. M365 env vars (`MS365_TENANT_ID`, `MS365_CLIENT_ID`, `MS365_CLIENT_SECRET`, `MS365_USER_UPN`) still absent from remote session — this is now two missed runs. Fix needed in session environment config before next scheduled run.
 
+## 2026-07-23 — Lead triage run failed: MS365 env vars still not set (3rd consecutive miss)
+
+Automated lead-triage run failed — `scripts/microsoft365_api.py` exited with `KeyError: 'MS365_USER_UPN'`; third consecutive failure (2026-07-20, ~2026-07-22, 2026-07-23). No new leads added. M365 env vars must be set in the remote session environment config at code.claude.com before leads can be triaged automatically.
+
 ## 2026-07-20 — Lead triage run failed: MS365 env vars not set in remote session
 
 Automated lead-triage run failed — `scripts/microsoft365_api.py` exited with `KeyError: 'MS365_USER_UPN'`; `MS365_TENANT_ID` also absent. No new leads added. Fix: ensure `MS365_TENANT_ID`, `MS365_CLIENT_ID`, `MS365_CLIENT_SECRET`, and `MS365_USER_UPN` are set as environment variables in the remote session environment before the next scheduled run.

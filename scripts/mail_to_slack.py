@@ -34,12 +34,26 @@ NOISE_SENDER_PATTERNS = [
     "noreply@bidnet.com",
     "@send.calendly.com",
     "@indiehackers.com",
+    "postmaster@",
+    "mailer-daemon@",
+    "mail delivery subsystem",
+]
+
+# Bounce/NDR subjects from providers that don't use a recognizable postmaster
+# sender address (some relay through generic-looking addresses).
+NOISE_SUBJECT_PATTERNS = [
+    "undeliverable:",
+    "delivery has failed",
+    "delivery status notification",
 ]
 
 
-def is_noise_sender(sender: str) -> bool:
+def is_noise_sender(sender: str, subject: str = "") -> bool:
     sender = sender.lower()
-    return any(pattern in sender for pattern in NOISE_SENDER_PATTERNS)
+    subject = subject.lower()
+    if any(pattern in sender for pattern in NOISE_SENDER_PATTERNS):
+        return True
+    return any(pattern in subject for pattern in NOISE_SUBJECT_PATTERNS)
 
 
 def _mid_hash(msg_id: str) -> str:
@@ -134,7 +148,8 @@ def main():
     skipped = 0
     for msg in new_mail:
         sender = msg.get("from", {}).get("emailAddress", {}).get("address", "unknown sender")
-        target = args.noise_channel if (args.noise_channel and is_noise_sender(sender)) else args.channel
+        subject = msg.get("subject", "")
+        target = args.noise_channel if (args.noise_channel and is_noise_sender(sender, subject)) else args.channel
         target_seen = noise_seen_mids if target == args.noise_channel else seen_mids
 
         mid = _mid_hash(msg.get("id", msg["receivedDateTime"]))

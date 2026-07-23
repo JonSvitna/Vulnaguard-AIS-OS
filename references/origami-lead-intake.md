@@ -116,7 +116,9 @@ later.
 - [x] Stale n8n workflow (`Origami Lead Intake to SEO Agent`, posted into SEO Agent) deleted
 - [x] Sean connected a sending mailbox in Origami's settings (2026-07-23)
 - [ ] Sean connects a LinkedIn account (planned 2026-07-24) — until then, launching this campaign will likely hit the sender-gate `missingChannels` check since every sequence includes LinkedIn steps
-- [ ] Sean reviews the full 12-lead draft (one spot-checked above by Claude; not yet reviewed in full by Sean)
+- [x] Sean reviewed in Origami's UI (2026-07-23)
+- [x] CAN-SPAM compliance fix applied via `POST /campaigns/{id}/edits` (2026-07-23): every email step across all 12 leads now ends with a consistent footer — "Sean Murrill / Vulnaguard / Owings Mills, MD" + a reply-based opt-out line ("Reply STOP and I will take you off this list"), replacing inconsistent/missing sign-offs. LinkedIn steps untouched. The underlying column code and message template were also patched, so future sourcing runs inherit the same footer automatically — not just these 12. Spot-checked 2 of 12 (one that had a signature, one that had none) — both correct.
+- [x] Minor: `peopleCount` showing 11 vs. 12 total sequences — checked, all 12 sequences are real and correct; stale count field on the campaign summary object only, not a data issue
 - [ ] Launch (manual, human-triggered — not automated). Recommend waiting until LinkedIn is connected to avoid a partial/blocked launch.
-- [ ] Minor: `peopleCount` shows 11 vs. 12 total sequences returned by the sequences list — not yet investigated, low priority
+- [ ] Still open, not yet addressed: LinkedIn automation ToS risk (unknown if Origami uses LinkedIn's official API or browser automation — check before connecting), no sending-domain warmup/volume-ramp policy defined for Origami (unlike Clay's 25-50/day + 2-week bounce check), no reply/bounce webhook wired to Slack or anywhere in this AIOS, and only 2 of 12 drafts have been spot-checked for decision-maker data quality (the "John Johnny" artifact from the sourcing run may affect others)
 - [ ] Scheduled agent for recurring sourcing+drafting (built later, left disabled at first, after a few more manual quality spot-checks — first run already surfaced one data-quality artifact, "John Johnny" as a decision-maker name)

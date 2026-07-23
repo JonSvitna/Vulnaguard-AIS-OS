@@ -32,7 +32,7 @@ from pathlib import Path
 AUTH_URI = "https://accounts.google.com/o/oauth2/auth"
 TOKEN_URI = "https://oauth2.googleapis.com/token"
 API_BASE = "https://www.googleapis.com/youtube/v3"
-SCOPE = "https://www.googleapis.com/auth/youtube"
+SCOPE = "https://www.googleapis.com/auth/youtube https://www.googleapis.com/auth/youtube.force-ssl"
 REDIRECT_PORT = 8765
 ENV_PATH = Path(__file__).resolve().parent.parent / ".env"
 
@@ -173,6 +173,73 @@ def cmd_channel(_args):
     print(f"Channel ID: {item['id']}")
 
 
+def api_upload_call(url: str, http_method: str, data: bytes, content_type: str,
+                     extra_headers: dict | None = None) -> tuple[dict, dict]:
+    """Raw upload POST/PUT that returns (response_json, response_headers) — used for
+    both the resumable-session init call and the actual byte upload, since only the
+    init call returns a body we care about (the Location header) while the byte
+    upload returns the created video resource."""
+    token = get_access_token()
+    headers = {"Authorization": f"Bearer {token}", "Content-Type": content_type}
+    headers.update(extra_headers or {})
+    req = urllib.request.Request(url, data=data, headers=headers, method=http_method)
+    try:
+        with urllib.request.urlopen(req) as resp:
+            body = resp.read()
+            parsed = json.loads(body.decode()) if body else {}
+            return parsed, dict(resp.headers)
+    except urllib.error.HTTPError as e:
+        print(f"YouTube upload HTTP error {e.code}: {e.read().decode()}", file=sys.stderr)
+        sys.exit(1)
+
+
+def cmd_upload(args):
+    video_path = Path(args.file).expanduser()
+    if not video_path.exists():
+        print(f"File not found: {video_path}", file=sys.stderr)
+        sys.exit(1)
+    size = video_path.stat().st_size
+
+    snippet = {"title": args.title, "description": args.description or "", "categoryId": args.category_id}
+    if args.tags:
+        snippet["tags"] = [t.strip() for t in args.tags.split(",") if t.strip()]
+    body = {"snippet": snippet, "status": {"privacyStatus": args.privacy}}
+
+    init_url = ("https://www.googleapis.com/upload/youtube/v3/videos"
+                "?uploadType=resumable&part=snippet,status")
+    _, headers = api_upload_call(
+        init_url, "POST", json.dumps(body).encode(), "application/json",
+        extra_headers={
+            "X-Upload-Content-Type": "video/mp4",
+            "X-Upload-Content-Length": str(size),
+        },
+    )
+    session_uri = headers.get("Location") or headers.get("location")
+    if not session_uri:
+        print("No resumable session URI returned.", file=sys.stderr)
+        sys.exit(1)
+
+    print(f"Uploading {video_path.name} ({size / 1e6:.1f} MB)...")
+    with open(video_path, "rb") as f:
+        video_bytes = f.read()
+    result, _ = api_upload_call(session_uri, "PUT", video_bytes, "video/mp4")
+    video_id = result.get("id")
+    if not video_id:
+        print(f"Upload finished but no video id in response: {result}", file=sys.stderr)
+        sys.exit(1)
+    print(f"Uploaded. Video ID: {video_id}")
+    print(f"URL: https://www.youtube.com/watch?v={video_id}")
+
+    if args.thumbnail:
+        thumb_path = Path(args.thumbnail).expanduser()
+        ext = thumb_path.suffix.lower()
+        content_type = "image/png" if ext == ".png" else "image/jpeg"
+        thumb_bytes = thumb_path.read_bytes()
+        thumb_url = f"https://www.googleapis.com/upload/youtube/v3/thumbnails/set?videoId={video_id}"
+        api_upload_call(thumb_url, "POST", thumb_bytes, content_type)
+        print("Thumbnail set.")
+
+
 def cmd_update_branding(args):
     data = api_call("channels", params={"part": "brandingSettings", "mine": "true"})
     item = data["items"][0]
@@ -199,6 +266,15 @@ def main():
     p_branding.add_argument("--title")
     p_branding.add_argument("--description")
 
+    p_upload = sub.add_parser("upload")
+    p_upload.add_argument("--file", required=True)
+    p_upload.add_argument("--title", required=True)
+    p_upload.add_argument("--description")
+    p_upload.add_argument("--privacy", default="private", choices=["public", "unlisted", "private"])
+    p_upload.add_argument("--category-id", default="28")  # Science & Technology
+    p_upload.add_argument("--tags")
+    p_upload.add_argument("--thumbnail")
+
     args = parser.parse_args()
 
     for key in ("YOUTUBE_CLIENT_ID", "YOUTUBE_CLIENT_SECRET"):
@@ -213,6 +289,7 @@ def main():
         "auth": cmd_auth,
         "channel": cmd_channel,
         "update-branding": cmd_update_branding,
+        "upload": cmd_upload,
     }[args.command](args)
 
 

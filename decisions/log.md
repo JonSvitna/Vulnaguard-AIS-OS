@@ -2,6 +2,23 @@
 
 Append-only record of meaningful decisions and why they were made. `/level-up` Phase 2 (Method interview) writes scoped automation specs here. You can also append manually whenever you decide something worth remembering.
 
+## 2026-07-22 — First social batch shipped via Buffer: SeanBuilds "AI Won't Replace You" series queued to LinkedIn + Instagram
+
+**Decision:** Queued all 7 clips of the SeanBuilds "AI Won't Replace You" series (delivered 2026-07-21 by `sean-builds-ai-jobs-social`) to Buffer, one clip/day, LinkedIn + Instagram Reels only, 2026-07-23 through 2026-07-29 at 15:00 UTC. Facebook skipped (not connected in Buffer — no channel ID). Post copy used as-is from `renders/delivery-manifest.json` (title + CTA + hashtags per platform), approved without edits.
+
+**Why:** This closes the "zero `[posted]` entries despite drafts sitting ready" gap the `social-post-queue` skill was built to fix. Buffer access had rotted (token was for the wrong Buffer API surface — legacy REST vs. the account's actual Publish API key) and had never been exercised end-to-end before, so this was the first real run.
+
+**What had to be fixed along the way (technical, not re-litigated business decisions):**
+- `scripts/buffer_api.py` targeted Buffer's legacy REST API (`api.bufferapp.com/1`, no-OAuth dev-app tokens). Buffer no longer issues new tokens for that API. Rewrote the script to use Buffer's current GraphQL Publish API (`api.buffer.com`, personal API key, Bearer auth) — mutation/query shapes confirmed via live schema introspection, not docs alone (public docs were incomplete/summarized).
+- Buffer's API only accepts asset **URLs**, not file uploads — the 14 render files (7 clips × IG/LinkedIn) had to be hosted somewhere public first. Used the existing `vulnaguard-aios` DigitalOcean droplet (1 vCPU/1GB, already running the mail-to-slack + sam.gov crons) as a static file host: installed `nginx-light`, opened port 80, rsynced 1.2GB to `/var/www/media/social-2026-07/`. Deliberately did **not** run any new process there (no transcoding, no app server) to avoid competing with the existing crons for the box's 1GB RAM — confirmed ~620MB available headroom before and after.
+- Instagram posts require an explicit `metadata.instagram.type` (`reel`/`post`/`story`) and `shouldShareToFeed` — undocumented in the public guide, found via schema introspection.
+
+**Alternatives considered:** Vercel inline-file deploy for hosting (rejected — its `deploy_to_vercel` tool takes files inline in the tool call; 1.2GB of binary video is infeasible that way). Manual upload via Buffer's web UI (rejected once the droplet path worked — API path is repeatable for future weeks).
+
+**Owner:** Sean. `next-unposted` on `vulnaguard-seo-agent`'s content-pipeline 404s (route not deployed or wrong path) — the intended DB-backed flow from `references/content-intake-pipeline.md` is not actually live yet; this run used the already-rendered manifest directly instead. Follow-up: get a Facebook channel connected in Buffer if Facebook posting is wanted later; fix or confirm the content-pipeline `next-unposted` route for the next batch.
+
+**Update, same day:** Sean flagged the initial captions (generic title + CTA + hashtags pulled straight from the render manifest) as reading like a bot queued them. Rewrote all 14 through `seanbuilds-voice` — hook + point + a genuine question per clip, LinkedIn longer/professional register, Instagram punchier — and pushed the updates to the already-scheduled Buffer posts via a new `editPost` path in `scripts/buffer_api.py` (had to re-send `dueAt` and the video asset on every edit; Buffer clears both if omitted from the mutation, not documented). Lesson for future caption drafts: write them with real line breaks, not escaped `\n` in a chat message — one round of drafts had literal `\n` characters leak into the post text because they were typed as escape sequences instead of actual newlines.
+
 ## 2026-07-21 — Clay cutover: SEO Agent is the only outreach source of truth
 
 **Decision:** Finish the Clay → n8n → `vulnaguard-seo-agent` cutover. Clay sources and fit-scores U.S. SMB leads; n8n orchestrates intake/finalization/Slack buttons; the SEO Agent remains the only lead, draft, approval, and Resend send database. Live intake now posts to authenticated `/api/marketing/leads/clay-batch` (not the old CMMC `/import-confirm` path). Nothing sends before human approval.

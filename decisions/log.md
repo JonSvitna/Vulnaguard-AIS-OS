@@ -33,6 +33,10 @@ Note: the commit that added the YouTube upload code in the first place (`d5c8a66
 
 **Owner:** Sean. Ops runbook: `references/clay-lead-automation.md`. Remaining manual: create `#clay-leads`, wire Slack signing secret + interactivity URL, activate finalizer/approval workflows, finish Clay HTTP column mapping + 6am schedule.
 
+## 2026-07-24 — Lead Triage run failed: MS365 auth still not configured
+
+Lead triage routine could not pull mail — `MS365_USER_UPN` env var missing (same root cause as 2026-07-21 failure and session-start `MS365_TENANT_ID` gap). No new leads added. Recurring failure: fix requires setting `MS365_USER_UPN`, `MS365_TENANT_ID`, and associated auth env vars in the session/environment config.
+
 ## 2026-07-21 — Overnight Lead Triage run failed: MS365 auth not configured
 
 Lead triage routine could not pull mail — `MS365_USER_UPN` env var is missing (same root cause as `MS365_TENANT_ID` gap flagged at session start). No new leads added. Fix: set `MS365_USER_UPN`, `MS365_TENANT_ID`, and associated auth env vars in the session/environment config before next run.

@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "seanbuilds-rework",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "/Users/seanm/Documents/GitHub/SeanBuilds_Rework", "run", "dev"],
+      "port": 3000
+    }
+  ]
+}

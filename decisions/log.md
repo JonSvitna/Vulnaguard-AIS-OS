@@ -2,6 +2,10 @@
 
 Append-only record of meaningful decisions and why they were made. `/level-up` Phase 2 (Method interview) writes scoped automation specs here. You can also append manually whenever you decide something worth remembering.
 
+## 2026-07-26 — Lead triage run failed: M365 auth not configured
+
+**One-line:** Lead triage cron on 2026-07-26 failed — `scripts/microsoft365_api.py` exited with `KeyError: 'MS365_USER_UPN'`; no mail was pulled and no new leads were added. MS365 env vars (`MS365_TENANT_ID`, `MS365_USER_UPN`, and likely `MS365_CLIENT_ID`/`MS365_CLIENT_SECRET`) are not set in this environment. Fix: configure those env vars in the Claude Code on the web environment settings before the next scheduled run.
+
 ## 2026-07-22 — First social batch shipped via Buffer: SeanBuilds "AI Won't Replace You" series queued to LinkedIn + Instagram
 
 **Decision:** Queued all 7 clips of the SeanBuilds "AI Won't Replace You" series (delivered 2026-07-21 by `sean-builds-ai-jobs-social`) to Buffer, one clip/day, LinkedIn + Instagram Reels only, 2026-07-23 through 2026-07-29 at 15:00 UTC. Facebook skipped (not connected in Buffer — no channel ID). Post copy used as-is from `renders/delivery-manifest.json` (title + CTA + hashtags per platform), approved without edits.

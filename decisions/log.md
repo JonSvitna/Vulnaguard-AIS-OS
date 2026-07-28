@@ -2,6 +2,10 @@
 
 Append-only record of meaningful decisions and why they were made. `/level-up` Phase 2 (Method interview) writes scoped automation specs here. You can also append manually whenever you decide something worth remembering.
 
+## 2026-07-28 — Lead triage run failed: M365 auth not configured (day 3)
+
+**One-line:** Lead triage cron on 2026-07-28 failed again — `scripts/microsoft365_api.py` exited with `KeyError: 'MS365_USER_UPN'`; 0 new leads added. This is the 3rd consecutive day with this same failure (and at least the 5th overall). Fix required: set `MS365_TENANT_ID`, `MS365_USER_UPN`, `MS365_CLIENT_ID`, `MS365_CLIENT_SECRET` in the Claude Code on the web environment settings — until this is done, the lead triage cron will continue to fail silently every morning.
+
 ## 2026-07-27 — Lead triage run failed: M365 auth not configured (day 2)
 
 **One-line:** Lead triage cron on 2026-07-27 failed again — `scripts/microsoft365_api.py` exited with `KeyError: 'MS365_USER_UPN'`; 0 new leads added. Same root cause as 2026-07-26: M365 env vars not set in this environment. Action required: set `MS365_TENANT_ID`, `MS365_USER_UPN`, `MS365_CLIENT_ID`, `MS365_CLIENT_SECRET` in the Claude Code on the web environment settings.

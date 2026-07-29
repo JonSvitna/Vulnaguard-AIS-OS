@@ -891,3 +891,24 @@ Rebuilt with Sean's two scope answers (Resend Audience as destination; convert `
 **Owner:** Sean. Next: configure the MS365 env vars in the remote session (needed for this script's Graph calls, not to revive lead-triage), fill in the real `--site-id`/`--file-path`/`--table` for the Brickline sheet, add an explicit "Approved" column if the sheet doesn't have one yet, then run `scripts/slack_guest_check.py` manually per Bike Method Phase 1. Business-level (Brickline, cost-control) — mirror to the Obsidian vault only if/when Brickline tracking is confirmed in scope there; this AIOS is acting as handler per Sean's direction 2026-07-27.
 
 **Update same day:** MS365 Graph auth confirmed live in this (local/interactive) session — `python3 scripts/microsoft365_api.py mail --top 1` succeeded, so the env vars in this repo's `.env` are real and working; the failures logged all week are scoped to the separate remote/scheduled session only. Slack channel resolved: `#brickline-leads` (`C0BJ0211NUT`, `vulnaguardsentinel` workspace, per `Brickline-OS/connections.md` row 3). Checked `Brickline-OS` in full — no SharePoint site or `.xlsx` file path is documented anywhere in that repo. **Blocking on Sean:** the SharePoint site URL/name and the guest sheet's file path — he'll supply both once back at his computer. Script cannot be real-world tested until then.
+
+## 2026-07-28 — "AI Is a Shovel" video published; editing pipeline formalized as `video-creation` skill
+
+Published the long-form "AI Is a Shovel" video to OfficialSeanBuilds
+(`https://www.youtube.com/watch?v=qXsc6UORWnE`, public) — title, description with
+recalculated chapter markers, tags, and a custom thumbnail (re-encoded PNG→JPEG to
+clear YouTube's undocumented ~2MB thumbnail limit). `scripts/youtube_api.py` was
+extended from channel-branding-only to also support resumable video upload,
+thumbnail set, and comment posting (`connections.md` row 16 updated). Comment
+*pinning* has no API — confirmed there is no endpoint for it anywhere in YouTube
+Data API v3 — stays a manual Studio step.
+
+At Sean's request, renamed the `seanbuilds-video-edit` Claude skill (built 2026-07-20
+from this video's edit) to `video-creation` and extended it to cover the publishing
+step, not just the edit — it's now the single reference for his whole raw-clips
+-to-live-on-YouTube pipeline. Technical/dev decision — stays local to this log, not
+mirrored to the Obsidian vault.
+
+**Owner:** Sean. Next: pin the comment-prompt comment manually in Studio (no API
+path exists); re-run `youtube_api.py auth` next time a call fails with `invalid_grant`
+(Testing-mode tokens expire ~7 days) or before relying on the new comment-scope grant.

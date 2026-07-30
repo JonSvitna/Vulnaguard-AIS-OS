@@ -922,3 +922,7 @@ mirrored to the Obsidian vault.
 **Owner:** Sean. Next: pin the comment-prompt comment manually in Studio (no API
 path exists); re-run `youtube_api.py auth` next time a call fails with `invalid_grant`
 (Testing-mode tokens expire ~7 days) or before relying on the new comment-scope grant.
+
+## 2026-07-30 — Lead triage run failed: M365 auth not configured (day 5+)
+
+Lead triage cron on 2026-07-30 failed — `scripts/microsoft365_api.py` exited with `KeyError: 'MS365_USER_UPN'`; 0 new leads added. Same root cause as every prior failure. Also: `decisions/log.md` has an unresolved git merge conflict near the top (lines 5-13) that needs manual resolution.

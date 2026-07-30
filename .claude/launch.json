@@ -18,6 +18,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["--prefix", "/Users/seanm/Documents/GitHub/TradeJournal/frontend", "run", "dev", "--", "--port", "5173"],
       "port": 5173
+    },
+    {
+      "name": "creative-os-render",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "/Users/seanm/Documents/GitHub/creative-os/render", "run", "dev", "--", "--port", "3060"],
+      "port": 3060
     }
   ]
 }

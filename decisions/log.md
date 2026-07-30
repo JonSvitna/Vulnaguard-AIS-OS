@@ -2,9 +2,15 @@
 
 Append-only record of meaningful decisions and why they were made. `/level-up` Phase 2 (Method interview) writes scoped automation specs here. You can also append manually whenever you decide something worth remembering.
 
+<<<<<<< Updated upstream
 ## 2026-07-29 — Lead triage run failed: M365 auth not configured (day 4)
 
 **One-line:** Lead triage cron on 2026-07-29 failed again — `scripts/microsoft365_api.py` exited with `KeyError: 'MS365_USER_UPN'`; 0 new leads added. 4th consecutive day. Fix: set `MS365_TENANT_ID`, `MS365_USER_UPN`, `MS365_CLIENT_ID`, `MS365_CLIENT_SECRET` in Claude Code on the web environment settings.
+=======
+## 2026-07-29 — Fixed STOP-reply false-positive bug in vulnaguard-seo-agent (`78a77aa`)
+
+**One-line:** `checkStopReplies` (`lib/check-stop-replies.ts`) polls Sean's real working mailbox, not a dedicated outreach-reply inbox, and nothing ever moved a lead out of `sent` status once they replied (747 leads found stuck in `sent`). Every message in an ongoing live conversation with a former cold lead was rescanned against a broad STOP-word regex forever, so ordinary language eventually matched — silently auto-unsubscribing an active prospect, sending them an unwanted "removed from outreach" email mid-conversation, and spamming Slack on every hit. Fix: only leads still in pure `sent` status are evaluated, and a lead's first non-STOP reply flips it to `replied` so that thread is never rescanned again. Verified via direct prod DB query that a same-day legitimate unsubscribe (Hillcrest Pharmacy & Compounding of Elkton) had processed correctly before the fix went in. Typechecked, committed, and pushed to `main` — Railway auto-deploys from there.
+>>>>>>> Stashed changes
 
 ## 2026-07-28 — Lead triage run failed: M365 auth not configured (day 3)
 

@@ -879,3 +879,52 @@ Rebuilt with Sean's two scope answers (Resend Audience as destination; convert `
 **Alternatives considered:** Postgres alongside Resend for durability (declined by Sean — Resend Audiences alone, no new infra to keep alive); leaving `mailto:` CTAs as-is and only fixing the two real forms (declined by Sean — wanted the ~10 dead-end CTAs converted too).
 
 **Owner:** Sean — verify `seanbuilds.com` in Resend (DNS at the registrar) so notify emails can send from a branded address instead of `onboarding@resend.dev`; capture itself doesn't depend on this and is live now. Purely technical/infra wiring for an existing site — not mirrored to the Obsidian vault.
+
+## 2026-07-27 — `/level-up`: Slack guest-access mismatch check (scoped, Brickline)
+
+**Candidate (Mindset):** This week's Brickline Properties Slack channel had the wrong people with guest access, which led to an incorrect billing charge. Ranked above two other candidates (a dedup-tracked mass-email/sequencing system, and an unfinished document-sharing flow) because it's the root cause that caused real cost this week, not a symptom.
+
+**Method spec:**
+- **Constraint:** No reliable check on who actually has Slack guest access vs. who should — access is currently granted ad hoc ("invited based off my needs, nothing concrete"), which is what let the wrong people in.
+- **EAD:** Not eliminable (guest access is required for collaboration) and not purely delegable (needs a rule, not a person eyeballing). Automate the check; keep removal decisions with Sean.
+- **Process map:**
+  - Trigger: manual Slack invite (unchanged — this automation doesn't touch invite mechanics, only audits after the fact)
+  - Data sources: SharePoint Excel sheet (source of truth) + live Slack channel membership
+  - Transformation: cross-reference Slack member list against sheet rows, keyed on a new explicit **Approved** column
+  - Decision point: in Slack but not marked Approved → flag; marked Approved but not yet in Slack → flag (approval pending)
+  - Destination: flagged mismatches surfaced to Sean for review (no auto-remove, no auto-invite)
+- **Autonomy level: L2 — Drafted.** Script runs the check and drafts the mismatch list; Sean decides what to do with each one.
+- **KPI: Less cost bucket.** Metric: zero unapproved-guest billing incidents per month.
+
+**Blocker surfaced during scoping:** This check needs Microsoft Graph access to read the SharePoint Excel sheet. M365 auth (`MS365_USER_UPN` and related env vars) has failed 5 consecutive times this week in the remote session (2026-07-20, 07-22, 07-23, 07-26, 07-27 — see those entries above), so this automation cannot run reliably until that's fixed. Logged as a prerequisite, not ignored.
+
+**Correction:** The repeated M365 auth failures logged 07-20 through 07-27 belong to the `lead-triage` automation specifically, which Sean intentionally disabled (it was pulling resources) — those are not an unresolved bug to fix by reactivating lead-triage. Independent of that: the underlying `MS365_TENANT_ID`/`MS365_CLIENT_ID`/`MS365_CLIENT_SECRET`/`MS365_USER_UPN` env vars still need to be configured in the remote session regardless, since this new guest-access script (and anything else using `scripts/microsoft365_api.py`'s Graph auth pattern) depends on them independent of lead-triage's on/off state.
+
+**Owner:** Sean. Next: configure the MS365 env vars in the remote session (needed for this script's Graph calls, not to revive lead-triage), fill in the real `--site-id`/`--file-path`/`--table` for the Brickline sheet, add an explicit "Approved" column if the sheet doesn't have one yet, then run `scripts/slack_guest_check.py` manually per Bike Method Phase 1. Business-level (Brickline, cost-control) — mirror to the Obsidian vault only if/when Brickline tracking is confirmed in scope there; this AIOS is acting as handler per Sean's direction 2026-07-27.
+
+**Update same day:** MS365 Graph auth confirmed live in this (local/interactive) session — `python3 scripts/microsoft365_api.py mail --top 1` succeeded, so the env vars in this repo's `.env` are real and working; the failures logged all week are scoped to the separate remote/scheduled session only. Slack channel resolved: `#brickline-leads` (`C0BJ0211NUT`, `vulnaguardsentinel` workspace, per `Brickline-OS/connections.md` row 3). Checked `Brickline-OS` in full — no SharePoint site or `.xlsx` file path is documented anywhere in that repo. **Blocking on Sean:** the SharePoint site URL/name and the guest sheet's file path — he'll supply both once back at his computer. Script cannot be real-world tested until then.
+
+## 2026-07-28 — "AI Is a Shovel" video published; editing pipeline formalized as `video-creation` skill
+
+Published the long-form "AI Is a Shovel" video to OfficialSeanBuilds
+(`https://www.youtube.com/watch?v=qXsc6UORWnE`, public) — title, description with
+recalculated chapter markers, tags, and a custom thumbnail (re-encoded PNG→JPEG to
+clear YouTube's undocumented ~2MB thumbnail limit). `scripts/youtube_api.py` was
+extended from channel-branding-only to also support resumable video upload,
+thumbnail set, and comment posting (`connections.md` row 16 updated). Comment
+*pinning* has no API — confirmed there is no endpoint for it anywhere in YouTube
+Data API v3 — stays a manual Studio step.
+
+At Sean's request, renamed the `seanbuilds-video-edit` Claude skill (built 2026-07-20
+from this video's edit) to `video-creation` and extended it to cover the publishing
+step, not just the edit — it's now the single reference for his whole raw-clips
+-to-live-on-YouTube pipeline. Technical/dev decision — stays local to this log, not
+mirrored to the Obsidian vault.
+
+**Owner:** Sean. Next: pin the comment-prompt comment manually in Studio (no API
+path exists); re-run `youtube_api.py auth` next time a call fails with `invalid_grant`
+(Testing-mode tokens expire ~7 days) or before relying on the new comment-scope grant.
+
+## 2026-07-30 — Lead triage run failed: M365 auth not configured (day 5+)
+
+Lead triage cron on 2026-07-30 failed — `scripts/microsoft365_api.py` exited with `KeyError: 'MS365_USER_UPN'`; 0 new leads added. Same root cause as every prior failure. Also: `decisions/log.md` has an unresolved git merge conflict near the top (lines 5-13) that needs manual resolution.

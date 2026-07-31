@@ -4,8 +4,26 @@
     {
       "name": "seanbuilds-rework",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["--prefix", "/Users/seanm/Documents/GitHub/SeanBuilds_Rework", "run", "dev"],
-      "port": 3000
+      "runtimeArgs": ["--prefix", "/Users/seanm/Documents/GitHub/SeanBuilds_Rework", "run", "dev", "--", "-p", "3050"],
+      "port": 3050
+    },
+    {
+      "name": "trade-journal-backend",
+      "runtimeExecutable": "/Users/seanm/Documents/GitHub/TradeJournal/backend/.venv/bin/uvicorn",
+      "runtimeArgs": ["main:app", "--reload", "--port", "8010", "--app-dir", "/Users/seanm/Documents/GitHub/TradeJournal/backend"],
+      "port": 8010
+    },
+    {
+      "name": "trade-journal-frontend",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "/Users/seanm/Documents/GitHub/TradeJournal/frontend", "run", "dev", "--", "--port", "5173"],
+      "port": 5173
+    },
+    {
+      "name": "creative-os-render",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "/Users/seanm/Documents/GitHub/creative-os/render", "run", "dev", "--", "--port", "3060"],
+      "port": 3060
     }
   ]
 }

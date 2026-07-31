@@ -2,6 +2,30 @@
 
 Append-only record of meaningful decisions and why they were made. `/level-up` Phase 2 (Method interview) writes scoped automation specs here. You can also append manually whenever you decide something worth remembering.
 
+## 2026-07-31 — Lead triage run failed: M365 auth not configured (day 6)
+
+**One-line:** Lead triage cron on 2026-07-31 failed — `scripts/microsoft365_api.py` exited with `KeyError: 'MS365_USER_UPN'`; 0 new leads added. 6th consecutive day. Fix: set `MS365_TENANT_ID`, `MS365_USER_UPN`, `MS365_CLIENT_ID`, `MS365_CLIENT_SECRET` in Claude Code on the web environment settings.
+
+## 2026-07-29 — Lead triage run failed: M365 auth not configured (day 4)
+
+**One-line:** Lead triage cron on 2026-07-29 failed again — `scripts/microsoft365_api.py` exited with `KeyError: 'MS365_USER_UPN'`; 0 new leads added. 4th consecutive day. Fix: set `MS365_TENANT_ID`, `MS365_USER_UPN`, `MS365_CLIENT_ID`, `MS365_CLIENT_SECRET` in Claude Code on the web environment settings.
+
+## 2026-07-29 — Fixed STOP-reply false-positive bug in vulnaguard-seo-agent (`78a77aa`)
+
+**One-line:** `checkStopReplies` (`lib/check-stop-replies.ts`) polls Sean's real working mailbox, not a dedicated outreach-reply inbox, and nothing ever moved a lead out of `sent` status once they replied (747 leads found stuck in `sent`). Every message in an ongoing live conversation with a former cold lead was rescanned against a broad STOP-word regex forever, so ordinary language eventually matched — silently auto-unsubscribing an active prospect, sending them an unwanted "removed from outreach" email mid-conversation, and spamming Slack on every hit. Fix: only leads still in pure `sent` status are evaluated, and a lead's first non-STOP reply flips it to `replied` so that thread is never rescanned again. Verified via direct prod DB query that a same-day legitimate unsubscribe (Hillcrest Pharmacy & Compounding of Elkton) had processed correctly before the fix went in. Typechecked, committed, and pushed to `main` — Railway auto-deploys from there.
+
+## 2026-07-28 — Lead triage run failed: M365 auth not configured (day 3)
+
+**One-line:** Lead triage cron on 2026-07-28 failed again — `scripts/microsoft365_api.py` exited with `KeyError: 'MS365_USER_UPN'`; 0 new leads added. This is the 3rd consecutive day with this same failure (and at least the 5th overall). Fix required: set `MS365_TENANT_ID`, `MS365_USER_UPN`, `MS365_CLIENT_ID`, `MS365_CLIENT_SECRET` in the Claude Code on the web environment settings — until this is done, the lead triage cron will continue to fail silently every morning.
+
+## 2026-07-27 — Lead triage run failed: M365 auth not configured (day 2)
+
+**One-line:** Lead triage cron on 2026-07-27 failed again — `scripts/microsoft365_api.py` exited with `KeyError: 'MS365_USER_UPN'`; 0 new leads added. Same root cause as 2026-07-26: M365 env vars not set in this environment. Action required: set `MS365_TENANT_ID`, `MS365_USER_UPN`, `MS365_CLIENT_ID`, `MS365_CLIENT_SECRET` in the Claude Code on the web environment settings.
+
+## 2026-07-26 — Lead triage run failed: M365 auth not configured
+
+**One-line:** Lead triage cron on 2026-07-26 failed — `scripts/microsoft365_api.py` exited with `KeyError: 'MS365_USER_UPN'`; no mail was pulled and no new leads were added. MS365 env vars (`MS365_TENANT_ID`, `MS365_USER_UPN`, and likely `MS365_CLIENT_ID`/`MS365_CLIENT_SECRET`) are not set in this environment. Fix: configure those env vars in the Claude Code on the web environment settings before the next scheduled run.
+
 ## 2026-07-22 — First social batch shipped via Buffer: SeanBuilds "AI Won't Replace You" series queued to LinkedIn + Instagram
 
 **Decision:** Queued all 7 clips of the SeanBuilds "AI Won't Replace You" series (delivered 2026-07-21 by `sean-builds-ai-jobs-social`) to Buffer, one clip/day, LinkedIn + Instagram Reels only, 2026-07-23 through 2026-07-29 at 15:00 UTC. Facebook skipped (not connected in Buffer — no channel ID). Post copy used as-is from `renders/delivery-manifest.json` (title + CTA + hashtags per platform), approved without edits.
